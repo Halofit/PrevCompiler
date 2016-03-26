@@ -59,3 +59,27 @@ Error recovery ->
 	- delete tokens from id until we match
 	- inspect what follows th next non-termal symbols
 		(if T skip until find a symbol in Follow(T) -> then remove from stack) -> example skip until next ; in Java
+
+
+------------Third------------------
+E -> E+T | T
+	|
+	V
+E -> T E'
+E' -> eps |+ T E'
+
+
+parseE()
+	Expr op1 = parseT();
+	Expr e = parseE'(op1);
+	return e;
+
+parseE'(Expr op1)
+	case '+':
+		skip('+');
+		Expr op2 = parseT();
+		Expr e = parseE'(new BinExpr(+, op1, op2));
+		return e;
+
+a[i] ->  (arr, a, i)
+a.i  ->  (rec, a, i)

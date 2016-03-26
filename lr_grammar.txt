@@ -29,10 +29,10 @@ PrefixExpression -> sub PrefixExpression .
 PrefixExpression -> not PrefixExpression .
 PrefixExpression -> mem PrefixExpression .
 PrefixExpression -> lbracket Type rbracket PrefixExpression .
-PostfixExpression -> AtomicExpression .
-PostfixExpression -> PostfixExpression lbracket Expression rbracket .
-PostfixExpression -> PostfixExpression dot IDENTIFIER .
-PostfixExpression -> PostfixExpression val .
+PostfixExpression -> AtomicExpression . # atom
+PostfixExpression -> PostfixExpression lbracket Expression rbracket . #postfix[expr]
+PostfixExpression -> PostfixExpression dot IDENTIFIER . # postfix . ID
+PostfixExpression -> PostfixExpression val . # postfix ^
 AtomicExpression -> INTEGER .
 AtomicExpression -> BOOLEAN .
 AtomicExpression -> CHAR .

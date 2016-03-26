@@ -1,0 +1,10 @@
+((ord('A')=1),
+ p.x=3,pa^[3]=4,@pa^,pa=null,
+ pa^=1,
+ @i=null)
+  where
+      fun ord(c:char):ptr integer=@[integer]c
+      var i:integer
+      var p:rec{x:integer,y:integer}
+      var pa:ptr arr[5]integer
+  end

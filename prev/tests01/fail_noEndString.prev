@@ -1,0 +1,9 @@
+string a = "welcome to the {0}, we've got {1} and {2}
+
+int b = 10
+
+#this is a very long comment to make sure we don't print too much of the sring 
+a.format(b,b,b)
+printf(a)
+
+

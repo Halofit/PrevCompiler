@@ -5,159 +5,266 @@ import compiler.common.report.*;
 
 /**
  * A lexical symbol.
- * 
+ *
  * @author sliva
  */
 public class Symbol extends Position implements Loggable {
 
 	/**
 	 * Tokens.
-	 * 
+	 *
 	 * @author sliva
 	 */
 	public enum Token {
 
 		// Symbols.
 
-		/** Symbol <code>+</code>. */
+		/**
+		 * Symbol <code>+</code>.
+		 */
 		ADD,
-		/** Symbol <code>&#x26;</code>. */
+		/**
+		 * Symbol <code>&#x26;</code>.
+		 */
 		AND,
-		/** Symbol <code>=</code>. */
+		/**
+		 * Symbol <code>=</code>.
+		 */
 		ASSIGN,
-		/** Symbol <code>:</code>. */
+		/**
+		 * Symbol <code>:</code>.
+		 */
 		COLON,
-		/** Symbol <code>,</code>. */
+		/**
+		 * Symbol <code>,</code>.
+		 */
 		COMMA,
-		/** Symbol <code>}</code>. */
+		/**
+		 * Symbol <code>}</code>.
+		 */
 		CLOSING_BRACE,
-		/** Symbol <code>]</code>. */
+		/**
+		 * Symbol <code>]</code>.
+		 */
 		CLOSING_BRACKET,
-		/** Symbol <code>)</code>. */
+		/**
+		 * Symbol <code>)</code>.
+		 */
 		CLOSING_PARENTHESIS,
-		/** Symbol <code>.</code>. */
+		/**
+		 * Symbol <code>.</code>.
+		 */
 		DOT,
-		/** Symbol <code>/</code>. */
+		/**
+		 * Symbol <code>/</code>.
+		 */
 		DIV,
-		/** Symbol <code>==</code>. */
+		/**
+		 * Symbol <code>==</code>.
+		 */
 		EQU,
-		/** Symbol <code>&#x3E;=</code>. */
+		/**
+		 * Symbol <code>&#x3E;=</code>.
+		 */
 		GEQ,
-		/** Symbol <code>&#x3E;</code>. */
+		/**
+		 * Symbol <code>&#x3E;</code>.
+		 */
 		GTH,
-		/** Symbol <code>&#x3C;</code>. */
+		/**
+		 * Symbol <code>&#x3C;</code>.
+		 */
 		LEQ,
-		/** Symbol <code>&#x3C;=</code>. */
+		/**
+		 * Symbol <code>&#x3C;=</code>.
+		 */
 		LTH,
-		/** Symbol <code>&#x40;</code>. */
+		/**
+		 * Symbol <code>&#x40;</code>.
+		 */
 		MEM,
-		/** Symbol <code>%</code>. */
+		/**
+		 * Symbol <code>%</code>.
+		 */
 		MOD,
-		/** Symbol <code>*</code>. */
+		/**
+		 * Symbol <code>*</code>.
+		 */
 		MUL,
-		/** Symbol <code>!=</code>. */
+		/**
+		 * Symbol <code>!=</code>.
+		 */
 		NEQ,
-		/** Symbol <code>!</code>. */
+		/**
+		 * Symbol <code>!</code>.
+		 */
 		NOT,
-		/** Symbol <code>{</code>. */
+		/**
+		 * Symbol <code>{</code>.
+		 */
 		OPENING_BRACE,
-		/** Symbol <code>[</code>. */
+		/**
+		 * Symbol <code>[</code>.
+		 */
 		OPENING_BRACKET,
-		/** Symbol <code>(</code>. */
+		/**
+		 * Symbol <code>(</code>.
+		 */
 		OPENING_PARENTHESIS,
-		/** Symbol <code>|</code>. */
+		/**
+		 * Symbol <code>|</code>.
+		 */
 		OR,
-		/** Symbol <code>-</code>. */
+		/**
+		 * Symbol <code>-</code>.
+		 */
 		SUB,
-		/** Symbol <code>^</code>. */
+		/**
+		 * Symbol <code>^</code>.
+		 */
 		VAL,
 
 		// Constants of atomic types.
 
-		/** Integer constant. */
+		/**
+		 * Integer constant.
+		 */
 		CONST_INTEGER,
-		/** Logical constant. */
+		/**
+		 * Logical constant.
+		 */
 		CONST_BOOLEAN,
-		/** Character constant. */
+		/**
+		 * Character constant.
+		 */
 		CONST_CHAR,
-		/** String constant. */
+		/**
+		 * String constant.
+		 */
 		CONST_STRING,
-		/** Null pointer. */
+		/**
+		 * Null pointer.
+		 */
 		CONST_NULL,
-		/** Void constnant. */
+		/**
+		 * Void constnant.
+		 */
 		CONST_NONE,
 
 		// Type names.
 
-		/** Type <code>integer</code>. */
+		/**
+		 * Type <code>integer</code>.
+		 */
 		INTEGER,
-		/** Type <code>boolean</code>. */
+		/**
+		 * Type <code>boolean</code>.
+		 */
 		BOOLEAN,
-		/** Type <code>char</code>. */
+		/**
+		 * Type <code>char</code>.
+		 */
 		CHAR,
-		/** Type <code>string</code>. */
+		/**
+		 * Type <code>string</code>.
+		 */
 		STRING,
-		/** Type <code>void</code>. */
+		/**
+		 * Type <code>void</code>.
+		 */
 		VOID,
 
 		// Keywords.
 
-		/** Keyword <code>arr</code>. */
+		/**
+		 * Keyword <code>arr</code>.
+		 */
 		ARR,
-		/** Keyword <code>else</code>. */
+		/**
+		 * Keyword <code>else</code>.
+		 */
 		ELSE,
-		/** Keyword <code>end</code>. */
+		/**
+		 * Keyword <code>end</code>.
+		 */
 		END,
-		/** Keyword <code>for</code>. */
+		/**
+		 * Keyword <code>for</code>.
+		 */
 		FOR,
-		/** Keyword <code>fun</code>. */
+		/**
+		 * Keyword <code>fun</code>.
+		 */
 		FUN,
-		/** Keyword <code>if</code>. */
+		/**
+		 * Keyword <code>if</code>.
+		 */
 		IF,
-		/** Keyword <code>then</code>. */
+		/**
+		 * Keyword <code>then</code>.
+		 */
 		THEN,
-		/** Keyword <code>ptr</code>. */
+		/**
+		 * Keyword <code>ptr</code>.
+		 */
 		PTR,
-		/** Keyword <code>rec</code>. */
+		/**
+		 * Keyword <code>rec</code>.
+		 */
 		REC,
-		/** Keyword <code>typ</code>. */
+		/**
+		 * Keyword <code>typ</code>.
+		 */
 		TYP,
-		/** Keyword <code>var</code>. */
+		/**
+		 * Keyword <code>var</code>.
+		 */
 		VAR,
-		/** Keyword <code>where</code>. */
+		/**
+		 * Keyword <code>where</code>.
+		 */
 		WHERE,
-		/** Keyword <code>while</code>. */
+		/**
+		 * Keyword <code>while</code>.
+		 */
 		WHILE,
 
 		// Identifiers.
 
-		/** Identifier. */
+		/**
+		 * Identifier.
+		 */
 		IDENTIFIER,
 
 		// Non-tokens.
 
-		/** End of file signal. */
+		/**
+		 * End of file signal.
+		 */
 		EOF,
-		/** Error token. */
+		/**
+		 * Error token.
+		 */
 		ERROR,
 
 	}
 
-	/** The token of this symbol. */
+	/**
+	 * The token of this symbol.
+	 */
 	public final Token token;
 
-	/** The lexeme of this symbol. */
+	/**
+	 * The lexeme of this symbol.
+	 */
 	public final String lexeme;
 
 	/**
 	 * Constructs a new symbol.
-	 * 
-	 * @param token
-	 *            The symbol's token.
-	 * @param lexeme
-	 *            The symbols's lexeme.
-	 * @param position
-	 *            The symbol's position.
+	 *
+	 * @param token    The symbol's token.
+	 * @param lexeme   The symbols's lexeme.
+	 * @param position The symbol's position.
 	 */
 	public Symbol(Token token, String lexeme, Position position) {
 		super(position);
@@ -167,11 +274,9 @@ public class Symbol extends Position implements Loggable {
 
 	/**
 	 * Constructs a new symbol.
-	 * 
-	 * @param token
-	 *            The symbol's token.
-	 * @param position
-	 *            The symbol's position.
+	 *
+	 * @param token    The symbol's token.
+	 * @param position The symbol's position.
 	 */
 	public Symbol(Token token, Position position) {
 		super(position);
@@ -181,8 +286,7 @@ public class Symbol extends Position implements Loggable {
 
 	@Override
 	public void log(Logger logger) {
-		if (logger == null)
-			return;
+		if (logger == null) return;
 		logger.begElement("term");
 		logger.addAttribute("name", token.toString());
 		logger.addAttribute("lexeme", lexeme);
@@ -190,7 +294,7 @@ public class Symbol extends Position implements Loggable {
 		logger.endElement();
 	}
 
-	public Position getPosition(){
+	public Position getPosition() {
 		return this;
 	}
 }

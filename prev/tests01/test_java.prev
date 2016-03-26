@@ -1,0 +1,14 @@
+
+	private static final String[] boolConsts = {"true", "false"}
+	private static final String ptrConst = "null"
+	private static final String voidConst = "none"
+	private static final String[] types = {"integer", "boolean", "char", "string", "void"}
+	private static final String[] keywords =
+			{"arr", "else", "end", "for", "fun", "if", "then",
+					"ptr", "rec", "typ", "var", "where", "while"}
+	private static final String[] symbols =
+			{"+", "&", "=", ":", ",", "}", "]", ")", ".", "/", "==", ">=", ">",
+					"<=", "<", "@", "%", "*", "!=", "!", "{", "[", "(", "|", "-", "^"}
+	private static final Character[] symbols_starters =  //also includes symbol enders '='
+			{'+', '&', '=', ':', ',', '}', ']', ')', '.', '/', '=', '>', '>',
+					'<', '<', '@', '%', '*', '!', '!', '{', '[', '(', '|', '-', '^'}

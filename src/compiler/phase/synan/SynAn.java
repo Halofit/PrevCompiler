@@ -3,8 +3,8 @@ package compiler.phase.synan;
 import compiler.Task;
 import compiler.common.logger.Transformer;
 import compiler.common.report.PhaseErrors.SynAnError;
-import compiler.common.report.Position;
 import compiler.common.report.Report;
+import compiler.data.ast.*;
 import compiler.phase.Phase;
 import compiler.phase.lexan.LexAn;
 import compiler.phase.lexan.Symbol;
@@ -12,6 +12,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
+import java.util.LinkedList;
 
 
 /**
@@ -110,26 +112,12 @@ public class SynAn extends Phase {
 	}
 
 	/**
-	 * Logs the error token inserted when a missing lexical symbol has been
-	 * reported.
-	 *
-	 * @return The error token (the symbol in the lookahead buffer is to be used
-	 * later).
-	 */
-	private Symbol nextSymbolIsError() {
-		Symbol error = new Symbol(Symbol.Token.ERROR, "", new Position("", 0, 0));
-		error.log(logger);
-		return error;
-	}
-
-	/**
 	 * Starts logging an internal node of the derivation tree.
 	 *
 	 * @param nontName The name of a nonterminal the internal node represents.
 	 */
 	private void begLog(String nontName) {
-		if (logger == null)
-			return;
+		if (logger == null) return;
 		logger.begElement("nont");
 		logger.addAttribute("name", nontName);
 	}
@@ -138,8 +126,7 @@ public class SynAn extends Phase {
 	 * Ends logging an internal node of the derivation tree.
 	 */
 	private void endLog() {
-		if (logger == null)
-			return;
+		if (logger == null) return;
 		logger.endElement();
 	}
 
@@ -148,13 +135,15 @@ public class SynAn extends Phase {
 	 * <p>
 	 * This method performs the syntax analysis of the source file.
 	 */
-	public void synAn() {
+	public Program synAn() {
 		laSymbol = lexAn.lexAn();
-		parseProgram();
+		Program prg = parseProgram();
 
 		if (laSymbol.token != Symbol.Token.EOF) {
 			Report.warning(laSymbol, "Unexpected symbol(s) at the end of file.");
 		}
+
+		return prg;
 	}
 
 
@@ -162,8 +151,12 @@ public class SynAn extends Phase {
 		if (laSymbol.token == token) {
 			return nextSymbol();
 		} else {
-			SynAnError error = new SynAnError("[skip] expected " + token + " got " + laSymbol.token + " at " + laSymbol.getPosition());
-			throw new SynAnError("[skip] expected " + token + " got " + laSymbol.token + " at " + laSymbol.getPosition() + " " + (error.getStackTrace()[1]));
+			SynAnError error = new SynAnError("[skip] expected " + token
+					+ " got " + laSymbol.token + " at " + laSymbol.getPosition());
+
+			throw new SynAnError("[skip] expected " + token + " got "
+					+ laSymbol.token + " at " + laSymbol.getPosition()
+					+ " " + (error.getStackTrace()[1]));
 		}
 	}
 
@@ -177,36 +170,39 @@ public class SynAn extends Phase {
 	// LL(1) parser.
 
 	//Program -> Expression .
-	private void parseProgram() {
+	private Program parseProgram() {
 		begLog("Program");
-		parseExpression();
-
+		Expr expr = parseExpression();
 
 		if (laSymbol.token != Symbol.Token.EOF) {
 			throw new SynAnError("Symbol at the end is not EOF, not all input was consumed.");
 		}
 
 		endLog();
+		return new Program(laSymbol, expr);
 	}
 
 	//Expression -> AssignmentExpression ExpressionPrime .
-	private void parseExpression() {
+	private Expr parseExpression() {
 		begLog("Expression");
-		parseAssignmentExpression();
-		parseExpressionPrime();
+		Expr op1 = parseAssignmentExpression();
+		Expr expr = parseExpressionPrime(op1);
 		endLog();
+		return expr;
 	}
 
 	//ExpressionPrime -> where Declarations end ExpressionPrime .
 	//ExpressionPrime -> .
-	private void parseExpressionPrime() {
+	private Expr parseExpressionPrime(Expr op1) {
 		begLog("ExpressionPrime");
+		Expr expr;
 		switch (laSymbol.token) {
 			case WHERE:
 				skip(Symbol.Token.WHERE);
-				parseDeclarations();
+				LinkedList<Decl> decls = parseDeclarations();
 				skip(Symbol.Token.END);
-				parseExpressionPrime();
+				Expr where = new WhereExpr(laSymbol, op1, decls);
+				expr = parseExpressionPrime(where);
 				break;
 
 			case END:
@@ -220,59 +216,74 @@ public class SynAn extends Phase {
 			case FUN:
 			case VAR:
 			case EOF:
+				expr = op1;
 				break;
 
 			default:
+				expr = null;
 				signalError("ExpressionPrime");
 
 		}
 		endLog();
+
+		return expr;
 	}
 
 
 	//Expressions -> Expression ExpressionsPrime .
-	private void parseExpressions() {
+	private LinkedList<Expr> parseExpressions() {
 		begLog("Expressions");
-		parseExpression();
-		parseExpressionsPrime();
+		Expr expr = parseExpression();
+		LinkedList<Expr> exprs = parseExpressionsPrime();
 		endLog();
+		exprs.add(0, expr);
+		return exprs;
 	}
 
 	//ExpressionsPrime -> comma Expression ExpressionsPrime .
 	//ExpressionsPrime -> .
-	private void parseExpressionsPrime() {
+	private LinkedList<Expr> parseExpressionsPrime() {
 		begLog("ExpressionsPrime");
+		LinkedList<Expr> exprs;
 		switch (laSymbol.token) {
 			case COMMA:
 				skip(Symbol.Token.COMMA);
-				parseExpression();
-				parseExpressionsPrime();
+				Expr expr = parseExpression();
+				exprs = parseExpressionsPrime();
+				exprs.add(0, expr);
 				break;
 			case CLOSING_PARENTHESIS:
+				exprs = new LinkedList<>();
 				break;
 			default:
+				exprs = null;
 				signalError("ExpressionsPrime");
 		}
 		endLog();
+		return exprs;
 	}
 
 	//AssignmentExpression -> DisjunctiveExpression AssignmentExpressionPrime .
-	private void parseAssignmentExpression() {
+	private Expr parseAssignmentExpression() {
 		begLog("AssignmentExpression");
-		parseDisjunctiveExpression();
-		parseAssignmentExpressionPrime();
+		Expr op1 = parseDisjunctiveExpression();
+		Expr expr = parseAssignmentExpressionPrime(op1);
 		endLog();
+		return expr;
 	}
 
 
 	//AssignmentExpressionPrime -> .
 	//AssignmentExpressionPrime -> assign DisjunctiveExpression .
-	private void parseAssignmentExpressionPrime() {
+	private Expr parseAssignmentExpressionPrime(Expr op1) {
 		begLog("AssignmentExpressionPrime");
+		Expr expr;
+
 		switch (laSymbol.token) {
 			case ASSIGN:
 				skip(Symbol.Token.ASSIGN);
-				parseDisjunctiveExpression();
+				Expr op2 = parseDisjunctiveExpression();
+				expr = new BinExpr(laSymbol, BinExpr.Oper.ASSIGN, op1, op2);
 				break;
 
 			case WHERE:
@@ -287,32 +298,37 @@ public class SynAn extends Phase {
 			case FUN:
 			case VAR:
 			case EOF:
+				expr = op1;
 				break;
 
 			default:
+				expr = null;
 				signalError("AssignmentExpressionPrime");
 		}
 
 		endLog();
+		return expr;
 	}
 
 	//DisjunctiveExpression -> ConjunctiveExpression DisjunctiveExpressionPrime .
-	private void parseDisjunctiveExpression() {
+	private Expr parseDisjunctiveExpression() {
 		begLog("DisjunctiveExpression");
-		parseConjunctiveExpression();
-		parseDisjunctiveExpressionPrime();
+		Expr op1 = parseConjunctiveExpression();
+		Expr expr = parseDisjunctiveExpressionPrime(op1);
 		endLog();
+		return expr;
 	}
 
 	//DisjunctiveExpressionPrime -> or ConjunctiveExpression DisjunctiveExpressionPrime .
 	//DisjunctiveExpressionPrime -> .
-	private void parseDisjunctiveExpressionPrime() {
+	private Expr parseDisjunctiveExpressionPrime(Expr op1) {
 		begLog("DisjunctiveExpressionPrime");
+		Expr expr;
 		switch (laSymbol.token) {
 			case OR:
 				skip(Symbol.Token.OR);
-				parseConjunctiveExpression();
-				parseDisjunctiveExpressionPrime();
+				Expr op2 = parseConjunctiveExpression();
+				expr = parseDisjunctiveExpressionPrime(new BinExpr(laSymbol, BinExpr.Oper.OR, op1, op2));
 				break;
 			case WHERE:
 			case END:
@@ -327,30 +343,35 @@ public class SynAn extends Phase {
 			case FUN:
 			case VAR:
 			case EOF:
+				expr = op1;
 				break;
 			default:
+				expr = null;
 				signalError("DisjunctiveExpressionPrime");
 		}
 		endLog();
+		return expr;
 	}
 
 	//ConjunctiveExpression -> RelationalExpression ConjunctiveExpressionPrime .
-	private void parseConjunctiveExpression() {
+	private Expr parseConjunctiveExpression() {
 		begLog("ConjunctiveExpression");
-		parseRelationalExpression();
-		parseConjunctiveExpressionPrime();
+		Expr op1 = parseRelationalExpression();
+		Expr expr = parseConjunctiveExpressionPrime(op1);
 		endLog();
+		return expr;
 	}
 
 	//ConjunctiveExpressionPrime -> and RelationalExpression ConjunctiveExpressionPrime .
 	//ConjunctiveExpressionPrime -> .
-	private void parseConjunctiveExpressionPrime() {
+	private Expr parseConjunctiveExpressionPrime(Expr op1) {
 		begLog("ConjunctiveExpressionPrime");
+		Expr expr;
 		switch (laSymbol.token) {
 			case AND:
 				skip(Symbol.Token.AND);
-				parseRelationalExpression();
-				parseConjunctiveExpressionPrime();
+				Expr op2 = parseRelationalExpression();
+				expr = parseConjunctiveExpressionPrime(new BinExpr(laSymbol, BinExpr.Oper.AND, op1, op2));
 				break;
 			case WHERE:
 			case END:
@@ -366,19 +387,23 @@ public class SynAn extends Phase {
 			case FUN:
 			case VAR:
 			case EOF:
+				expr = op1;
 				break;
 			default:
+				expr = null;
 				signalError("ConjunctiveExpressionPrime");
 		}
 		endLog();
+		return expr;
 	}
 
 	//RelationalExpression -> AdditiveExpression RelationalExpressionPrime .
-	private void parseRelationalExpression() {
+	private Expr parseRelationalExpression() {
 		begLog("RelationalExpression");
-		parseAdditiveExpression();
-		parseRelationalExpressionPrime();
+		Expr op1 = parseAdditiveExpression();
+		Expr expr = parseRelationalExpressionPrime(op1);
 		endLog();
+		return expr;
 	}
 
 	//RelationalExpressionPrime -> .
@@ -388,32 +413,40 @@ public class SynAn extends Phase {
 	//RelationalExpressionPrime -> gth AdditiveExpression .
 	//RelationalExpressionPrime -> leq AdditiveExpression .
 	//RelationalExpressionPrime -> geq AdditiveExpression .
-	private void parseRelationalExpressionPrime() {
+	private Expr parseRelationalExpressionPrime(Expr op1) {
 		begLog("RelationalExpressionPrime");
+		Expr expr;
+		Expr op2;
 		switch (laSymbol.token) {
 			case EQU:
 				skip(Symbol.Token.EQU);
-				parseAdditiveExpression();
+				op2 = parseAdditiveExpression();
+				expr = new BinExpr(laSymbol, BinExpr.Oper.EQU, op1, op2);
 				break;
 			case NEQ:
 				skip(Symbol.Token.NEQ);
-				parseAdditiveExpression();
+				op2 = parseAdditiveExpression();
+				expr = new BinExpr(laSymbol, BinExpr.Oper.NEQ, op1, op2);
 				break;
 			case LTH:
 				skip(Symbol.Token.LTH);
-				parseAdditiveExpression();
+				op2 = parseAdditiveExpression();
+				expr = new BinExpr(laSymbol, BinExpr.Oper.LTH, op1, op2);
 				break;
 			case GTH:
 				skip(Symbol.Token.GTH);
-				parseAdditiveExpression();
+				op2 = parseAdditiveExpression();
+				expr = new BinExpr(laSymbol, BinExpr.Oper.GTH, op1, op2);
 				break;
 			case LEQ:
 				skip(Symbol.Token.LEQ);
-				parseAdditiveExpression();
+				op2 = parseAdditiveExpression();
+				expr = new BinExpr(laSymbol, BinExpr.Oper.LEQ, op1, op2);
 				break;
 			case GEQ:
 				skip(Symbol.Token.GEQ);
-				parseAdditiveExpression();
+				op2 = parseAdditiveExpression();
+				expr = new BinExpr(laSymbol, BinExpr.Oper.GEQ, op1, op2);
 				break;
 
 			case WHERE:
@@ -431,36 +464,42 @@ public class SynAn extends Phase {
 			case FUN:
 			case VAR:
 			case EOF:
+				expr = op1;
 				break;
 			default:
+				expr = null;
 				signalError("RelationalExpressionPrime");
 		}
 		endLog();
+		return expr;
 	}
 
 	//AdditiveExpression -> MultiplicativeExpression AdditiveExpressionPrime .
-	private void parseAdditiveExpression() {
+	private Expr parseAdditiveExpression() {
 		begLog("AdditiveExpression");
-		parseMultiplicativeExpression();
-		parseAdditiveExpressionPrime();
+		Expr op1 = parseMultiplicativeExpression();
+		Expr expr = parseAdditiveExpressionPrime(op1);
 		endLog();
+		return expr;
 	}
 
 	//AdditiveExpressionPrime -> add MultiplicativeExpression AdditiveExpressionPrime .
 	//AdditiveExpressionPrime -> sub MultiplicativeExpression AdditiveExpressionPrime .
 	//AdditiveExpressionPrime -> .
-	private void parseAdditiveExpressionPrime() {
+	private Expr parseAdditiveExpressionPrime(Expr op1) {
 		begLog("AdditiveExpressionPrime");
+		Expr op2;
+		Expr expr;
 		switch (laSymbol.token) {
 			case ADD:
 				skip(Symbol.Token.ADD);
-				parseMultiplicativeExpression();
-				parseAdditiveExpressionPrime();
+				op2 = parseMultiplicativeExpression();
+				expr = parseAdditiveExpressionPrime(new BinExpr(laSymbol, BinExpr.Oper.ADD, op1, op2));
 				break;
 			case SUB:
 				skip(Symbol.Token.SUB);
-				parseMultiplicativeExpression();
-				parseAdditiveExpressionPrime();
+				op2 = parseMultiplicativeExpression();
+				expr = parseAdditiveExpressionPrime(new BinExpr(laSymbol, BinExpr.Oper.SUB, op1, op2));
 				break;
 
 			case WHERE:
@@ -484,44 +523,50 @@ public class SynAn extends Phase {
 			case FUN:
 			case VAR:
 			case EOF:
+				expr = op1;
 				break;
 
 			default:
+				expr = null;
 				signalError("AdditiveExpressionPrime");
 
 		}
 		endLog();
+		return expr;
 	}
 
 	//MultiplicativeExpression -> PrefixExpression MultiplicativeExpressionPrime .
-	private void parseMultiplicativeExpression() {
+	private Expr parseMultiplicativeExpression() {
 		begLog("MultiplicativeExpression");
-		parsePrefixExpression();
-		parseMultiplicativeExpressionPrime();
+		Expr op1 = parsePrefixExpression();
+		Expr expr = parseMultiplicativeExpressionPrime(op1);
 		endLog();
+		return expr;
 	}
 
 	//MultiplicativeExpressionPrime -> mul PrefixExpression MultiplicativeExpressionPrime .
 	//MultiplicativeExpressionPrime -> div PrefixExpression MultiplicativeExpressionPrime .
 	//MultiplicativeExpressionPrime -> mod PrefixExpression MultiplicativeExpressionPrime .
 	//MultiplicativeExpressionPrime -> .
-	private void parseMultiplicativeExpressionPrime() {
+	private Expr parseMultiplicativeExpressionPrime(Expr op1) {
 		begLog("MultiplicativeExpressionPrime");
+		Expr expr;
+		Expr op2;
 		switch (laSymbol.token) {
 			case MUL:
 				skip(Symbol.Token.MUL);
-				parsePrefixExpression();
-				parseMultiplicativeExpressionPrime();
+				op2 = parsePrefixExpression();
+				expr = parseMultiplicativeExpressionPrime(new BinExpr(laSymbol, BinExpr.Oper.MUL, op1, op2));
 				break;
 			case DIV:
 				skip(Symbol.Token.DIV);
-				parsePrefixExpression();
-				parseMultiplicativeExpressionPrime();
+				op2 = parsePrefixExpression();
+				expr = parseMultiplicativeExpressionPrime(new BinExpr(laSymbol, BinExpr.Oper.DIV, op1, op2));
 				break;
 			case MOD:
 				skip(Symbol.Token.MOD);
-				parsePrefixExpression();
-				parseMultiplicativeExpressionPrime();
+				op2 = parsePrefixExpression();
+				expr = parseMultiplicativeExpressionPrime(new BinExpr(laSymbol, BinExpr.Oper.MOD, op1, op2));
 				break;
 
 			case WHERE:
@@ -547,12 +592,15 @@ public class SynAn extends Phase {
 			case FUN:
 			case VAR:
 			case EOF:
+				expr = op1;
 				break;
 
 			default:
+				expr = null;
 				signalError("MultiplicativeExpressionPrime");
 		}
 		endLog();
+		return expr;
 	}
 
 	//PrefixExpression -> PostfixExpression .
@@ -561,68 +609,81 @@ public class SynAn extends Phase {
 	//PrefixExpression -> not PrefixExpression .
 	//PrefixExpression -> mem PrefixExpression .
 	//PrefixExpression -> lbracket Type rbracket PrefixExpression .
-	private void parsePrefixExpression() {
+	private Expr parsePrefixExpression() {
 		begLog("PrefixExpression");
+		Expr expr;
+		Expr op1;
+
 		switch (laSymbol.token) {
 			case ADD:
 				skip(Symbol.Token.ADD);
-				parsePrefixExpression();
+				op1 = parsePrefixExpression();
+				expr = new UnExpr(laSymbol, UnExpr.Oper.ADD, op1);
 				break;
 			case SUB:
 				skip(Symbol.Token.SUB);
-				parsePrefixExpression();
+				op1 = parsePrefixExpression();
+				expr = new UnExpr(laSymbol, UnExpr.Oper.SUB, op1);
 				break;
 			case NOT:
 				skip(Symbol.Token.NOT);
-				parsePrefixExpression();
+				op1 = parsePrefixExpression();
+				expr = new UnExpr(laSymbol, UnExpr.Oper.NOT, op1);
 				break;
 			case MEM:
 				skip(Symbol.Token.MEM);
-				parsePrefixExpression();
+				op1 = parsePrefixExpression();
+				expr = new UnExpr(laSymbol, UnExpr.Oper.MEM, op1);
 				break;
 			case OPENING_BRACKET:
 				skip(Symbol.Token.OPENING_BRACKET);
-				parseType();
+				Type type = parseType();
 				skip(Symbol.Token.CLOSING_BRACKET);
-				parsePrefixExpression();
+				op1 = parsePrefixExpression();
+				expr = new CastExpr(laSymbol, type, op1);
 				break;
 			default:
-				parsePostfixExpression();
+				expr = parsePostfixExpression();
 				break;
 		}
 		endLog();
+		return expr;
 	}
 
 	//PostfixExpression -> AtomicExpression PostfixExpressionPrime .
-	private void parsePostfixExpression() {
+	private Expr parsePostfixExpression() {
 		begLog("PostfixExpression");
-		parseAtomicExpression();
-		parsePostfixExpressionPrime();
+		Expr op1 = parseAtomicExpression();
+		Expr expr = parsePostfixExpressionPrime(op1);
 		endLog();
+		return expr;
 	}
 
 	//PostfixExpressionPrime -> lbracket Expression rbracket PostfixExpressionPrime .
 	//PostfixExpressionPrime -> dot IDENTIFIER PostfixExpressionPrime .
 	//PostfixExpressionPrime -> val PostfixExpressionPrime .
 	//PostfixExpressionPrime -> .
-	private void parsePostfixExpressionPrime() {
+	private Expr parsePostfixExpressionPrime(Expr op1) {
 		begLog("PostfixExpressionPrime");
+		Expr expr;
+		Expr op2;
 		switch (laSymbol.token) {
-			case OPENING_BRACKET:
+			case OPENING_BRACKET: //prefix [expr]
 				skip(Symbol.Token.OPENING_BRACKET);
-				parseExpression();
+				op2 = parseExpression();
 				skip(Symbol.Token.CLOSING_BRACKET);
-				parsePostfixExpressionPrime();
+				expr = parsePostfixExpressionPrime(new BinExpr(laSymbol, BinExpr.Oper.ARR, op1, op2));
 				break;
 
 			case DOT:
 				skip(Symbol.Token.DOT);
-				skip(Symbol.Token.IDENTIFIER);
-				parsePostfixExpressionPrime();
+				Symbol id = skip(Symbol.Token.IDENTIFIER);
+				op2 = new VarName(laSymbol, id.lexeme);
+				expr = parsePostfixExpressionPrime(new BinExpr(laSymbol, BinExpr.Oper.REC, op1, op2));
 				break;
 			case VAL:
 				skip(Symbol.Token.VAL);
-				parsePostfixExpressionPrime();
+				expr = parsePostfixExpressionPrime(new UnExpr(laSymbol, UnExpr.Oper.VAL, op1));
 				break;
 
 			case WHERE:
@@ -651,12 +712,15 @@ public class SynAn extends Phase {
 			case FUN:
 			case VAR:
 			case EOF:
+				expr = op1;
 				break;
 
 			default:
+				expr = null;
 				signalError("PostfixExpressionPrime");
 		}
 		endLog();
+		return expr;
 	}
 
 	//AtomicExpression -> INTEGER .
@@ -670,85 +734,102 @@ public class SynAn extends Phase {
 	//AtomicExpression -> if Expression then Expression else Expression end .
 	//AtomicExpression -> for IDENTIFIER assign Expression comma Expression colon Expression end .
 	//AtomicExpression -> while Expression colon Expression end .
-	private void parseAtomicExpression() {
+	private Expr parseAtomicExpression() {
 		begLog("AtomicExpression");
+		Expr expr;
+		Symbol atom;
 		switch (laSymbol.token) {
 			case CONST_INTEGER:
-				skip(Symbol.Token.CONST_INTEGER);
+				atom = skip(Symbol.Token.CONST_INTEGER);
+				expr = new AtomExpr(laSymbol, AtomExpr.AtomTypes.INTEGER, atom.lexeme);
 				break;
 			case CONST_BOOLEAN:
-				skip(Symbol.Token.CONST_BOOLEAN);
+				atom = skip(Symbol.Token.CONST_BOOLEAN);
+				expr = new AtomExpr(laSymbol, AtomExpr.AtomTypes.BOOLEAN, atom.lexeme);
 				break;
 			case CONST_CHAR:
-				skip(Symbol.Token.CONST_CHAR);
+				atom = skip(Symbol.Token.CONST_CHAR);
+				expr = new AtomExpr(laSymbol, AtomExpr.AtomTypes.CHAR, atom.lexeme);
 				break;
 			case CONST_STRING:
-				skip(Symbol.Token.CONST_STRING);
+				atom = skip(Symbol.Token.CONST_STRING);
+				expr = new AtomExpr(laSymbol, AtomExpr.AtomTypes.STRING, atom.lexeme);
 				break;
 			case CONST_NULL:
-				skip(Symbol.Token.CONST_NULL);
+				atom = skip(Symbol.Token.CONST_NULL);
+				expr = new AtomExpr(laSymbol, AtomExpr.AtomTypes.PTR, atom.lexeme);
 				break;
 			case CONST_NONE:
-				skip(Symbol.Token.CONST_NONE);
+				atom = skip(Symbol.Token.CONST_NONE);
+				expr = new AtomExpr(laSymbol, AtomExpr.AtomTypes.VOID, atom.lexeme);
 				break;
 			case IDENTIFIER:
-				skip(Symbol.Token.IDENTIFIER);
-				parseArgumentsOpt();
+				atom = skip(Symbol.Token.IDENTIFIER);
+				LinkedList<Expr> args = parseArgumentsOpt();
+				expr = new FunCall(laSymbol, atom.lexeme, args);
 				break;
 			case OPENING_PARENTHESIS:
 				skip(Symbol.Token.OPENING_PARENTHESIS);
-				parseExpressions();
+				LinkedList<Expr> exprs = parseExpressions();
+				expr = new Exprs(laSymbol, exprs);
 				skip(Symbol.Token.CLOSING_PARENTHESIS);
 				break;
 			//AtomicExpression -> if Expression then Expression else Expression end .
 			case IF:
 				skip(Symbol.Token.IF);
-				parseExpression();
+				Expr ifCond = parseExpression();
 				skip(Symbol.Token.THEN);
-				parseExpression();
+				Expr thenExpr = parseExpression();
 				skip(Symbol.Token.ELSE);
-				parseExpression();
+				Expr elseExpr = parseExpression();
 				skip(Symbol.Token.END);
+				expr = new IfExpr(laSymbol, ifCond, thenExpr, elseExpr);
 				break;
 			//AtomicExpression -> for IDENTIFIER assign Expression comma Expression colon Expression end .
 			case FOR:
 				skip(Symbol.Token.FOR);
-				skip(Symbol.Token.IDENTIFIER);
+				Symbol id = skip(Symbol.Token.IDENTIFIER);
+				VarName iterVar = new VarName(laSymbol, id.lexeme);
 				skip(Symbol.Token.ASSIGN);
-				parseExpression();
+				Expr lowBound = parseExpression();
 				skip(Symbol.Token.COMMA);
-				parseExpression();
+				Expr highBound = parseExpression();
 				skip(Symbol.Token.COLON);
-				parseExpression();
+				Expr forBody = parseExpression();
 				skip(Symbol.Token.END);
+				expr = new ForExpr(laSymbol, iterVar, lowBound, highBound, forBody);
 				break;
 
 			//AtomicExpression -> while Expression colon Expression end .
 			case WHILE:
 				skip(Symbol.Token.WHILE);
-				parseExpression();
+				Expr whileCond = parseExpression();
 				skip(Symbol.Token.COLON);
-				parseExpression();
+				Expr whileBody = parseExpression();
 				skip(Symbol.Token.END);
+				expr = new WhileExpr(laSymbol, whileCond, whileBody);
 				break;
 
 			default:
+				expr = null;
 				signalError("AtomicExpression");
 
 		}
 
 		endLog();
+		return expr;
 	}
 
 	//ArgumentsOpt -> .
 	//ArgumentsOpt -> lparen Expressions rparen .
-	private void parseArgumentsOpt() {
+	private LinkedList<Expr> parseArgumentsOpt() {
 		begLog("ArgumentsOpt");
+		LinkedList<Expr> exprs;
 
 		switch (laSymbol.token) {
 			case OPENING_PARENTHESIS:
 				skip(Symbol.Token.OPENING_PARENTHESIS);
-				parseExpressions();
+				exprs = parseExpressions();
 				skip(Symbol.Token.CLOSING_PARENTHESIS);
 				break;
 
@@ -781,166 +862,213 @@ public class SynAn extends Phase {
 			case FUN:
 			case VAR:
 			case EOF:
+				exprs = new LinkedList<>();
 				break;
 			default:
+				exprs = null;
 				signalError("ArgumentsOpt");
 		}
 
 		endLog();
+		return exprs;
 	}
 
 	//Declarations -> Declaration DeclarationsPrime .
-	private void parseDeclarations() {
+	private LinkedList<Decl> parseDeclarations() {
 		begLog("Declarations");
-		parseDeclaration();
-		parseDeclarationsPrime();
+		Decl decl = parseDeclaration();
+		LinkedList<Decl> decls = parseDeclarationsPrime();
+		decls.add(0, decl);
 		endLog();
+		return decls;
 	}
 
 	//DeclarationsPrime -> Declaration DeclarationsPrime .
 	//DeclarationsPrime -> .
-	private void parseDeclarationsPrime() {
+	private LinkedList<Decl> parseDeclarationsPrime() {
 		begLog("DeclarationsPrime");
+		LinkedList<Decl> decls;
 		switch (laSymbol.token) {
-			case END:
-				break;
 			case TYP:
 			case FUN:
 			case VAR:
-				parseDeclaration();
-				parseDeclarationsPrime();
+				Decl decl = parseDeclaration();
+				decls = parseDeclarationsPrime();
+				decls.add(0, decl);
+				break;
+			case END:
+				decls = new LinkedList<>();
 				break;
 			default:
+				decls = null;
 				signalError("DeclarationsPrime");
 		}
 
 		endLog();
+		return decls;
 	}
 
 	//Declaration -> TypeDeclaration .
 	//Declaration -> FunctionDeclaration .
 	//Declaration -> VariableDeclaration .
-	private void parseDeclaration() {
+	private Decl parseDeclaration() {
 		begLog("Declaration");
+		Decl decl;
 		switch (laSymbol.token) {
 			case TYP:
-				parseTypeDeclaration();
+				decl = parseTypeDeclaration();
 				break;
 			case FUN:
-				parseFunctionDeclaration();
+				decl = parseFunctionDeclaration();
 				break;
 			case VAR:
-				parseVariableDeclaration();
+				decl = parseVariableDeclaration();
 				break;
 			default:
+				decl = null;
 				signalError("Declaration");
 		}
 		endLog();
+		return decl;
 	}
 
 	//TypeDeclaration -> typ IDENTIFIER colon Type .
-	private void parseTypeDeclaration() {
+	private TypeDecl parseTypeDeclaration() {
 		begLog("TypeDeclaration");
 		skip(Symbol.Token.TYP);
-		skip(Symbol.Token.IDENTIFIER);
+		Symbol id = skip(Symbol.Token.IDENTIFIER);
 		skip(Symbol.Token.COLON);
-		parseType();
+		Type type = parseType();
+		TypeDecl decl = new TypeDecl(laSymbol, id.lexeme, type);
+
 		endLog();
+		return decl;
 	}
 
 	//FunctionDeclaration -> fun IDENTIFIER lparen ParametersOpt rparen colon Type FunctionBodyOpt .
-	private void parseFunctionDeclaration() {
+	private FunDecl parseFunctionDeclaration() {
 		begLog("FunctionDeclaration");
 		skip(Symbol.Token.FUN);
-		skip(Symbol.Token.IDENTIFIER);
+		Symbol id = skip(Symbol.Token.IDENTIFIER);
 		skip(Symbol.Token.OPENING_PARENTHESIS);
-		parseParametersOpt();
+		LinkedList<ParDecl> params = parseParametersOpt();
 		skip(Symbol.Token.CLOSING_PARENTHESIS);
 		skip(Symbol.Token.COLON);
-		parseType();
-		parseFunctionBodyOpt();
+		Type type = parseType();
+		Expr body = parseFunctionBodyOpt();
+
+		FunDecl decl;
+		if (body == null) {
+			decl = new FunDecl(laSymbol, id.lexeme, params, type);
+		} else {
+			decl = new FunDef(laSymbol, id.lexeme, params, type, body);
+		}
+
 		endLog();
+		return decl;
 	}
 
 	//ParametersOpt -> .
 	//ParametersOpt -> Parameters .
-	private void parseParametersOpt() {
+	private LinkedList<ParDecl> parseParametersOpt() {
 		begLog("ParametersOpt");
+		LinkedList<ParDecl> params;
 		switch (laSymbol.token) {
 			case IDENTIFIER:
-				parseParameters();
+				params = parseParameters();
 				break;
 			case CLOSING_PARENTHESIS:
+				params = new LinkedList<>();
 				break;
 			default:
+				params = null;
 				signalError("ParametersOpt");
 		}
 		endLog();
+
+		return params;
 	}
 
 	//Parameters -> Parameter ParametersPrime .
-	private void parseParameters() {
+	private LinkedList<ParDecl> parseParameters() {
 		begLog("Parameters");
-		parseParameter();
-		parseParametersPrime();
+		ParDecl param = parseParameter();
+		LinkedList<ParDecl> params = parseParametersPrime();
+		params.add(0, param);
 		endLog();
+		return params;
 	}
 
 	//ParametersPrime -> comma Parameter ParametersPrime .
 	//ParametersPrime -> .
-	private void parseParametersPrime() {
+	private LinkedList<ParDecl> parseParametersPrime() {
 		begLog("ParametersPrime");
+		LinkedList<ParDecl> params;
 		switch (laSymbol.token) {
 			case COMMA:
 				skip(Symbol.Token.COMMA);
-				parseParameter();
-				parseParametersPrime();
+				ParDecl param = parseParameter();
+				params = parseParametersPrime();
+				params.add(0, param);
 				break;
 
 			case CLOSING_PARENTHESIS:
+				params = new LinkedList<>();
 				break;
 			default:
+				params = null;
 				signalError("ParametersPrime");
 		}
 		endLog();
+		return params;
 	}
 
 	//Parameter -> IDENTIFIER colon Type .
-	private void parseParameter() {
+	private ParDecl parseParameter() {
 		begLog("Parameter");
-		skip(Symbol.Token.IDENTIFIER);
+		Symbol id = skip(Symbol.Token.IDENTIFIER);
 		skip(Symbol.Token.COLON);
-		parseType();
+		Type type = parseType();
 		endLog();
+		return new ParDecl(laSymbol, id.lexeme, type);
 	}
 
 	//FunctionBodyOpt -> .
 	//FunctionBodyOpt -> assign Expression .
-	private void parseFunctionBodyOpt() {
+	private Expr parseFunctionBodyOpt() {
 		begLog("FunctionBodyOpt");
+		Expr expr;
 		switch (laSymbol.token) {
 			case ASSIGN:
 				skip(Symbol.Token.ASSIGN);
-				parseExpression();
+				expr = parseExpression();
+				break;
 			case END:
 			case TYP:
 			case FUN:
 			case VAR:
+				expr = null;
 				break;
 			default:
+				expr = null;
 				signalError("FunctionBodyOpt");
 		}
 		endLog();
+
+		return expr;
 	}
 
 	//VariableDeclaration -> var IDENTIFIER colon Type .
-	private void parseVariableDeclaration() {
+	private VarDecl parseVariableDeclaration() {
 		begLog("VariableDeclaration");
 		skip(Symbol.Token.VAR);
-		skip(Symbol.Token.IDENTIFIER);
+		Symbol id = skip(Symbol.Token.IDENTIFIER);
 		skip(Symbol.Token.COLON);
-		parseType();
+		Type type = parseType();
+		VarDecl decl = new VarDecl(laSymbol, id.lexeme, type);
+
 		endLog();
+		return decl;
 	}
 
 	//Type -> integer .
@@ -952,84 +1080,108 @@ public class SynAn extends Phase {
 	//Type -> rec lbrace Components rbrace .
 	//Type -> ptr Type .
 	//Type -> IDENTIFIER .
-	private void parseType() {
+	private Type parseType() {
 		begLog("Type");
+		Type type;
 		switch (laSymbol.token) {
 			case INTEGER:
 				skip(Symbol.Token.INTEGER);
+				type = new AtomType(laSymbol, AtomType.AtomTypes.INTEGER);
 				break;
 			case BOOLEAN:
 				skip(Symbol.Token.BOOLEAN);
+				type = new AtomType(laSymbol, AtomType.AtomTypes.BOOLEAN);
 				break;
 			case CHAR:
 				skip(Symbol.Token.CHAR);
+				type = new AtomType(laSymbol, AtomType.AtomTypes.CHAR);
 				break;
 			case STRING:
 				skip(Symbol.Token.STRING);
+				type = new AtomType(laSymbol, AtomType.AtomTypes.STRING);
 				break;
 			case VOID:
 				skip(Symbol.Token.VOID);
+				type = new AtomType(laSymbol, AtomType.AtomTypes.VOID);
 				break;
 			case ARR:
 				skip(Symbol.Token.ARR);
 				skip(Symbol.Token.OPENING_BRACKET);
-				parseExpression();
+				Expr size = parseExpression();
 				skip(Symbol.Token.CLOSING_BRACKET);
-				parseType();
+				Type arrType = parseType();
+
+				type = new ArrType(laSymbol, size, arrType);
 				break;
 			case REC:
 				skip(Symbol.Token.REC);
 				skip(Symbol.Token.OPENING_BRACE);
-				parseComponents();
+				LinkedList<CompDecl> comps = parseComponents();
 				skip(Symbol.Token.CLOSING_BRACE);
+				type = new RecType(laSymbol, comps);
 				break;
 			case PTR:
 				skip(Symbol.Token.PTR);
-				parseType();
+				Type ptrType = parseType();
+				type = new PtrType(laSymbol, ptrType);
 				break;
 			case IDENTIFIER:
-				skip(Symbol.Token.IDENTIFIER);
+				Symbol typeName = skip(Symbol.Token.IDENTIFIER);
+				type = new TypeName(laSymbol, typeName.lexeme);
 				break;
 			default:
+				type = null;
 				signalError("Type");
 		}
+
 		endLog();
+		return type;
 	}
 
 	//Components -> Component ComponentsPrime .
-	private void parseComponents() {
+	private LinkedList<CompDecl> parseComponents() {
 		begLog("Components");
-		parseComponent();
-		parseComponentsPrime();
+		CompDecl comp = parseComponent();
+		LinkedList<CompDecl> comps = parseComponentsPrime();
+		comps.add(0, comp);
+
 		endLog();
+		return comps;
 	}
 
 	//ComponentsPrime -> comma Component ComponentsPrime .
 	//ComponentsPrime -> .
-	private void parseComponentsPrime() {
+	private LinkedList<CompDecl> parseComponentsPrime() {
 		begLog("ComponentsPrime");
+		LinkedList<CompDecl> comps;
 		switch (laSymbol.token) {
 			case COMMA:
 				skip(Symbol.Token.COMMA);
-				parseComponent();
-				parseComponentsPrime();
+				CompDecl comp = parseComponent();
+				comps = parseComponentsPrime();
+				comps.add(0, comp);
 				break;
 			case CLOSING_BRACE:
+				comps = new LinkedList<>();
 				break;
 			default:
+				comps = null;
 				signalError("ComponentsPrime");
 		}
 		endLog();
+
+		return comps;
 	}
 
 	//Component -> IDENTIFIER colon Type .
-	private void parseComponent() {
+	private CompDecl parseComponent() {
 		begLog("Component");
-		skip(Symbol.Token.IDENTIFIER);
+		Symbol id = skip(Symbol.Token.IDENTIFIER);
 		skip(Symbol.Token.COLON);
-		parseType();
-		endLog();
-	}
+		Type type = parseType();
+		CompDecl decl = new CompDecl(laSymbol, id.lexeme, type);
 
-//TODO
+		endLog();
+		return decl;
+	}
 }

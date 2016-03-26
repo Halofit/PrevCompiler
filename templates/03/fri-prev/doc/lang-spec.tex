@@ -1,0 +1,68 @@
+\documentclass[10pt]{article}
+\usepackage{a4wide}
+\usepackage{times}
+\begin{document}
+
+\parindent=0pt
+\parskip=0.3\baselineskip
+
+\def\production#1#2{\noindent#1$ \longrightarrow $#2\par}
+\def\nont#1{\textit{#1}}
+\def\term#1{\texttt{#1}}
+
+\title{\textbf{The PREV Language Specification}}
+\author{Bo\v stjan Slivnik}
+\date{\today}
+\maketitle
+
+\section{Lexical structure}
+
+The programs in the PREV programming language are written is 7-bit ASCII character set (all other characters are invalid).  A single character LF denotes the end of line regardless of the text file format.
+
+The (groups of) symbols of the PREV programming language are:
+\begin{itemize}
+\item \textbf{Symbols:}
+\begin{quote}
+\term{\symbol{"2B}}\ \ \term{\symbol{"26}}\ \ \term{\symbol{"3D}}\ \ \term{\symbol{"3A}}\ \ \term{\symbol{"2C}}\ \ \term{\symbol{"7D}}\ \ \term{\symbol{"5D}}\ \ \term{\symbol{"29}}\ \ \term{\symbol{"2E}}\ \ \term{\symbol{"2F}}\ \ \term{\symbol{"3D}\symbol{"3D}}\ \ \term{\symbol{"3E}\symbol{"3D}}\ \ \term{\symbol{"3E}}\ \ \term{\symbol{"3C}\symbol{"3D}}\ \ \term{\symbol{"3C}}\ \ \term{\symbol{"40}}\ \ \term{\symbol{"25}}\ \ \term{\symbol{"2A}}\ \ \term{\symbol{"21}\symbol{"3D}}\ \ \term{\symbol{"21}}\ \ \term{\symbol{"7B}}\ \ \term{\symbol{"5B}}\ \ \term{\symbol{"28}}\ \ \term{\symbol{"7C}}\ \ \term{\symbol{"2D}}\ \ \term{\symbol{"5E}}
+\end{quote}
+\item \textbf{Constants:}
+\begin{itemize}
+\item \textit{Integer constants:} An integer constant is a sequence of decimal digits optionally prefixed by a sign, i.e., ``\texttt{\symbol{"2B}}'' or ``\texttt{\symbol{"2D}}'', denoting a 64-bit signed integer, i.e., from the interval $ [-2^{63},2^{63}-1] $.
+\item \textit{Boolean constants:} \term{true}\ \ \term{false}
+\item \textit{Character constants:} A character constant consists of a single character name within single quotes.  A character name is either a character with an ASCII code from the interval $[32,126]$ (but not a backslash, a single or a double quote) or an escape sequence.  An escape sequence starts with a backslash character followed by a backslash (denoting a backslash), a single quote (denoting a single quote), a double quote (denoting a double quote), ``\texttt{t}'' (denoting TAB), or ``\texttt{n}'' (denoting LF).
+\item \textit{String constants:} A string constant is a possibly empty finite sequence of character names within double quotes.  A character name is either a character with an ASCII code from the interval $[32,126]$ (but not a backslash, a single or a double quote) or an escape sequence.  An escape sequence starts with a backslash character followed by a backslash (denoting a backslash), a single quote (denoting a single quote), a double quote (denoting a double quote), ``\texttt{t}'' (denoting TAB), or ``\texttt{n}'' (denoting LF).
+\item \textit{Pointer constant:} \term{null}
+\item \textit{Void constant:} \term{none}
+\end{itemize}
+\item \textbf{Type names:}
+\begin{quote}
+\term{integer}\ \ \term{boolean}\ \ \term{char}\ \ \term{string}\ \ \term{void}
+\end{quote}
+\item \textbf{Keywords:}
+\begin{quote}
+\term{arr}\ \ \term{else}\ \ \term{end}\ \ \term{for}\ \ \term{fun}\ \ \term{if}\ \ \term{then}\ \ \term{ptr}\ \ \term{rec}\ \ \term{typ}\ \ \term{var}\ \ \term{where}\ \ \term{while}
+\end{quote}
+\item \textbf{Identifiers:} An identifier is a nonempty finite sequence of letters, digits and underscores that starts with a letter or an underscore.
+\end{itemize}
+Additionaly, the source might include the following:
+\begin{itemize}
+\item \textbf{White space:} Characters CR, LF, TAB, or space.
+\item \textbf{Comments:} A comment is a sequence of character that starts with an octothorpe character, i.e., ``\texttt{\symbol{"23}}'', and ends with the LF character (regardless of the text file format).
+\end{itemize}
+
+To break the source file into individual symbols, the first-match-longest-match rule must be used.
+
+\section{Syntactic structure}
+
+The concrete syntax of the PREV programming language is defined by an LR(1) grammar.  Nonterminal and terminal symbols are written in italic and typewritter fonts, respectivelly.  Terminal symbols \term{IDENTIFIER}, \term{INTEGER}, \term{BOOLEAN}, \term{CHAR} and \term{STRING} denote (all) identifiers, integer constants, bool\-ean constants, character constants and string constants, respectivelly.  The start symbol of the grammar is \nont{Program}.  The LR(1) grammar contains the following productions:
+\medskip\par
+
+\begingroup
+\parskip=0pt
+\input grammar.tex
+\medskip\par
+\endgroup
+
+Note that the LR(1) grammar generates certain sentential forms which are prohibited by semantics.
+
+\end{document}
