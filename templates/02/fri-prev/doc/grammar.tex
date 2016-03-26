@@ -1,0 +1,99 @@
+\production{ \nont{Program} }{ \nont{Expression} }
+\smallskip
+\production{ \nont{Expression} }{ \nont{AssignmentExpression} }
+\production{ \nont{Expression} }{ \nont{Expression} \term{where} \nont{Declarations} \term{end} }
+\smallskip
+\production{ \nont{Expressions} }{ \nont{Expression} }
+\production{ \nont{Expressions} }{ \nont{Expressions} \term{\symbol{"2C}} \nont{Expression} }
+\smallskip
+\production{ \nont{AssignmentExpression} }{ \nont{DisjunctiveExpression} }
+\production{ \nont{AssignmentExpression} }{ \nont{DisjunctiveExpression} \term{\symbol{"3D}} \nont{DisjunctiveExpression} }
+\smallskip
+\production{ \nont{DisjunctiveExpression} }{ \nont{ConjunctiveExpression} }
+\production{ \nont{DisjunctiveExpression} }{ \nont{DisjunctiveExpression} \term{\symbol{"7C}} \nont{ConjunctiveExpression} }
+\smallskip
+\production{ \nont{ConjunctiveExpression} }{ \nont{RelationalExpression} }
+\production{ \nont{ConjunctiveExpression} }{ \nont{ConjunctiveExpression} \term{\symbol{"26}} \nont{RelationalExpression} }
+\smallskip
+\production{ \nont{RelationalExpression} }{ \nont{AdditiveExpression} }
+\production{ \nont{RelationalExpression} }{ \nont{AdditiveExpression} \term{\symbol{"3D}\symbol{"3D}} \nont{AdditiveExpression} }
+\production{ \nont{RelationalExpression} }{ \nont{AdditiveExpression} \term{\symbol{"21}\symbol{"3D}} \nont{AdditiveExpression} }
+\production{ \nont{RelationalExpression} }{ \nont{AdditiveExpression} \term{\symbol{"3C}} \nont{AdditiveExpression} }
+\production{ \nont{RelationalExpression} }{ \nont{AdditiveExpression} \term{\symbol{"3E}} \nont{AdditiveExpression} }
+\production{ \nont{RelationalExpression} }{ \nont{AdditiveExpression} \term{\symbol{"3C}\symbol{"3D}} \nont{AdditiveExpression} }
+\production{ \nont{RelationalExpression} }{ \nont{AdditiveExpression} \term{\symbol{"3E}\symbol{"3D}} \nont{AdditiveExpression} }
+\smallskip
+\production{ \nont{AdditiveExpression} }{ \nont{AdditiveExpression} \term{\symbol{"2B}} \nont{MultiplicativeExpression} }
+\production{ \nont{AdditiveExpression} }{ \nont{AdditiveExpression} \term{\symbol{"2D}} \nont{MultiplicativeExpression} }
+\production{ \nont{AdditiveExpression} }{ \nont{MultiplicativeExpression} }
+\smallskip
+\production{ \nont{MultiplicativeExpression} }{ \nont{MultiplicativeExpression} \term{\symbol{"2A}} \nont{PrefixExpression} }
+\production{ \nont{MultiplicativeExpression} }{ \nont{MultiplicativeExpression} \term{\symbol{"2F}} \nont{PrefixExpression} }
+\production{ \nont{MultiplicativeExpression} }{ \nont{MultiplicativeExpression} \term{\symbol{"25}} \nont{PrefixExpression} }
+\production{ \nont{MultiplicativeExpression} }{ \nont{PrefixExpression} }
+\smallskip
+\production{ \nont{PrefixExpression} }{ \nont{PostfixExpression} }
+\production{ \nont{PrefixExpression} }{ \term{\symbol{"2B}} \nont{PrefixExpression} }
+\production{ \nont{PrefixExpression} }{ \term{\symbol{"2D}} \nont{PrefixExpression} }
+\production{ \nont{PrefixExpression} }{ \term{\symbol{"21}} \nont{PrefixExpression} }
+\production{ \nont{PrefixExpression} }{ \term{\symbol{"40}} \nont{PrefixExpression} }
+\production{ \nont{PrefixExpression} }{ \term{\symbol{"5B}} \nont{Type} \term{\symbol{"5D}} \nont{PrefixExpression} }
+\smallskip
+\production{ \nont{PostfixExpression} }{ \nont{AtomicExpression} }
+\production{ \nont{PostfixExpression} }{ \nont{PostfixExpression} \term{\symbol{"5B}} \nont{Expression} \term{\symbol{"5D}} }
+\production{ \nont{PostfixExpression} }{ \nont{PostfixExpression} \term{\symbol{"2E}} \term{IDENTIFIER} }
+\production{ \nont{PostfixExpression} }{ \nont{PostfixExpression} \term{\symbol{"5E}} }
+\smallskip
+\production{ \nont{AtomicExpression} }{ \term{INTEGER} }
+\production{ \nont{AtomicExpression} }{ \term{BOOLEAN} }
+\production{ \nont{AtomicExpression} }{ \term{CHAR} }
+\production{ \nont{AtomicExpression} }{ \term{STRING} }
+\production{ \nont{AtomicExpression} }{ \term{null} }
+\production{ \nont{AtomicExpression} }{ \term{none} }
+\production{ \nont{AtomicExpression} }{ \term{IDENTIFIER} \nont{ArgumentsOpt} }
+\production{ \nont{AtomicExpression} }{ \term{\symbol{"28}} \nont{Expressions} \term{\symbol{"29}} }
+\production{ \nont{AtomicExpression} }{ \term{if} \nont{Expression} \term{then} \nont{Expression} \term{else} \nont{Expression} \term{end} }
+\production{ \nont{AtomicExpression} }{ \term{for} \term{IDENTIFIER} \term{\symbol{"3D}} \nont{Expression} \term{\symbol{"2C}} \nont{Expression} \term{\symbol{"3A}} \nont{Expression} \term{end} }
+\production{ \nont{AtomicExpression} }{ \term{while} \nont{Expression} \term{\symbol{"3A}} \nont{Expression} \term{end} }
+\smallskip
+\production{ \nont{ArgumentsOpt} }{ \	erm{} }
+\production{ \nont{ArgumentsOpt} }{ \term{\symbol{"28}} \nont{Expressions} \term{\symbol{"29}} }
+\smallskip
+\production{ \nont{Declarations} }{ \nont{Declaration} }
+\production{ \nont{Declarations} }{ \nont{Declarations} \nont{Declaration} }
+\smallskip
+\production{ \nont{Declaration} }{ \nont{TypeDeclaration} }
+\production{ \nont{Declaration} }{ \nont{FunctionDeclaration} }
+\production{ \nont{Declaration} }{ \nont{VariableDeclaration} }
+\smallskip
+\production{ \nont{TypeDeclaration} }{ \term{typ} \term{IDENTIFIER} \term{\symbol{"3A}} \nont{Type} }
+\smallskip
+\production{ \nont{FunctionDeclaration} }{ \term{fun} \term{IDENTIFIER} \term{\symbol{"28}} \nont{ParametersOpt} \term{\symbol{"29}} \term{\symbol{"3A}} \nont{Type} \nont{FunctionBodyOpt} }
+\smallskip
+\production{ \nont{ParametersOpt} }{ \	erm{} }
+\production{ \nont{ParametersOpt} }{ \nont{Parameters} }
+\smallskip
+\production{ \nont{Parameters} }{ \nont{Parameter} }
+\production{ \nont{Parameters} }{ \nont{Parameters} \term{\symbol{"2C}} \nont{Parameter} }
+\smallskip
+\production{ \nont{Parameter} }{ \term{IDENTIFIER} \term{\symbol{"3A}} \nont{Type} }
+\smallskip
+\production{ \nont{FunctionBodyOpt} }{ \	erm{} }
+\production{ \nont{FunctionBodyOpt} }{ \term{\symbol{"3D}} \nont{Expression} }
+\smallskip
+\production{ \nont{VariableDeclaration} }{ \term{var} \term{IDENTIFIER} \term{\symbol{"3A}} \nont{Type} }
+\smallskip
+\production{ \nont{Type} }{ \term{integer} }
+\production{ \nont{Type} }{ \term{boolean} }
+\production{ \nont{Type} }{ \term{char} }
+\production{ \nont{Type} }{ \term{string} }
+\production{ \nont{Type} }{ \term{void} }
+\production{ \nont{Type} }{ \term{arr} \term{\symbol{"5B}} \nont{Expression} \term{\symbol{"5D}} \nont{Type} }
+\production{ \nont{Type} }{ \term{rec} \term{\symbol{"7B}} \nont{Components} \term{\symbol{"7D}} }
+\production{ \nont{Type} }{ \term{ptr} \nont{Type} }
+\production{ \nont{Type} }{ \term{IDENTIFIER} }
+\smallskip
+\production{ \nont{Components} }{ \nont{Component} }
+\production{ \nont{Components} }{ \nont{Components} \term{\symbol{"2C}} \nont{Component} }
+\smallskip
+\production{ \nont{Component} }{ \term{IDENTIFIER} \term{\symbol{"3A}} \nont{Type} }

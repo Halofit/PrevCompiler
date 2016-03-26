@@ -1,0 +1,33 @@
+
+#hello there
+#this should pass synan
+
+#i don't know how to make array literals :( [1,2,3,4,5]
+if binary_search(3, 3, 0, 4) > -1 then
+	printf("present")
+else
+	printf("not present")
+end
+where
+	fun binary_search(el:integer, A : ptr integer, low : integer, high : integer) : integer = (
+			mid = ((low + high) / 2) , 
+			if high < low then
+				-1
+			else
+				
+				if A[mid] > el then
+					binary_search(el, A, low, mid-1)
+				else
+					if A[mid] < el then
+						binary_search(el, A, mid+1, high)
+					else
+						mid
+					end
+				end
+				where 
+					var mid : integer
+				end
+			end
+	)
+end
+	

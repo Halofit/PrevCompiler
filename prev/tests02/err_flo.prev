@@ -1,0 +1,9 @@
+
+#free flow functions are erronous - kinda bad imo
+fun gcd(a : integer, b : integer) : integer = (
+	if a==0 then
+		b #i am making an assumption that this language is functional
+	else
+		gcd (b%a, a)
+	end
+)

@@ -1,0 +1,7 @@
+while true:
+	sum = sum + 1,
+	printf("Rick and morty for a hundred years\n")
+end
+where
+	var sum : integer
+end

@@ -1,0 +1,8 @@
+for i=0, i<10: 
+	(sum = sum + i,
+	i = i+1)
+end
+where 
+	var i : integer 
+	var sum : integer
+end

@@ -1,0 +1,3 @@
+while true:
+	printf("Rick and morty for a hundred years\n")
+end

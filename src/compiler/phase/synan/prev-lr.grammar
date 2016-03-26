@@ -1,0 +1,154 @@
+Program ->
+	  Expression
+	.
+
+Expression ->
+	  AssignmentExpression
+	| Expression WHERE Declarations END
+	.
+
+Expressions ->
+	  Expression
+	| Expressions COMMA Expression
+	.
+
+AssignmentExpression ->
+	  DisjunctiveExpression
+	| DisjunctiveExpression ASSIGN DisjunctiveExpression
+	.
+
+DisjunctiveExpression ->
+          ConjunctiveExpression
+	| DisjunctiveExpression OR ConjunctiveExpression
+	.
+
+ConjunctiveExpression ->
+          RelationalExpression
+	| ConjunctiveExpression AND RelationalExpression
+	.
+
+RelationalExpression ->
+	  AdditiveExpression
+	| AdditiveExpression EQU AdditiveExpression
+	| AdditiveExpression NEQ AdditiveExpression
+	| AdditiveExpression LTH AdditiveExpression
+	| AdditiveExpression GTH AdditiveExpression
+	| AdditiveExpression LEQ AdditiveExpression
+	| AdditiveExpression GEQ AdditiveExpression
+	.
+
+AdditiveExpression ->
+	  AdditiveExpression ADD MultiplicativeExpression
+	| AdditiveExpression SUB MultiplicativeExpression
+	| MultiplicativeExpression
+	.
+
+MultiplicativeExpression ->
+	  MultiplicativeExpression MUL PrefixExpression
+	| MultiplicativeExpression DIV PrefixExpression
+	| MultiplicativeExpression MOD PrefixExpression
+	| PrefixExpression
+	.
+
+PrefixExpression ->
+	  PostfixExpression
+	| ADD PrefixExpression
+	| SUB PrefixExpression
+	| NOT PrefixExpression
+	| MEM PrefixExpression
+	| OPENING_BRACKET Type CLOSING_BRACKET PrefixExpression
+	.
+
+PostfixExpression ->
+	  AtomicExpression
+	| PostfixExpression OPENING_BRACKET Expression CLOSING_BRACKET
+	| PostfixExpression DOT IDENTIFIER
+	| PostfixExpression VAL
+	.
+
+AtomicExpression ->
+	  CONST_INTEGER
+	| CONST_BOOLEAN
+	| CONST_CHAR
+	| CONST_STRING
+	| CONST_NULL
+	| CONST_NONE
+	| IDENTIFIER ArgumentsOpt
+	| OPENING_PARENTHESIS Expressions CLOSING_PARENTHESIS
+	| IF Expression THEN Expression ELSE Expression END
+	| FOR IDENTIFIER ASSIGN Expression COMMA Expression COLON Expression END
+	| WHILE Expression COLON Expression END
+	.
+
+ArgumentsOpt ->
+	  #
+	| OPENING_PARENTHESIS Expressions CLOSING_PARENTHESIS
+	.
+
+Declarations ->
+	  Declaration
+	| Declarations Declaration
+	.
+
+Declaration ->
+	  TypeDeclaration
+	| FunctionDeclaration
+	| VariableDeclaration
+	.
+
+TypeDeclaration ->
+	  TYP IDENTIFIER
+	  	COLON Type
+	.
+
+FunctionDeclaration ->
+	  FUN IDENTIFIER
+		OPENING_PARENTHESIS ParametersOpt CLOSING_PARENTHESIS
+		COLON Type
+		FunctionBodyOpt
+	.
+
+ParametersOpt ->
+	  #
+	| Parameters
+	.
+
+Parameters ->
+	  Parameter
+	| Parameters COMMA Parameter
+	.
+
+Parameter ->
+	  IDENTIFIER COLON Type
+	.
+	
+FunctionBodyOpt ->
+	  #
+	| ASSIGN Expression
+	.
+
+VariableDeclaration ->
+	  VAR IDENTIFIER
+	  	COLON Type
+	.
+
+Type ->
+	  INTEGER
+	| BOOLEAN
+	| CHAR
+	| STRING
+	| VOID
+	| ARR OPENING_BRACKET Expression CLOSING_BRACKET Type
+	| REC OPENING_BRACE Components CLOSING_BRACE
+	| PTR Type
+	| IDENTIFIER
+	.
+
+Components ->
+	  Component
+	| Components COMMA Component
+	.
+
+Component ->
+	  IDENTIFIER COLON Type
+	.

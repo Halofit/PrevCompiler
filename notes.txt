@@ -1,0 +1,61 @@
+
+------------First------------------
+
+No extensions plz
+0x65 -> not a hex constant
+	actually has to be recognised as
+		0		-> int const
+		x65		-> identifier
+
+Any new function should be private in one file (one class)
+
+xml -> [position] token, lexeme (when needed) representation
+	position line,column of first and last character  ---> starts with one
+
+call log before returning from lexAn() function to get xml
+
+put xml & xsl into chrome to get visual report
+
+Report errors with function in report or throw CompilerError
+
+oddaja: 63120275-01.zip
+
+NEEDS TO BE THE SAME STRUCTURE AS IN prev-01.zip
+ADD three positive and three negative examples to Moodle
+
+LEXER:
+
+
+------------Second------------------
+
+Parser -> Syntax analysis ll(1) parser
+
+recursive descent
+there must not be any left recursive productions
+transform into ll(1) form from of lr(1) grammar
+	- left recursion elimination
+	- left factoring
+
+Tool to check -> mdaines.github.io/grammophone/
+Check parsing table
+	- Transform -> try to get ll(1)
+
+	Trick for left recursive problems:
+		E -> E+T | E-T | T
+
+				|
+				|
+				V
+
+		E  -> TE'
+		E' -> +TE' | -TE' | epsilon
+
+Get parsing table ---> fuct for symbol -> switch(input) case options .... default: error
+
+When writing functions for rules -> begLog, endLog
+
+Error recovery ->
+	- insert random correct symbol
+	- delete tokens from id until we match
+	- inspect what follows th next non-termal symbols
+		(if T skip until find a symbol in Follow(T) -> then remove from stack) -> example skip until next ; in Java

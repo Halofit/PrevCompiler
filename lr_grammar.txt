@@ -1,0 +1,75 @@
+Program -> Expression .
+Expression -> AssignmentExpression .
+Expression -> Expression where Declarations end .
+Expressions -> Expression .
+Expressions -> Expressions comma Expression .
+AssignmentExpression -> DisjunctiveExpression .
+AssignmentExpression -> DisjunctiveExpression assign DisjunctiveExpression .
+DisjunctiveExpression -> ConjunctiveExpression .
+DisjunctiveExpression -> DisjunctiveExpression or ConjunctiveExpression .
+ConjunctiveExpression -> RelationalExpression .
+ConjunctiveExpression -> ConjunctiveExpression and RelationalExpression .
+RelationalExpression -> AdditiveExpression .
+RelationalExpression -> AdditiveExpression equ AdditiveExpression .
+RelationalExpression -> AdditiveExpression neq AdditiveExpression .
+RelationalExpression -> AdditiveExpression lth AdditiveExpression .
+RelationalExpression -> AdditiveExpression gth AdditiveExpression .
+RelationalExpression -> AdditiveExpression leq AdditiveExpression .
+RelationalExpression -> AdditiveExpression geq AdditiveExpression .
+AdditiveExpression -> AdditiveExpression add MultiplicativeExpression .
+AdditiveExpression -> AdditiveExpression sub MultiplicativeExpression .
+AdditiveExpression -> MultiplicativeExpression .
+MultiplicativeExpression -> MultiplicativeExpression mul PrefixExpression .
+MultiplicativeExpression -> MultiplicativeExpression div PrefixExpression .
+MultiplicativeExpression -> MultiplicativeExpression mod PrefixExpression .
+MultiplicativeExpression -> PrefixExpression .
+PrefixExpression -> PostfixExpression .
+PrefixExpression -> add PrefixExpression .
+PrefixExpression -> sub PrefixExpression .
+PrefixExpression -> not PrefixExpression .
+PrefixExpression -> mem PrefixExpression .
+PrefixExpression -> lbracket Type rbracket PrefixExpression .
+PostfixExpression -> AtomicExpression .
+PostfixExpression -> PostfixExpression lbracket Expression rbracket .
+PostfixExpression -> PostfixExpression dot IDENTIFIER .
+PostfixExpression -> PostfixExpression val .
+AtomicExpression -> INTEGER .
+AtomicExpression -> BOOLEAN .
+AtomicExpression -> CHAR .
+AtomicExpression -> STRING .
+AtomicExpression -> null .
+AtomicExpression -> none .
+AtomicExpression -> IDENTIFIER ArgumentsOpt .
+AtomicExpression -> lparen Expressions rparen .
+AtomicExpression -> if Expression then Expression else Expression end .
+AtomicExpression -> for IDENTIFIER assign Expression comma Expression colon Expression end .
+AtomicExpression -> while Expression colon Expression end .
+ArgumentsOpt ->  .
+ArgumentsOpt -> lparen Expressions rparen .
+Declarations -> Declaration .
+Declarations -> Declarations Declaration .
+Declaration -> TypeDeclaration .
+Declaration -> FunctionDeclaration .
+Declaration -> VariableDeclaration .
+TypeDeclaration -> typ IDENTIFIER colon Type .
+FunctionDeclaration -> fun IDENTIFIER lparen ParametersOpt rparen colon Type FunctionBodyOpt .
+ParametersOpt ->   .
+ParametersOpt -> Parameters .
+Parameters -> Parameter .
+Parameters -> Parameters comma Parameter .
+Parameter -> IDENTIFIER colon Type .
+FunctionBodyOpt ->   .
+FunctionBodyOpt -> assign Expression .
+VariableDeclaration -> var IDENTIFIER colon Type .
+Type -> integer .
+Type -> boolean .
+Type -> char .
+Type -> string .
+Type -> void .
+Type -> arr lbracket Expression rbracket Type .
+Type -> rec lbrace Components rbrace .
+Type -> ptr Type .
+Type -> IDENTIFIER .
+Components -> Component .
+Components -> Components comma Component .
+Component -> IDENTIFIER colon Type .
