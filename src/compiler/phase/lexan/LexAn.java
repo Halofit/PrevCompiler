@@ -83,11 +83,11 @@ public class LexAn extends Phase {
 	}
 
 	//Lang definitions
-	/*
+
 	private static final String[] symbols =
 			{"+", "&", "=", ":", ",", "}", "]", ")", ".", "/", "==", ">=", ">",
 					"<=", "<", "@", "%", "*", "!=", "!", "{", "[", "(", "|", "-", "^"};
-	*/
+
 	private static final Character[] symbols_starters =  //also includes symbol enders '='
 			{'+', '&', '=', ':', ',', '}', ']', ')', '.', '/', '=', '>', '>',
 					'<', '<', '@', '%', '*', '!', '!', '{', '[', '(', '|', '-', '^'};
@@ -249,7 +249,7 @@ public class LexAn extends Phase {
 						break;
 					case SYMBOL:
 						//TODO check assumption -> The only length 2 symbols end with '='
-						if (c == '=') {
+						if(Arrays.asList(symbols).contains(lexeme.toString())){
 							endFlag = EndFlag.END;
 						} else {
 							endFlag = EndFlag.END_PB;
@@ -293,9 +293,6 @@ public class LexAn extends Phase {
 						this.currLine++;
 					}
 					clearLexer();
-				} else if (endFlag == EndFlag.NONE) {
-				} else {
-					throw new LexAnError(getPosition() + " Unknown EndFlag!");
 				}
 			} // the read char loop
 
@@ -591,7 +588,7 @@ public class LexAn extends Phase {
 						return Symbol.Token.VAL;
 
 					default:
-						throw new LexAnError(getPosition() + " Unknown symbol <" + lexeme + ">");
+						throw new LexAnError(getPosition() + " Unknown symbol || " + lexeme + " ||");
 				}
 			case EOF:
 				return Symbol.Token.EOF;

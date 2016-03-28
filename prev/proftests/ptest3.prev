@@ -1,0 +1,5 @@
+(pi^=3, i=3)
+where
+  var pi:ptr integer
+  var i:integer
+end

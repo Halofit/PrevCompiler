@@ -2,14 +2,17 @@
 # START GOOGLE CHROME WITH --allow-file-access-from-files
 #
 
+bindir = ../out/production/Compiler
+xsldir = ./xsl
+
 %.abstr.xml	: %.prev
-	java -classpath ../prg/bin compiler.Main --xsldir=../prg/xsl --phase=abstr --loggedphases=abstr $<
+	java -classpath $(bindir) compiler.Main --xsldir=$(xsldir) --phase=abstr --loggedphases="abstr" $<
 
 %.synan.xml	: %.prev
-	java -classpath ../prg/bin compiler.Main --xsldir=../prg/xsl --phase=synan --loggedphases=synan $<
+	java -classpath $(bindir) compiler.Main --xsldir=$(xsldir) --phase=synan --loggedphases=synan $<
 
 %.lexan.xml	: %.prev
-	java -classpath ../prg/bin compiler.Main --xsldir=../prg/xsl --phase=lexan --loggedphases=lexan $<
+	java -classpath $(bindir) compiler.Main --xsldir=$(xsldir) --phase=lexan --loggedphases=lexan $<
 
-clean		:
-	'rm' -fr *.xml
+clean:
+	del *.xml

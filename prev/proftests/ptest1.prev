@@ -1,0 +1,4 @@
+(i+3=3,1+i)
+where
+  var i:integer
+end

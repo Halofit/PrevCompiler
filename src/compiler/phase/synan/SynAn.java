@@ -37,47 +37,51 @@ public class SynAn extends Phase {
 	public SynAn(Task task) {
 		super(task, "synan");
 		this.lexAn = new LexAn(task);
-		this.logger.setTransformer(//
-				new Transformer() {
-					// This transformer produces the
-					// left-most derivation.
 
-					private String nodeName(Node node) {
-						Element element = (Element) node;
-						String nodeName = element.getTagName();
-						if (nodeName.equals("nont")) {
-							return element.getAttribute("name");
-						}
-						if (nodeName.equals("symbol")) {
-							return element.getAttribute("name");
-						}
-						return null;
-					}
+		if(this.logger != null){
 
-					private void leftMostDer(Node node) {
-						if (((Element) node).getTagName().equals("nont")) {
-							String nodeName = nodeName(node);
-							NodeList children = node.getChildNodes();
-							StringBuilder production = new StringBuilder();
-							production.append(nodeName).append(" -->");
-							for (int childIdx = 0; childIdx < children.getLength(); childIdx++) {
-								Node child = children.item(childIdx);
-								String childName = nodeName(child);
-								production.append(" ").append(childName);
+			this.logger.setTransformer(
+					new Transformer() {
+						// This transformer produces the
+						// left-most derivation.
+
+						private String nodeName(Node node) {
+							Element element = (Element) node;
+							String nodeName = element.getTagName();
+							if (nodeName.equals("nont")) {
+								return element.getAttribute("name");
 							}
-							Report.info(production.toString());
-							for (int childIdx = 0; childIdx < children.getLength(); childIdx++) {
-								Node child = children.item(childIdx);
-								leftMostDer(child);
+							if (nodeName.equals("symbol")) {
+								return element.getAttribute("name");
+							}
+							return null;
+						}
+
+						private void leftMostDer(Node node) {
+							if (((Element) node).getTagName().equals("nont")) {
+								String nodeName = nodeName(node);
+								NodeList children = node.getChildNodes();
+								StringBuilder production = new StringBuilder();
+								production.append(nodeName).append(" -->");
+								for (int childIdx = 0; childIdx < children.getLength(); childIdx++) {
+									Node child = children.item(childIdx);
+									String childName = nodeName(child);
+									production.append(" ").append(childName);
+								}
+								Report.info(production.toString());
+								for (int childIdx = 0; childIdx < children.getLength(); childIdx++) {
+									Node child = children.item(childIdx);
+									leftMostDer(child);
+								}
 							}
 						}
-					}
 
-					public Document transform(Document doc) {
-						leftMostDer(doc.getDocumentElement().getFirstChild());
-						return doc;
-					}
-				});
+						public Document transform(Document doc) {
+							leftMostDer(doc.getDocumentElement().getFirstChild());
+							return doc;
+						}
+					});
+		}
 	}
 
 	/**
@@ -165,6 +169,13 @@ public class SynAn extends Phase {
 		throw new SynAnError("[" + funName + "]" + laSymbol.getPosition() + " | " + laSymbol.token);
 	}
 
+	private void signalError(String funName, String expect) {
+		throw new SynAnError("[" + funName + "]"
+				+ " At " + laSymbol.getPosition()
+				+ " got " + laSymbol.token
+				+ " expected " + expect);
+	}
+
 
 	// All these methods are a part of a recursive descent implementation of an
 	// LL(1) parser.
@@ -175,7 +186,8 @@ public class SynAn extends Phase {
 		Expr expr = parseExpression();
 
 		if (laSymbol.token != Symbol.Token.EOF) {
-			throw new SynAnError("Symbol at the end is not EOF, not all input was consumed.");
+			throw new SynAnError("At " + laSymbol.getPosition()
+					+ " expected EOF, got" + laSymbol.token);
 		}
 
 		endLog();
@@ -221,7 +233,7 @@ public class SynAn extends Phase {
 
 			default:
 				expr = null;
-				signalError("ExpressionPrime");
+				signalError("ExpressionPrime", "where or end of expr");
 
 		}
 		endLog();
@@ -257,7 +269,7 @@ public class SynAn extends Phase {
 				break;
 			default:
 				exprs = null;
-				signalError("ExpressionsPrime");
+				signalError("ExpressionsPrime", "comma (,) or closing parethesis |)|");
 		}
 		endLog();
 		return exprs;
@@ -303,7 +315,7 @@ public class SynAn extends Phase {
 
 			default:
 				expr = null;
-				signalError("AssignmentExpressionPrime");
+				signalError("AssignmentExpressionPrime", "assignment or next statement");
 		}
 
 		endLog();
@@ -717,7 +729,7 @@ public class SynAn extends Phase {
 
 			default:
 				expr = null;
-				signalError("PostfixExpressionPrime");
+				signalError("PostfixExpressionPrime", "comma or end of expression");
 		}
 		endLog();
 		return expr;
@@ -766,12 +778,21 @@ public class SynAn extends Phase {
 			case IDENTIFIER:
 				atom = skip(Symbol.Token.IDENTIFIER);
 				LinkedList<Expr> args = parseArgumentsOpt();
-				expr = new FunCall(laSymbol, atom.lexeme, args);
+				if(args.isEmpty()){
+					expr = new VarName(laSymbol, atom.lexeme);
+				}else{
+					expr = new FunCall(laSymbol, atom.lexeme, args);
+				}
+
 				break;
 			case OPENING_PARENTHESIS:
 				skip(Symbol.Token.OPENING_PARENTHESIS);
 				LinkedList<Expr> exprs = parseExpressions();
-				expr = new Exprs(laSymbol, exprs);
+				if(exprs.size() == 1){
+					expr = exprs.get(0);
+				}else{
+					expr = new Exprs(laSymbol, exprs);
+				}
 				skip(Symbol.Token.CLOSING_PARENTHESIS);
 				break;
 			//AtomicExpression -> if Expression then Expression else Expression end .
@@ -901,7 +922,7 @@ public class SynAn extends Phase {
 				break;
 			default:
 				decls = null;
-				signalError("DeclarationsPrime");
+				signalError("DeclarationsPrime", "end or a declaration");
 		}
 
 		endLog();
@@ -1017,7 +1038,7 @@ public class SynAn extends Phase {
 				break;
 			default:
 				params = null;
-				signalError("ParametersPrime");
+				signalError("ParametersPrime", "comma <,> or closing paren |)|");
 		}
 		endLog();
 		return params;

@@ -1,0 +1,10 @@
+
+1+i+ii+p.x+p.y[3]+i
+where
+  var p:point
+  typ point:rec{x:integer,y:arr[5]int}
+  typ int:integer
+  var ii:integer
+  var i:int
+  typ a:arr[10+1]int
+end
