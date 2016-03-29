@@ -1,0 +1,5 @@
+quicksort(a,b,c,d) where
+fun a(a:b,b:c,c:d):integer 
+fun quicksort(A:ptr integer, lo:integer, hi:integer):ptr integer= if lo < hi then (p = partition(A, lo, hi), quicksort(A, lo, p - 1), quicksort(A, p + 1, hi),A) else A end
+fun partition(A:ptr integer, lo:integer, hi:integer):integer= (pivot = A(hi), i = lo, for j = lo, hi-1: if A(j) <= pivot then (swap(A(i),A(j)), i = i + 1) else null end end, swap(A(i),A(hi)), i)
+end
