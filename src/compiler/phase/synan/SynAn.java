@@ -39,7 +39,7 @@ public class SynAn extends Phase {
 		super(task, "synan");
 		this.lexAn = new LexAn(task);
 
-		if(this.logger != null){
+		if (this.logger != null) {
 
 			this.logger.setTransformer(
 					new Transformer() {
@@ -341,7 +341,7 @@ public class SynAn extends Phase {
 			case OR:
 				skip(Symbol.Token.OR);
 				Expr op2 = parseConjunctiveExpression();
-				Expr conjunctiveExpr  = new BinExpr(new Position(op1,op2), BinExpr.Oper.OR, op1, op2);
+				Expr conjunctiveExpr = new BinExpr(new Position(op1, op2), BinExpr.Oper.OR, op1, op2);
 				expr = parseDisjunctiveExpressionPrime(conjunctiveExpr);
 				break;
 			case WHERE:
@@ -794,9 +794,9 @@ public class SynAn extends Phase {
 			case IDENTIFIER:
 				atom = skip(Symbol.Token.IDENTIFIER);
 				LinkedList<Expr> args = parseArgumentsOpt();
-				if(args.isEmpty()){
+				if (args == null) {
 					expr = new VarName(new Position(atom), atom.lexeme);
-				}else{
+				} else {
 					expr = new FunCall(new Position(atom, args.getLast()), atom.lexeme, args);
 				}
 
@@ -805,9 +805,9 @@ public class SynAn extends Phase {
 				Symbol lparen = skip(Symbol.Token.OPENING_PARENTHESIS);
 				LinkedList<Expr> exprs = parseExpressions();
 				Symbol rparen = skip(Symbol.Token.CLOSING_PARENTHESIS);
-				if(exprs.size() == 1){
+				if (exprs.size() == 1) {
 					expr = exprs.get(0);
-				}else{
+				} else {
 					expr = new Exprs(new Position(lparen, rparen), exprs);
 				}
 				break;
@@ -857,8 +857,8 @@ public class SynAn extends Phase {
 		return expr;
 	}
 
-	//ArgumentsOpt -> .
-	//ArgumentsOpt -> lparen Expressions rparen .
+	// ArgumentsOpt -> .
+	// ArgumentsOpt -> lparen ArgumentsOpt' .
 	private LinkedList<Expr> parseArgumentsOpt() {
 		begLog("ArgumentsOpt");
 		LinkedList<Expr> exprs;
@@ -866,8 +866,7 @@ public class SynAn extends Phase {
 		switch (laSymbol.token) {
 			case OPENING_PARENTHESIS:
 				skip(Symbol.Token.OPENING_PARENTHESIS);
-				exprs = parseExpressions();
-				skip(Symbol.Token.CLOSING_PARENTHESIS);
+				exprs = parseArgumentsOptPrime();
 				break;
 
 			case WHERE:
@@ -899,11 +898,32 @@ public class SynAn extends Phase {
 			case FUN:
 			case VAR:
 			case EOF:
-				exprs = new LinkedList<>();
+				exprs = null;
 				break;
 			default:
 				exprs = null;
 				signalError("ArgumentsOpt");
+		}
+
+		endLog();
+		return exprs;
+	}
+
+
+	//ArgumentsOpt' -> Expressions rparen .
+	//ArgumentsOpt' -> rparen .
+	private LinkedList<Expr> parseArgumentsOptPrime() {
+		begLog("ArgumentsOpt");
+		LinkedList<Expr> exprs;
+
+		switch (laSymbol.token) {
+			case CLOSING_PARENTHESIS:
+				exprs = new LinkedList<>();
+				skip(Symbol.Token.CLOSING_PARENTHESIS);
+				break;
+			default:
+				exprs = parseExpressions();
+				skip(Symbol.Token.CLOSING_PARENTHESIS);
 		}
 
 		endLog();

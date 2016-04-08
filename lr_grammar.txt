@@ -46,6 +46,7 @@ AtomicExpression -> for IDENTIFIER assign Expression comma Expression colon Expr
 AtomicExpression -> while Expression colon Expression end .
 ArgumentsOpt ->  .
 ArgumentsOpt -> lparen Expressions rparen .
+ArgumentsOpt -> lparen rparen .
 Declarations -> Declaration .
 Declarations -> Declarations Declaration .
 Declaration -> TypeDeclaration .
