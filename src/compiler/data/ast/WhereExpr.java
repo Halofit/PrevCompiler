@@ -12,7 +12,7 @@ public class WhereExpr extends Expr {
 
 	public final Expr expr;
 
-	private final Decl[] decls;
+	public final Decl[] decls;
 
 	public WhereExpr(Position position, Expr expr, LinkedList<Decl> decls) {
 		super(position);

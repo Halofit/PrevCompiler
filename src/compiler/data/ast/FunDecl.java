@@ -10,7 +10,7 @@ import compiler.data.ast.code.*;
  */
 public class FunDecl extends Decl {
 
-	private final ParDecl[] pars;
+	public final ParDecl[] pars;
 	
 	public FunDecl(Position position, String name, LinkedList<ParDecl> pars, Type type) {
 		super(position, name, type);

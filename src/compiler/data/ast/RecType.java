@@ -10,7 +10,7 @@ import compiler.data.ast.code.*;
  */
 public class RecType extends Type {
 	
-	private final CompDecl[] comps;
+	public final CompDecl[] comps;
 
 	public RecType(Position position, LinkedList<CompDecl> comps) {
 		super(position);
