@@ -27,6 +27,10 @@ public class Exprs extends Expr {
 		return exprs[e];
 	}
 
+	public Expr lastExpr(){
+		return exprs[exprs.length-1];
+	}
+
 	@Override
 	public void accept(Visitor visitor) {
 		visitor.visit(this);

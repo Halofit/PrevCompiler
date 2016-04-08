@@ -86,3 +86,74 @@ a.i  ->  (rec, a, i)
 
 ------------Fourth------------------
 
+Semantic analyisis notes:
+	EvalDecl: namespace scope in evalDecl
+	EvalType: tipi
+
+
+		a.c
+			a-> v evalDecl
+			c-> v evalType
+
+		DECL(i) -> vrne deklaracijo i-ja
+		DECL_tau(c) -> pogleda dekl v rekordu ?
+
+		[[DECL(typ-name)]]_typ = Tau
+		-------------
+		[[typ-name]]_typ = Tau
+
+			&&&
+
+		[[type]]_typ = Tau
+		-------------
+		[[typ name:type]]_typ = Tau
+
+			pomeni
+
+		typ int:integer
+
+		pravilo 3.4.1 2 pravilo -> integer -> tip integer
+		pravilo 3.4.3 1 pravilo -> deklaracija je tipa integer
+
+		var i: int
+
+		int -> ime zato DECL(int) = type int:integer (kaže na deklaracijo -> name resolver to dobi)
+		tip int-a je integer
+		zato je vse tipa integer (3.4.3 3 pravilo)
+
+
+	ZA RECORDE
+
+		[[expr]]_typ = Tau [[DECL_tau(comp-name)]]_typ = Tau'   #implicitno vemo da je Tau record tipa, ker samo record naredi namespace
+		-------------
+		[[expr.comp-name]]_typ = Tau'
+
+		var r:rec{i: integer}
+				| |		\
+				| |		 integer
+				| \------------- vse je istga tipa
+				\--------rec(integer)
+		\----vse je rec(integer)
+
+		r.i? ce je r ime
+		| \
+		|
+		 \ tip je rec(integer)
+
+
+	WHERE
+		pri deklaracijah (najprej imena)
+		tipi -> spremenljivke -> funkcije
+		2 preleta -> najprej deklaracije (imena), nato implementacije
+
+		typ a:b
+		typ b:integer
+
+		Prvi prelet:  TypDef(a,?), TypDef(b,?)
+		Drugi prelet: TypDef(a, ? -> TypDef(b,?)) ugotovimo da je TypName(b,? -> IntegerTyp))
+
+		IntegerTyp je atribut AtomType(INTEGER) ki je obešen na TypeDef
+		TypName(b) pod TypDef(a) ima atribut kazalec na TypeName(b,?)
+
+Typ.java
+	actualType -> naj bi vrnu dejanski tip

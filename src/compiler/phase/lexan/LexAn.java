@@ -248,7 +248,6 @@ public class LexAn extends Phase {
 						}
 						break;
 					case SYMBOL:
-						//TODO check assumption -> The only length 2 symbols end with '='
 						if(Arrays.asList(symbols).contains(lexeme.toString())){
 							endFlag = EndFlag.END;
 						} else {

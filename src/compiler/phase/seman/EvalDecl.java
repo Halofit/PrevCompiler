@@ -1,9 +1,7 @@
 package compiler.phase.seman;
 
-import compiler.common.report.*;
-import compiler.data.ast.*;
-import compiler.data.ast.attr.*;
-import compiler.data.ast.code.*;
+import compiler.data.ast.attr.Attributes;
+import compiler.data.ast.code.FullVisitor;
 
 /**
  * Declaration resolver.

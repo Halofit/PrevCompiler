@@ -5,8 +5,12 @@
 bindir = ../out/production/Compiler
 xsldir = ./xsl
 
+
+%.seman.xml	: %.prev
+	java -classpath $(bindir) compiler.Main --xsldir=$(xsldir) --phase=seman --loggedphases=seman $<
+
 %.abstr.xml	: %.prev
-	java -classpath $(bindir) compiler.Main --xsldir=$(xsldir) --phase=abstr --loggedphases="abstr" $<
+	java -classpath $(bindir) compiler.Main --xsldir=$(xsldir) --phase=abstr --loggedphases=abstr $<
 
 %.synan.xml	: %.prev
 	java -classpath $(bindir) compiler.Main --xsldir=$(xsldir) --phase=synan --loggedphases=synan $<
@@ -14,5 +18,6 @@ xsldir = ./xsl
 %.lexan.xml	: %.prev
 	java -classpath $(bindir) compiler.Main --xsldir=$(xsldir) --phase=lexan --loggedphases=lexan $<
 
+	
 clean:
 	del *.xml
