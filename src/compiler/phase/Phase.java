@@ -18,7 +18,7 @@ public abstract class Phase implements AutoCloseable {
 
 	public Phase(Task task, String phaseName) {
 		this.task = task;
-		if (this.task.loggedPhases.contains(phaseName)) {
+		if (this.task.loggedPhases.indexOf(phaseName) != -1) {
 			logger = new Logger(this.task.xmlFName + "." + phaseName + ".xml",
 					this.task.xslDName + "/" + phaseName + ".xsl");
 		} else
