@@ -187,7 +187,7 @@ public class SymbolTable {
 	public Decl fndDecl(String nameSpace, String name) throws CannotFndNameDecl {
 		LinkedList<ScopedDecl> scopedDecls = symbolTable.get(nameSpace + name);
 		if (scopedDecls == null)
-			throw new CannotFndNameDecl("");
+			throw new CannotFndNameDecl("Cannot find symbol " + name + " in namespace" + nameSpace);
 		else
 			return scopedDecls.peekFirst().decl;
 	}

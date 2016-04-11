@@ -1,0 +1,10 @@
+for i=0,100 :
+	putstr(itostr([integer]buf[i]))
+end
+where
+	typ int: integer
+	fun putstr(s:string):void
+	fun itostr(i:int):string
+	var buf: arr[100] int
+	var i: integer
+end

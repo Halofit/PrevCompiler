@@ -1,7 +1,9 @@
 package compiler.phase.seman;
 
-import compiler.*;
-import compiler.phase.*;
+import compiler.Task;
+import compiler.common.report.PhaseErrors.SemAnError;
+import compiler.common.report.Position;
+import compiler.phase.Phase;
 
 /**
  * Semantic analyzer.
@@ -32,6 +34,10 @@ public class SemAn extends Phase {
 		if (logger != null)
 			(new SemAnToXML(logger, true, task.prgAttrs)).visit(task.prgAST);
 		super.close();
+	}
+
+	public static void signalError(String message, Position pos){
+		throw new SemAnError(pos.toString() + "|" + message);
 	}
 
 }

@@ -1,7 +1,6 @@
 package compiler.phase.seman;
 
-import compiler.common.report.CompilerError;
-import compiler.common.report.PhaseErrors.SemAnError;
+
 import compiler.data.ast.*;
 import compiler.data.ast.attr.Attributes;
 import compiler.data.ast.code.FullVisitor;
@@ -31,6 +30,16 @@ public class EvalDecl extends FullVisitor {
 	 */
 	private SymbolTable symbolTable = new SymbolTable();
 
+
+	private static long namespaceGenerator = 0L;
+
+	private static String namespaceNameGen() {
+		Long l = namespaceGenerator;
+		namespaceGenerator++;
+		return l.toString();
+	}
+
+
 	@Override
 	public void visit(WhereExpr whereExpr) {
 		symbolTable.enterScope();
@@ -46,11 +55,7 @@ public class EvalDecl extends FullVisitor {
 
 	@Override
 	public void visit(FunDef funDef) {
-		try {
-			symbolTable.insDecl(funDef.name, funDef);
-		} catch (CannotInsNameDecl ex) {
-			throw new SemAnError(ex.getMessage());
-		}
+		symbolTable.insDecl(funDef.name, funDef);
 		funDef.type.accept(this);
 
 		symbolTable.enterScope();
@@ -66,11 +71,7 @@ public class EvalDecl extends FullVisitor {
 
 	@Override
 	public void visit(FunDecl funDecl) {
-		try {
-			symbolTable.insDecl(funDecl.name, funDecl);
-		} catch (CannotInsNameDecl ex) {
-			throw new SemAnError(ex.getMessage());
-		}
+		symbolTable.insDecl(funDecl.name, funDecl);
 
 		funDecl.type.accept(this);
 
@@ -91,40 +92,62 @@ public class EvalDecl extends FullVisitor {
 	@Override
 	public void visit(ParDecl parDecl) {
 		super.visit(parDecl);
-		try {
-			symbolTable.insDecl(parDecl.name, parDecl);
-		} catch (CannotInsNameDecl ex) {
-			throw new SemAnError(ex.getMessage());
-		}
+		symbolTable.insDecl(parDecl.name, parDecl);
 	}
 
 	@Override
 	public void visit(TypeDecl typDecl) {
 		super.visit(typDecl);
-		try {
-			symbolTable.insDecl(typDecl.name, typDecl);
-		} catch (CannotInsNameDecl ex) {
-			throw new SemAnError(ex.getMessage());
-		}
+		symbolTable.insDecl(typDecl.name, typDecl);
 	}
 
 	@Override
 	public void visit(VarDecl varDecl) {
 		super.visit(varDecl);
-		try {
-			symbolTable.insDecl(varDecl.name, varDecl);
-		} catch (CannotInsNameDecl ex) {
-			throw new SemAnError(ex.getMessage());
-		}
+		symbolTable.insDecl(varDecl.name, varDecl);
 	}
 
 	@Override
 	public void visit(RecType recType) {
-		symbolTable.enterNamespace(recType.);
-		for(CompDecl cd : recType.comps){
-
+		String nsname = namespaceNameGen();
+		symbolTable.enterNamespace(nsname);
+		for (CompDecl cd : recType.comps) {
+			symbolTable.insDecl(nsname, cd.name, cd);
 			cd.accept(this);
 		}
+		symbolTable.leaveNamespace();
 	}
+
+
+	@Override
+	public void visit(TypeName typeName) {
+		super.visit(typeName);
+
+		Decl decl = symbolTable.fndDecl(typeName.name());
+		attrs.declAttr.set(typeName, decl);
+	}
+
+	@Override
+	public void visit(VarName varName) {
+		super.visit(varName);
+
+		Decl decl = symbolTable.fndDecl(varName.name());
+		attrs.declAttr.set(varName, decl);
+	}
+
+	@Override
+	public void visit(CompName compName) {
+		super.visit(compName);
+		//TODO you do nothing here, since you don't actually know what namespace you belong to
+	}
+
+	@Override
+	public void visit(FunCall funCall) {
+		Decl decl = symbolTable.fndDecl(funCall.name());
+		attrs.declAttr.set(funCall, decl);
+
+		super.visit(funCall);
+	}
+
 }
 
