@@ -12,7 +12,7 @@ public class FunCall extends Expr implements Declarable {
 
 	private String name;
 	
-	private final Expr[] args;
+	public final Expr[] args;
 
 	public FunCall(Position position, String name, LinkedList<Expr> args) {
 		super(position);

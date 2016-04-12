@@ -6,6 +6,8 @@ import compiler.data.ast.attr.Attributes;
 import compiler.data.ast.code.FullVisitor;
 import compiler.data.typ.*;
 
+import java.util.LinkedList;
+
 /**
  * Type checker.
  * <p>
@@ -29,6 +31,15 @@ public class EvalTyp extends FullVisitor {
 	 * The symbol table.
 	 */
 	private SymbolTable symbolTable = new SymbolTable();
+
+	//id of namespaces
+	private static long namespaceGenerator = 0L;
+
+	private static String namespaceNameGen() {
+		Long l = namespaceGenerator;
+		namespaceGenerator++;
+		return l.toString();
+	}
 
 	// TODO
 
@@ -179,16 +190,25 @@ public class EvalTyp extends FullVisitor {
 				break;
 			case REC:
 				//TODO determine types of components
+				//TODO resolve name of components
 				if (op1T instanceof RecTyp) {
 					VarName recVar = (VarName) op1;
 					Decl recDecl = attrs.declAttr.get(recVar);
-					if(recDecl == null) SemAn.signalError("Unrecognised record use.", binExpr);
+					if (recDecl == null) SemAn.signalError("Undeclared record use.", binExpr);
 					Typ recType = attrs.typAttr.get(recDecl);
-					if(recType == null) SemAn.signalError("Cannot determine the record's type.", binExpr);
+					if (recType == null) SemAn.signalError("Cannot determine the record's type.", binExpr);
+					if (!(op2 instanceof CompName))
+						SemAn.signalError("Right side of . (dot) operator must be a component name.", binExpr);
+
+					//Resolve the component name
+					Decl decl = symbolTable.fndDecl(((Integer) recType.hashCode()).toString(), ((VarName) op1).name());
+					if (decl == null) SemAn.signalError("Cannot resolve component name.", binExpr);
+					attrs.declAttr.set((CompName) op2, decl);
+
 					Typ compType = attrs.typAttr.get(op2);
-					if(compType == null) SemAn.signalError("Cannot determine component's type.", binExpr);
+					if (compType == null) SemAn.signalError("Cannot determine component's type.", binExpr);
 					binE = compType;
-				}else{
+				} else {
 					SemAn.signalError("Can only use . (dot) operator on record types.", binExpr);
 				}
 				break;
@@ -202,47 +222,128 @@ public class EvalTyp extends FullVisitor {
 	public void visit(CastExpr castExpr) {
 		super.visit(castExpr);
 
-		
+		Typ castTyp = attrs.typAttr.get(castExpr.type);
+		Typ exprTyp = attrs.typAttr.get(castExpr.expr);
+
+		if (!(castTyp instanceof PtrTyp)
+				|| !(exprTyp instanceof PtrTyp)
+				|| !(((PtrTyp) exprTyp).baseTyp instanceof VoidTyp)) {
+			SemAn.signalError("Can only cast void pointer types to other ptr types", castExpr);
+		}
+
+		attrs.typAttr.set(castExpr, castTyp);
 	}
 
 	@Override
 	public void visit(CompDecl compDecl) {
 		super.visit(compDecl);
+
+		Typ compType = attrs.typAttr.get(compDecl.type);
+		if (compType == null) SemAn.signalError("Unknown type in component declaration.", compDecl);
+		attrs.typAttr.set(compDecl, compType);
 	}
 
 	@Override
 	public void visit(CompName compName) {
 		super.visit(compName);
+		Typeable t = attrs.declAttr.get(compName);
+		if (t == null) SemAn.signalError("Cannot resolve component name", compName);
+		Typ compType = attrs.typAttr.get(t);
+		if (compType == null) SemAn.signalError("Cannot resolve component type", compName);
+		attrs.typAttr.set(compName, compType);
 	}
 
 	@Override
 	public void visit(DeclError declError) {
 		super.visit(declError);
+		SemAn.signalError("DeclError in AST tree, exiting.", declError);
 	}
 
 	@Override
 	public void visit(Exprs exprs) {
 		super.visit(exprs);
+
+		for(Expr e: exprs.exprs){
+			if(attrs.typAttr.get(e) == null) SemAn.signalError("One of expressions has an unindentified type.", exprs);
+		}
+
+		Expr last = exprs.lastExpr();
+		Typ exprsTyp = attrs.typAttr.get(last);
+		if (exprsTyp == null) SemAn.signalError("Cannot find last expressions type.", exprs); //Redundant
+		attrs.typAttr.set(exprs, exprsTyp);
 	}
 
 	@Override
 	public void visit(ExprError exprError) {
 		super.visit(exprError);
+		SemAn.signalError("ExprError in AST tree, exiting.", exprError);
 	}
 
 	@Override
 	public void visit(ForExpr forExpr) {
 		super.visit(forExpr);
+
+		//Do type checking on the for statement
+		if (!(attrs.typAttr.get(forExpr.var) instanceof IntegerTyp)) {
+			SemAn.signalError("For interation variable must be an integer.", forExpr);
+		}
+
+		if (!(attrs.typAttr.get(forExpr.loBound) instanceof IntegerTyp)) {
+			SemAn.signalError("For lower bound must be an integer.", forExpr);
+		}
+
+		if (!(attrs.typAttr.get(forExpr.hiBound) instanceof IntegerTyp)) {
+			SemAn.signalError("For high bound must be an integer.", forExpr);
+		}
+
+		if (attrs.typAttr.get(forExpr.body) == null) {
+			SemAn.signalError("For body must have a type.", forExpr);
+		}
+
+		//For statement is of tyop void
+		attrs.typAttr.set(forExpr, new VoidTyp());
 	}
 
 	@Override
 	public void visit(FunCall funCall) {
 		super.visit(funCall);
+
+		FunDecl decl = (FunDecl) attrs.declAttr.get(funCall);
+		FunTyp declType = (FunTyp) attrs.typAttr.get(decl);
+		if(decl == null || declType == null) SemAn.signalError("Cannot determine function delaration type.", funCall);
+
+		if(decl.numPars() != funCall.numArgs()) {
+			SemAn.signalError("Argument parity error: expected " + decl.numPars() + "arguments, got " + funCall.numArgs() + ".", funCall);
+		}
+
+		for (int i = 0; i < decl.numPars(); i++) {
+			Typ parTyp = attrs.typAttr.get(decl.par(i));
+			Typ argTyp = attrs.typAttr.get(funCall.arg(i));
+
+			if(parTyp == null) SemAn.signalError("Cannot determine parameter type", funCall);
+			if(argTyp == null) SemAn.signalError("Cannot determine argument type",  funCall);
+
+			if(!parTyp.getClass().equals(argTyp.getClass())){
+				SemAn.signalError("Type mismatch in argument " + i + ".", funCall);
+			}
+		}
+
+		attrs.typAttr.set(funCall, declType.resultTyp);
+
 	}
 
 	@Override
 	public void visit(FunDecl funDecl) {
 		super.visit(funDecl);
+
+		LinkedList<Typ> parTyps = new LinkedList<>();
+		for(ParDecl e: funDecl.pars){
+			Typ t = attrs.typAttr.get(e);
+			if(t == null) SemAn.signalError("Cannot determine param type", funDecl);
+			parTyps.add(t);
+		}
+
+		attrs.typAttr.set(funDecl, new FunTyp(parTyps, ));
 	}
 
 	@Override
@@ -273,6 +374,17 @@ public class EvalTyp extends FullVisitor {
 	@Override
 	public void visit(RecType recType) {
 		super.visit(recType);
+
+		// HACK -  probably rework
+		// Use the hashCode of the object itself.
+		// Hashcodes by default are normally unique, since they represent the internal Java ID
+		String nsname = ((Integer) recType.hashCode()).toString();
+		symbolTable.enterNamespace(nsname);
+		for (CompDecl cd : recType.comps) {
+			symbolTable.insDecl(nsname, cd.name, cd);
+			cd.accept(this);
+		}
+		symbolTable.leaveNamespace();
 	}
 
 	@Override

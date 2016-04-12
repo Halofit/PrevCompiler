@@ -86,7 +86,7 @@ public class EvalDecl extends FullVisitor {
 	@Override
 	public void visit(CompDecl compDecl) {
 		super.visit(compDecl);
-		//TODO check, I belive you do nothing here since you don't know the namespace
+		// TODO check: Do nothing here, read below: ... visit(RecType recType) { ...
 	}
 
 	@Override
@@ -109,13 +109,9 @@ public class EvalDecl extends FullVisitor {
 
 	@Override
 	public void visit(RecType recType) {
-		String nsname = namespaceNameGen();
-		symbolTable.enterNamespace(nsname);
-		for (CompDecl cd : recType.comps) {
-			symbolTable.insDecl(nsname, cd.name, cd);
-			cd.accept(this);
-		}
-		symbolTable.leaveNamespace();
+		super.visit(recType);
+		//TODO check: since symbolsTable is thrown away later, you should do this in EvalTyp.java
+		// components should not be checked here
 	}
 
 

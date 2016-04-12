@@ -10,7 +10,7 @@ import java.util.LinkedList;
  */
 public class Exprs extends Expr {
 
-	private final Expr[] exprs;
+	public final Expr[] exprs;
 	
 	public Exprs(Position position, LinkedList<Expr> exprs) {
 		super(position);
