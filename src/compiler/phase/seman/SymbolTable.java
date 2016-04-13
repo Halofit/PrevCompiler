@@ -48,8 +48,8 @@ public class SymbolTable {
 		symbolTable = new HashMap<String, LinkedList<ScopedDecl>>();
 
 		scope = 0;
-		scopes = new LinkedList<LinkedList<LinkedList<ScopedDecl>>>();
-		scopes.addFirst(new LinkedList<LinkedList<ScopedDecl>>());
+		scopes = new LinkedList<LinkedList<String>>();
+		scopes.addFirst(new LinkedList<String>());
 
 		namespaces = new Stack<String>();
 		namespaces.push("");
@@ -87,23 +87,19 @@ public class SymbolTable {
 	 * flushing out declarations when leaving a scope.
 	 * 
 	 * <p>
-	 * The inner most list is a value from
-	 * {@link compiler.phase.seman.SymbolTable#symbolTable symbolTable}, i.e.,
-	 * all declarations of a single name at different scopes. The middle list
-	 * includes all declarations of all names that has been declared at a
-	 * particular scope, and the outer most list contains all declarations of
-	 * all names that has been declared at all scopes, with the most recent
-	 * scope at the head of the list.
+	 * The inner list includes all names that have been declared at a particular
+	 * scope, and thus the outer list contains all names declared at different
+	 * scopes, with the most recent scope at the head of the list.
 	 * </p>
 	 */
-	private LinkedList<LinkedList<LinkedList<ScopedDecl>>> scopes;
+	private LinkedList<LinkedList<String>> scopes;
 
 	/**
 	 * Enters a new scope.
 	 */
 	public void enterScope() {
 		scope++;
-		scopes.addFirst(new LinkedList<LinkedList<ScopedDecl>>());
+		scopes.addFirst(new LinkedList<String>());
 	}
 
 	/**
@@ -111,8 +107,12 @@ public class SymbolTable {
 	 * current scope.
 	 */
 	public void leaveScope() {
-		for (LinkedList<ScopedDecl> scopedDecls : scopes.peek())
+		for (String name : scopes.peek()) {
+			LinkedList<ScopedDecl> scopedDecls = symbolTable.get(name);
 			scopedDecls.removeFirst();
+			if (scopedDecls.isEmpty())
+				symbolTable.remove(name);
+		}
 		scopes.removeFirst();
 		scope--;
 	}
@@ -140,6 +140,7 @@ public class SymbolTable {
 				scopedDecl.scope = scope;
 				scopedDecl.decl = decl;
 				scopedDecls.addFirst(scopedDecl);
+				scopes.peek().addFirst(nameSpace + name);
 			}
 			symbolTable.put(nameSpace + name, scopedDecls);
 		} else {
@@ -151,7 +152,7 @@ public class SymbolTable {
 				scopedDecl.scope = scope;
 				scopedDecl.decl = decl;
 				scopedDecls.addFirst(scopedDecl);
-				scopes.peek().addFirst(scopedDecls);
+				scopes.peek().addFirst(nameSpace + name);
 			}
 		}
 	}
@@ -186,8 +187,8 @@ public class SymbolTable {
 	 */
 	public Decl fndDecl(String nameSpace, String name) throws CannotFndNameDecl {
 		LinkedList<ScopedDecl> scopedDecls = symbolTable.get(nameSpace + name);
-		if (scopedDecls == null)
-			throw new CannotFndNameDecl("Cannot find symbol " + name + " in namespace" + nameSpace);
+		if ((scopedDecls == null) || (scopedDecls.isEmpty()))
+			throw new CannotFndNameDecl(nameSpace + name);
 		else
 			return scopedDecls.peekFirst().decl;
 	}

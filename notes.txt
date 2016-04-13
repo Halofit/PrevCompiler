@@ -157,3 +157,12 @@ Semantic analyisis notes:
 
 Typ.java
 	actualType -> naj bi vrnu dejanski tip
+
+------------Fifth------------------
+
+Klcini zazpisi
+	Ne za prototipe -> tist je že skompilan
+	za vsako spremenljivko določimo njen dostop
+	a je lokalna/globalna ->
+		lokalne ->
+		globalne -> določi labele (kaj je to?)
