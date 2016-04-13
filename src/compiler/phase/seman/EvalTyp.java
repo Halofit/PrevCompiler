@@ -136,7 +136,6 @@ public class EvalTyp extends FullVisitor {
 			case ASSIGN:
 				//if op1T is typ1 and opt2T is typ2 and typ1 is in memory than this is void type
 				if (op1T.isStructEquivTo(op2T)) {
-					//TODO typ1 is in memory?
 					binE = new VoidTyp();
 				} else {
 					SemAn.signalError("Assignement  operator type mismatch.", binExpr);
