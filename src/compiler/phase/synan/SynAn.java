@@ -704,7 +704,7 @@ public class SynAn extends Phase {
 			case DOT:
 				skip(Symbol.Token.DOT);
 				Symbol id = skip(Symbol.Token.IDENTIFIER);
-				op2 = new VarName(laSymbol, id.lexeme);
+				op2 = new CompName(laSymbol, id.lexeme);
 				postfixExpr = new BinExpr(new Position(op1, op2), BinExpr.Oper.REC, op1, op2);
 				expr = parsePostfixExpressionPrime(postfixExpr);
 				break;

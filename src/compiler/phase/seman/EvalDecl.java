@@ -31,15 +31,6 @@ public class EvalDecl extends FullVisitor {
 	private SymbolTable symbolTable = new SymbolTable();
 
 
-	private static long namespaceGenerator = 0L;
-
-	private static String namespaceNameGen() {
-		Long l = namespaceGenerator;
-		namespaceGenerator++;
-		return l.toString();
-	}
-
-
 	@Override
 	public void visit(WhereExpr whereExpr) {
 		symbolTable.enterScope();

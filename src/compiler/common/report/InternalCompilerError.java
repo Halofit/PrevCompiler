@@ -16,4 +16,8 @@ public class InternalCompilerError extends CompilerError {
 		this.printStackTrace(System.err);
 	}
 
+	public InternalCompilerError(String message, Position pos) {
+		super("[Internal compiler error.]" + message + " " + pos);
+		this.printStackTrace(System.err);
+	}
 }
