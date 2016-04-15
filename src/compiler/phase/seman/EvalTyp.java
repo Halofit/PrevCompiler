@@ -32,6 +32,9 @@ public class EvalTyp extends FullVisitor {
 	 */
 	private SymbolTable symbolTable = new SymbolTable();
 
+
+	private static boolean funDefSkipBody = false;
+	private static boolean funDefSkipEverythingButBody = false;
 	// TODO
 
 	@Override
@@ -117,19 +120,19 @@ public class EvalTyp extends FullVisitor {
 		Typ op1T = attrs.typAttr.get(op1);
 		Typ op2T = attrs.typAttr.get(op2);
 
-		Typ binE = null;
+		Typ binExprT = null;
 
 		switch (binExpr.oper) {
 			case ASSIGN:
 				//if op1T is typ1 and opt2T is typ2 and typ1 is in memory than this is void type
 				if (!isAssignable(op1T)) SemAn.signalError("Type is not assignable.", binExpr);
 				if (!op1T.isStructEquivTo(op2T)) SemAn.signalError("Assignement operator type mismatch.", binExpr);
-				binE = new VoidTyp();
+				binExprT = new VoidTyp();
 				break;
 			case OR:
 			case AND:
 				if (op1T instanceof BooleanTyp && op2T instanceof BooleanTyp) {
-					binE = new BooleanTyp();
+					binExprT = new BooleanTyp();
 				} else {
 					SemAn.signalError("Boolean expresions are only allowed on boolean types", binExpr);
 				}
@@ -146,7 +149,7 @@ public class EvalTyp extends FullVisitor {
 				}
 				if (!op1T.isStructEquivTo(op2T)) SemAn.signalError("Can only compare values of the same type", binExpr);
 
-				binE = new BooleanTyp();
+				binExprT = new BooleanTyp();
 				break;
 
 			case ADD:
@@ -155,7 +158,7 @@ public class EvalTyp extends FullVisitor {
 			case DIV:
 			case MOD:
 				if (op1T instanceof IntegerTyp && op2T instanceof IntegerTyp) {
-					binE = new IntegerTyp();
+					binExprT = new IntegerTyp();
 				} else {
 					SemAn.signalError("Arithmetic operation attempted with non-integers.", binExpr);
 				}
@@ -163,7 +166,7 @@ public class EvalTyp extends FullVisitor {
 
 			case ARR:
 				if (!(op2T instanceof IntegerTyp)) SemAn.signalError("Arrays must be indexed with integers", binExpr);
-				binE = op1T.actualTyp();
+				binExprT = ((ArrTyp)op1T).elemTyp;
 				break;
 			case REC:
 				//TODO determine types of components
@@ -185,7 +188,7 @@ public class EvalTyp extends FullVisitor {
 
 					Typ compType = attrs.typAttr.get(op2);
 					if (compType == null) SemAn.signalError("Cannot determine component's type.", binExpr);
-					binE = compType;
+					binExprT = compType;
 				} else {
 					SemAn.signalError("Can only use . (dot) operator on record types.", binExpr);
 				}
@@ -193,7 +196,7 @@ public class EvalTyp extends FullVisitor {
 
 		}
 
-		attrs.typAttr.set(binExpr, binE);
+		attrs.typAttr.set(binExpr, binExprT);
 	}
 
 	@Override
@@ -314,7 +317,8 @@ public class EvalTyp extends FullVisitor {
 			if (argTyp == null) SemAn.signalError("Cannot determine argument type.", funCall);
 
 			if (!parTyp.getClass().equals(argTyp.getClass())) {
-				SemAn.signalError("Type mismatch in argument " + i + ".", funCall);
+				SemAn.signalError("Type mismatch in argument " + i + ". Expected " + parTyp.getClass().getName() +
+						" got " + argTyp.getClass().getName() + ".", funCall);
 			}
 		}
 
@@ -346,8 +350,11 @@ public class EvalTyp extends FullVisitor {
 	@Override
 	public void visit(FunDef funDef) {
 		symbolTable.enterScope();
-		super.visit(funDef);
-		symbolTable.leaveScope();
+		for (int p = 0; p < funDef.numPars(); p++)
+			funDef.par(p).accept(this);
+		funDef.type.accept(this);
+
+
 
 		LinkedList<Typ> parTyps = new LinkedList<>();
 		for (ParDecl e : funDef.pars) {
@@ -362,11 +369,15 @@ public class EvalTyp extends FullVisitor {
 			SemAn.signalError("Function type must be assignable or void.", funDef);
 		}
 
-		Typ bodyT = attrs.typAttr.get(funDef.body);
-		if (bodyT == null) SemAn.signalError("Cannot determine function body type.", funDef);
-		if (!funT.isStructEquivTo(bodyT)) SemAn.signalError("Return type mismatch.", funDef);
+		if(EvalTyp.funDefSkipBody) {
+			funDef.body.accept(this);
+			Typ bodyT = attrs.typAttr.get(funDef.body);
+			if (bodyT == null) SemAn.signalError("Cannot determine function body type.", funDef);
+			if (!funT.isStructEquivTo(bodyT)) SemAn.signalError("Return type mismatch.", funDef);
+		}
 
 		attrs.typAttr.set(funDef, new FunTyp(parTyps, funT));
+		symbolTable.leaveScope();
 	}
 
 	@Override
@@ -501,7 +512,6 @@ public class EvalTyp extends FullVisitor {
 				finalT = new PtrTyp(subT);
 				break;
 			default:
-				finalT = null;
 				throw new InternalCompilerError();
 		}
 
@@ -539,10 +549,16 @@ public class EvalTyp extends FullVisitor {
 			if(d instanceof TypeDecl) d.accept(this);
 		}
 
+		funDefSkipBody = true; //skip function bodies
+		funDefSkipEverythingButBody = false;
+
 		for(Decl d: whereExpr.decls){
-			if(d instanceof FunDef) ((FunDecl) d).accept(this); //skip function bodies
-			else d.accept(this); //redo type decls, no harm done
+			if(d instanceof FunDef) d.accept(this);
+			else if(!(d instanceof TypeDecl)) d.accept(this);
 		}
+
+		funDefSkipBody = false;
+		funDefSkipEverythingButBody = true;
 
 		for(Decl d: whereExpr.decls){
 			if(d instanceof FunDef) d.accept(this); //recheck entire functions

@@ -25,7 +25,7 @@ import compiler.data.ast.*;
 public class Attribute<Node extends AST, Value> {
 
 	/** A mapping from AST nodes to attribute values. */
-	private HashMap<Node, Value> mapping = mapping = new HashMap<Node, Value>();;
+	private HashMap<Node, Value> mapping = mapping = new HashMap<Node, Value>();
 
 	/**
 	 * Sets a value of the AST nodes' attribute (if it has not been set
@@ -40,10 +40,8 @@ public class Attribute<Node extends AST, Value> {
 	 *             inserted is <code>null</code>.
 	 */
 	public void set(Node node, Value value) {
-		if (mapping.containsKey(node))
-			throw new InternalCompilerError();
-		if (value == null)
-			throw new InternalCompilerError();
+		//if (mapping.containsKey(node)) throw new InternalCompilerError(); //Allow overwriting?
+		if (value == null) throw new InternalCompilerError();
 		mapping.put(node, value);
 	}
 

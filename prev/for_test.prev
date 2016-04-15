@@ -1,5 +1,5 @@
 for i=0,100 :
-	putstr(itostr([integer]buf[i]))
+	putstr(itostr(buf[i]))
 end
 where
 	typ int: integer
