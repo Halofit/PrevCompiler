@@ -457,7 +457,11 @@ public class EvalTyp extends FullVisitor {
 		Typ t = attrs.typAttr.get(typDecl.type);
 		if (t == null) SemAn.signalError("Cannot determine type in Type declaration.", typDecl);
 
-		attrs.typAttr.set(typDecl, t);
+		//TODO is this correct?
+		TypName tn = new TypName(typDecl.name);
+		tn.setType(t);
+
+		attrs.typAttr.set(typDecl, tn);
 	}
 
 	@Override
@@ -588,10 +592,14 @@ public class EvalTyp extends FullVisitor {
 
 
 	private static boolean isComparable(Typ t) {
-		return (t instanceof CharTyp || t instanceof IntegerTyp || t instanceof BooleanTyp || t instanceof PtrTyp);
+		return (t.actualTyp() instanceof CharTyp ||
+				t.actualTyp() instanceof IntegerTyp ||
+				t.actualTyp() instanceof BooleanTyp ||
+				t.actualTyp() instanceof PtrTyp);
 	}
 
 	private static boolean isAssignable(Typ t) {
-		return isComparable(t) || t instanceof StringTyp;
+		return isComparable(t) ||
+			   t.actualTyp() instanceof StringTyp;
 	}
 }

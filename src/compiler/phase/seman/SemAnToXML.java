@@ -308,14 +308,14 @@ public class SemAnToXML extends AbstrToXML {
 	}
 
 	@Override
-	public void visit(TypeDecl typDecl) {
+	public void visit(TypeDecl typeDecl) {
 		begElement();
-		super.visit(typDecl);
+		super.visit(typeDecl);
 		logger.begElement("seman");
-		if (attrs.typAttr.get(typDecl) != null) {
+		if (attrs.typAttr.get(typeDecl) != null) {
 			logger.begElement("typ");
-			logger.addAttribute("kind", "NAME(" + ((TypName) (attrs.typAttr.get(typDecl))).name + ")");
-			((TypName) (attrs.typAttr.get(typDecl))).getType().log(logger);
+			logger.addAttribute("kind", "NAME(" + ((TypName) (attrs.typAttr.get(typeDecl))).name + ")");
+			((TypName) (attrs.typAttr.get(typeDecl))).getType().log(logger);
 			logger.endElement();
 		}
 		logger.endElement();

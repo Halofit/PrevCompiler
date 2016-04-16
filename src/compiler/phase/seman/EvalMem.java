@@ -16,7 +16,6 @@ public class EvalMem extends FullVisitor {
 		this.attrs = attrs;
 	}
 
-
 	@Override
 	public void visit(UnExpr unExpr) {
 		super.visit(unExpr);
@@ -30,7 +29,7 @@ public class EvalMem extends FullVisitor {
 				break;
 			case VAL:
 				Typ subT = attrs.typAttr.get(unExpr.subExpr);
-				if(subT instanceof PtrTyp) attrs.memAttr.set(unExpr, true);
+				if (subT instanceof PtrTyp) attrs.memAttr.set(unExpr, true);
 				break;
 		}
 	}
@@ -90,5 +89,64 @@ public class EvalMem extends FullVisitor {
 			whereExpr.decl(d).accept(this);
 		}
 		whereExpr.expr.accept(this);
+
+		attrs.memAttr.set(whereExpr, false);
+	}
+
+	//Other exprs
+
+	@Override
+	public void visit(AtomExpr atomExpr) {
+		super.visit(atomExpr);
+		attrs.memAttr.set(atomExpr, false);
+	}
+
+	@Override
+	public void visit(CastExpr castExpr) {
+		super.visit(castExpr);
+		attrs.memAttr.set(castExpr, false);
+	}
+
+	@Override
+	public void visit(Exprs exprs) {
+		super.visit(exprs);
+		attrs.memAttr.set(exprs, false);
+	}
+
+	@Override
+	public void visit(ExprError exprError) {
+		super.visit(exprError);
+		attrs.memAttr.set(exprError, false);
+	}
+
+	@Override
+	public void visit(ForExpr forExpr) {
+		super.visit(forExpr);
+		attrs.memAttr.set(forExpr, false);
+	}
+
+	@Override
+	public void visit(FunCall funCall) {
+		super.visit(funCall);
+		attrs.memAttr.set(funCall, false);
+	}
+
+	@Override
+	public void visit(IfExpr ifExpr) {
+		super.visit(ifExpr);
+		attrs.memAttr.set(ifExpr, false);
+	}
+
+	@Override
+	public void visit(Program program) {
+		super.visit(program);
+		attrs.memAttr.set(program, false);
+	}
+
+
+	@Override
+	public void visit(WhileExpr whileExpr) {
+		super.visit(whileExpr);
+		attrs.memAttr.set(whileExpr, false);
 	}
 }
