@@ -30,14 +30,23 @@ public class EvalDecl extends FullVisitor {
 	 */
 	private SymbolTable symbolTable = new SymbolTable();
 
+	private static boolean resolveOnlyBody = true;
 
 	@Override
 	public void visit(WhereExpr whereExpr) {
 		symbolTable.enterScope();
 
-		for (int d = 0; d < whereExpr.numDecls(); d++) {
-			whereExpr.decl(d).accept(this);
+		resolveOnlyBody = false;
+		for (Decl d : whereExpr.decls) {
+			d.accept(this);
 		}
+
+		resolveOnlyBody = true;
+		for (Decl d : whereExpr.decls) {
+			d.accept(this);
+		}
+
+		//Finnaly resolve the nested expression
 		whereExpr.expr.accept(this);
 
 		symbolTable.leaveScope();
@@ -46,38 +55,43 @@ public class EvalDecl extends FullVisitor {
 
 	@Override
 	public void visit(FunDef funDef) {
-		symbolTable.insDecl(funDef.name, funDef);
-		funDef.type.accept(this);
-
-		symbolTable.enterScope();
-
-		for (ParDecl pd : funDef.pars) {
-			pd.accept(this);
+		if (!resolveOnlyBody) {
+			symbolTable.insDecl(funDef.name, funDef);
+			funDef.type.accept(this);
 		}
-		funDef.body.accept(this);
 
-		symbolTable.leaveScope();
+		if (resolveOnlyBody) {
+			symbolTable.enterScope();
+
+			for (ParDecl pd : funDef.pars) {
+				pd.accept(this);
+			}
+			funDef.body.accept(this);
+
+			symbolTable.leaveScope();
+		}
 	}
 
 
 	@Override
 	public void visit(FunDecl funDecl) {
-		symbolTable.insDecl(funDecl.name, funDecl);
+		if (!resolveOnlyBody) {
+			symbolTable.insDecl(funDecl.name, funDecl);
 
-		funDecl.type.accept(this);
+			funDecl.type.accept(this);
 
-		symbolTable.enterScope();
-		for (ParDecl pd : funDecl.pars) {
-			pd.accept(this);
+			symbolTable.enterScope();
+			for (ParDecl pd : funDecl.pars) {
+				pd.accept(this);
+			}
+			symbolTable.leaveScope();
 		}
-
-		symbolTable.leaveScope();
 	}
 
 	@Override
 	public void visit(CompDecl compDecl) {
 		super.visit(compDecl);
-		// TODO check: Do nothing here, read below: ... visit(RecType recType) { ...
+		// Do nothing here, read below: ... visit(RecType recType) { ...
 	}
 
 	@Override
@@ -87,21 +101,27 @@ public class EvalDecl extends FullVisitor {
 	}
 
 	@Override
-	public void visit(TypeDecl typDecl) {
-		super.visit(typDecl);
-		symbolTable.insDecl(typDecl.name, typDecl);
+	public void visit(TypeDecl typeDecl) {
+		if (resolveOnlyBody) {
+			super.visit(typeDecl);
+		} else {
+			symbolTable.insDecl(typeDecl.name, typeDecl);
+		}
 	}
 
 	@Override
 	public void visit(VarDecl varDecl) {
-		super.visit(varDecl);
-		symbolTable.insDecl(varDecl.name, varDecl);
+		if (resolveOnlyBody) {
+			super.visit(varDecl);
+		} else {
+			symbolTable.insDecl(varDecl.name, varDecl);
+		}
 	}
 
 	@Override
 	public void visit(RecType recType) {
 		super.visit(recType);
-		//TODO check: since symbolsTable is thrown away later, you should do this in EvalTyp.java
+		// since symbolsTable is thrown away later, you should do this in EvalTyp.java
 		// components should not be checked here
 	}
 
@@ -110,7 +130,12 @@ public class EvalDecl extends FullVisitor {
 	public void visit(TypeName typeName) {
 		super.visit(typeName);
 
-		Decl decl = symbolTable.fndDecl(typeName.name());
+		Decl decl = null;
+		try {
+			decl = symbolTable.fndDecl(typeName.name());
+		} catch (CannotFndNameDecl cannotFndNameDecl) {
+			SemAn.signalError(cannotFndNameDecl.getMessage(), typeName);
+		}
 		attrs.declAttr.set(typeName, decl);
 	}
 
@@ -118,19 +143,33 @@ public class EvalDecl extends FullVisitor {
 	public void visit(VarName varName) {
 		super.visit(varName);
 
-		Decl decl = symbolTable.fndDecl(varName.name());
+		Decl decl = null;
+		try {
+			decl = symbolTable.fndDecl(varName.name());
+			if (!(decl instanceof VarDecl)) {
+				SemAn.signalError(decl.getClass().getSimpleName() + " " + varName.name() +
+								  " used as a variable.", varName);
+			}
+		} catch (CannotFndNameDecl cannotFndNameDecl) {
+			SemAn.signalError(cannotFndNameDecl.getMessage(), varName);
+		}
 		attrs.declAttr.set(varName, decl);
 	}
 
 	@Override
 	public void visit(CompName compName) {
 		super.visit(compName);
-		//TODO you do nothing here, since you don't actually know what namespace you belong to
+		// Do nothing here, since you don't actually know what namespace you belong to
 	}
 
 	@Override
 	public void visit(FunCall funCall) {
-		Decl decl = symbolTable.fndDecl(funCall.name());
+		Decl decl = null;
+		try {
+			decl = symbolTable.fndDecl(funCall.name());
+		} catch (CannotFndNameDecl cannotFndNameDecl) {
+			SemAn.signalError(cannotFndNameDecl.getMessage(), funCall);
+		}
 		attrs.declAttr.set(funCall, decl);
 
 		super.visit(funCall);

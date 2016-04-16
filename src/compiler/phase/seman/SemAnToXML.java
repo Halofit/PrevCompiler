@@ -388,8 +388,10 @@ public class SemAnToXML extends AbstrToXML {
 		{
 			Decl decl = attrs.declAttr.get(varName);
 			if (decl != null) {
-				if (!(decl instanceof VarDecl))
+				if (!(decl instanceof VarDecl)) {
+					System.out.println(decl.getClass().getSimpleName());
 					throw new InternalCompilerError();
+				}
 				logger.addAttribute("decl", ((Position) decl).toString());
 			}
 		}

@@ -1,0 +1,8 @@
+(a = 3, b = a) 
+where 
+	var a : a_t 
+	var b : b_t 
+	typ a_t : b_t
+	typ b_t : integer
+end
+	

@@ -7,13 +7,13 @@ import compiler.data.ast.*;
 
 /**
  * Symbol table.
- * 
+ * <p>
  * <p>
  * The symbol table is used during name resolving, i.e., connecting AST nodes
  * where names are used to AST nodes where names are defined. It supports
  * handling of
  * </p>
- * 
+ * <p>
  * <ul>
  * <li><i>scopes</i>: A new, i.e., inner, scope is created by calling
  * {@link compiler.phase.seman.SymbolTable#enterScope() enterScope}, flushing
@@ -34,14 +34,14 @@ import compiler.data.ast.*;
  * visible within the inner namespace unless replaced by a new declaration of
  * the same name within the inner namespace.</li>
  * </ul>
- * 
+ *
  * @author sliva
  */
 public class SymbolTable {
 
 	/**
 	 * Creates a new symbol table.
-	 * 
+	 * <p>
 	 * The initial scope is entered and the default namespace is prepared.
 	 */
 	public SymbolTable() {
@@ -59,20 +59,33 @@ public class SymbolTable {
 
 	/**
 	 * A declaration of a name at a particular scope.
-	 * 
+	 *
 	 * @author sliva
 	 */
 	private class ScopedDecl {
 
-		/** The scope. */
+		/**
+		 * The scope.
+		 */
 		public int scope;
 
-		/** The declaration. */
+		/**
+		 * The declaration.
+		 */
 		public Decl decl;
 
+		@Override
+		public String toString() {
+			return "ScopedDecl{" +
+				   "scope=" + scope +
+				   ", decl=" + decl +
+				   '}';
+		}
 	}
 
-	/** The current scope. */
+	/**
+	 * The current scope.
+	 */
 	private int scope;
 
 	/**
@@ -85,7 +98,7 @@ public class SymbolTable {
 	/**
 	 * A stack of spaces, i.e., a list of all declarations by scopes, used for
 	 * flushing out declarations when leaving a scope.
-	 * 
+	 * <p>
 	 * <p>
 	 * The inner list includes all names that have been declared at a particular
 	 * scope, and thus the outer list contains all names declared at different
@@ -110,8 +123,9 @@ public class SymbolTable {
 		for (String name : scopes.peek()) {
 			LinkedList<ScopedDecl> scopedDecls = symbolTable.get(name);
 			scopedDecls.removeFirst();
-			if (scopedDecls.isEmpty())
+			if (scopedDecls.isEmpty()) {
 				symbolTable.remove(name);
+			}
 		}
 		scopes.removeFirst();
 		scope--;
@@ -120,16 +134,12 @@ public class SymbolTable {
 	/**
 	 * Inserts a declaration of a name within the current scope and within the
 	 * specified namespace.
-	 * 
-	 * @param nameSpace
-	 *            The namespace that the declaration of the name is made within.
-	 * @param name
-	 *            The name declared.
-	 * @param decl
-	 *            The declaration of the name.
-	 * @throws CannotInsNameDecl
-	 *             If the name cannot be declared at this scope as it has
-	 *             already been.
+	 *
+	 * @param nameSpace The namespace that the declaration of the name is made within.
+	 * @param name      The name declared.
+	 * @param decl      The declaration of the name.
+	 * @throws CannotInsNameDecl If the name cannot be declared at this scope as it has
+	 *                           already been.
 	 */
 	public void insDecl(String nameSpace, String name, Decl decl) throws CannotInsNameDecl {
 		LinkedList<ScopedDecl> scopedDecls = symbolTable.get(nameSpace + name);
@@ -146,7 +156,8 @@ public class SymbolTable {
 		} else {
 			ScopedDecl scopedDecl = scopedDecls.peekFirst();
 			if (scopedDecl.scope == scope) {
-				throw new CannotInsNameDecl(((Position) scopedDecl.decl).toString());
+				throw new CannotInsNameDecl("Duplicate name " + nameSpace + name +
+											" in this scope: " + ((Position) scopedDecl.decl).toString());
 			} else {
 				scopedDecl = new ScopedDecl();
 				scopedDecl.scope = scope;
@@ -160,14 +171,11 @@ public class SymbolTable {
 	/**
 	 * Inserts a declaration of a name within the current scope and within the
 	 * default namespace.
-	 * 
-	 * @param name
-	 *            The name declared.
-	 * @param decl
-	 *            The declaration of the name.
-	 * @throws CannotInsNameDecl
-	 *             If the name cannot be declared at this scope as it has
-	 *             already been.
+	 *
+	 * @param name The name declared.
+	 * @param decl The declaration of the name.
+	 * @throws CannotInsNameDecl If the name cannot be declared at this scope as it has
+	 *                           already been.
 	 */
 	public void insDecl(String name, Decl decl) throws CannotInsNameDecl {
 		insDecl("#", name, decl);
@@ -176,32 +184,28 @@ public class SymbolTable {
 	/**
 	 * Returns the declaration of a name within all active scopes and within a
 	 * specified namespace.
-	 * 
-	 * @param nameSpace
-	 *            The namespace that the declaration of the name is made within.
-	 * @param name
-	 *            The name the declaration is being looked for.
+	 *
+	 * @param nameSpace The namespace that the declaration of the name is made within.
+	 * @param name      The name the declaration is being looked for.
 	 * @return The declaration of the name.
-	 * @throws CannotFndNameDecl
-	 *             If the declaration is not found.
+	 * @throws CannotFndNameDecl If the declaration is not found.
 	 */
 	public Decl fndDecl(String nameSpace, String name) throws CannotFndNameDecl {
 		LinkedList<ScopedDecl> scopedDecls = symbolTable.get(nameSpace + name);
-		if ((scopedDecls == null) || (scopedDecls.isEmpty()))
-			throw new CannotFndNameDecl(nameSpace + name);
-		else
+		if ((scopedDecls == null) || (scopedDecls.isEmpty())) {
+			throw new CannotFndNameDecl("Declaration of " + nameSpace + "#" + name + " was not found");
+		} else {
 			return scopedDecls.peekFirst().decl;
+		}
 	}
 
 	/**
 	 * Returns the declaration of a name within all active scopes and within the
 	 * default namespace.
-	 * 
-	 * @param name
-	 *            The name the declaration is being looked for.
+	 *
+	 * @param name The name the declaration is being looked for.
 	 * @return The declaration of the name.
-	 * @throws CannotFndNameDecl
-	 *             If the declaration is not found.
+	 * @throws CannotFndNameDecl If the declaration is not found.
 	 */
 	public Decl fndDecl(String name) throws CannotFndNameDecl {
 		return fndDecl("#", name);
@@ -209,14 +213,15 @@ public class SymbolTable {
 
 	// Namespaces.
 
-	/** The stack of namespaces. */
+	/**
+	 * The stack of namespaces.
+	 */
 	private Stack<String> namespaces;
 
 	/**
 	 * Generates a new namespace name.
-	 * 
-	 * @param name
-	 *            The name associated with this namespace.
+	 *
+	 * @param name The name associated with this namespace.
 	 * @return A new namespace name unique within a current context.
 	 */
 	public String newNamespace(String name) {
@@ -225,9 +230,8 @@ public class SymbolTable {
 
 	/**
 	 * Enters a new namespace;
-	 * 
-	 * @param namespace
-	 *            The namespace's name.
+	 *
+	 * @param namespace The namespace's name.
 	 */
 	public void enterNamespace(String namespace) {
 		namespaces.push(namespace);
@@ -237,10 +241,24 @@ public class SymbolTable {
 	 * Leaves the current namespace.
 	 */
 	public void leaveNamespace() {
-		if (namespaces.size() > 0)
+		if (namespaces.size() > 0) {
 			namespaces.pop();
-		else
+		} else {
 			throw new InternalCompilerError();
+		}
 	}
 
+	public void printTableData() {
+		System.out.println("Scope: " + scope);
+
+		System.out.println("Symbol Table: ");
+		for (String name : symbolTable.keySet()) {
+			String value = symbolTable.get(name).toString();
+			System.out.println(name + " " + value);
+		}
+		System.out.println("Visible namespaces:");
+		for (String ns : namespaces) {
+			System.out.println(ns);
+		}
+	}
 }

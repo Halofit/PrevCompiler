@@ -231,7 +231,7 @@ public class AbstrToXML implements Visitor {
 	public void visit(TypeDecl typeDecl) {
 		begElement();
 		((Position) typeDecl).log(logger);
-		logger.addAttribute("kind", "TypDecl");
+		logger.addAttribute("kind", "TypeDecl");
 		logger.addAttribute("name", typeDecl.name);
 		typeDecl.type.accept(this);
 		endElement();

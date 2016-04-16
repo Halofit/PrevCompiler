@@ -31,6 +31,8 @@ public class EvalMem extends FullVisitor {
 				Typ subT = attrs.typAttr.get(unExpr.subExpr);
 				if (subT instanceof PtrTyp) attrs.memAttr.set(unExpr, true);
 				break;
+			default:
+				attrs.memAttr.set(unExpr, false);
 		}
 	}
 
@@ -49,19 +51,25 @@ public class EvalMem extends FullVisitor {
 				if (inMem == null || !inMem) {
 					SemAn.signalError("Left side of the assignement must be in memory.", binExpr);
 				}
+				attrs.memAttr.set(binExpr, false);
 				break;
 			case ARR:
 				lT = attrs.typAttr.get(binExpr.fstExpr);
 				rT = attrs.typAttr.get(binExpr.sndExpr);
-				if (lT instanceof ArrTyp && rT instanceof IntegerTyp) attrs.memAttr.set(binExpr, true);
+				if (lT instanceof ArrTyp && rT instanceof IntegerTyp) {
+					attrs.memAttr.set(binExpr, true);
+				}
 				break;
 			case REC:
 				//Write
 				lT = attrs.typAttr.get(binExpr.fstExpr);
 				rT = attrs.typAttr.get(binExpr.sndExpr);
-				if (lT != null && rT != null) attrs.memAttr.set(binExpr, true);
+				if (lT != null && rT != null) {
+					attrs.memAttr.set(binExpr, true);
+				}
 				break;
-
+			default:
+				attrs.memAttr.set(binExpr, false);
 		}
 	}
 
@@ -80,6 +88,7 @@ public class EvalMem extends FullVisitor {
 	@Override
 	public void visit(CompName compName) {
 		super.visit(compName);
+		attrs.memAttr.set(compName, false);
 		//Maybe do nothing here. Do it in above in BinExpr -> mem
 	}
 

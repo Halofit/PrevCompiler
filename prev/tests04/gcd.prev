@@ -1,0 +1,17 @@
+(gcd(256, 129))
+where
+	typ a: b
+	typ b: integer
+
+	fun gcd(a : integer, b : integer) : integer = (
+		if a==0 then
+			r = b 
+		else
+			r = gcd(b%a, a)
+		end,
+		r 
+		)where
+			var r : integer
+		end
+		
+end

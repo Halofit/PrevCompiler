@@ -1,7 +1,7 @@
 
 (iter = 0,
 while iter < 1024:
-	orig[i] = iter
+	orig[iter] = iter
 end,
 fft(@orig, 1024, @result)
 	
@@ -17,11 +17,15 @@ where
 	typ cplx_t : rec{real: fract_t, imag: fract_t}
 	
 	#gcd function is required for fractions
-	fun gcd(a : integer, b : integer) : integer = 
+	fun gcd(a : integer, b : integer) : integer = (
 		if a==0 then
-			b 
+			r = b 
 		else
-			gcd (b%a, a)
+			r = gcd(b%a, a)
+		end,
+		r 
+		)where
+			var r : integer
 		end
 	
 	fun make_fract(a: integer, b:integer): fract_t = (
@@ -57,7 +61,7 @@ where
 	end
 	
 
-	fun fract_mul(a:fract_t, b:int): fract_t = (
+	fun fract_mul(a:fract_t, b:integer): fract_t = (
 		r.num = a.num * b.num,
 		r.den = a.den * b.den,
 		r
@@ -100,7 +104,7 @@ where
 		var r:cplx_t
 	end
 	
-	fun cplx_add(a:cplx_t, b:cplx_t): cplx_t = (
+	fun cplx_sub(a:cplx_t, b:cplx_t): cplx_t = (
 		r.real = fract_sub(a.real, b.real),
 		r.imag = fract_sub(a.imag, b.imag),
 		r
@@ -113,7 +117,7 @@ where
 		r.imag = fract_sub(fract_mul(a.real, b.imag), fract_mul(a.real, b.imag)),
 		r
 	) where 
-		var r:imag
+		var r:cplx_t
 	end	
 
 	fun pow(base: integer, exponent: integer) : integer = 
@@ -179,7 +183,7 @@ where
 				#fft butterflies (yay)
 				(res + i)^         = cplx_add((resultA + i)^, cplx_mult((resultB + i)^, omega)),
 				(res + i + len/2)^ = cplx_sub((resultA + i)^, cplx_mult((resultB + i)^, omega)),
-				omega = cplx_mul(omega, omega_n),
+				omega = cplx_mult(omega, omega_n),
 				#renormalise results, to prevent overflows
 				(res + i)^ = fract_simplify((res + i)^),
 				(res + i + len/2)^ = fract_simplify((res + i + len/2)^),

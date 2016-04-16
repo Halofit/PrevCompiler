@@ -81,13 +81,6 @@ public class EvalValue extends FullVisitor {
 
 	}
 
-	@Override
-	public void visit(Exprs exprs) {
-		super.visit(exprs);
-		//Value of expressions is the value of the final expression
-		Long value = attrs.valueAttr.get(exprs.lastExpr());
-		attrs.valueAttr.set(exprs, value);
-	}
 
 	@Override
 	public void visit(UnExpr unExpr) {

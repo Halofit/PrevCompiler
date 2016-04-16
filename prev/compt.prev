@@ -1,0 +1,20 @@
+for i=0,100 : (
+	p.x = i,
+	#pnt(p, "Hello"),
+	i
+)
+end
+where
+	var i : integer
+	var p : point
+	typ point : rec{x: int, y: int}
+	typ int : integer
+	
+	fun pnt(p: ptr point, s: string) : ptr point = (
+		p^.x = 3,
+		p^.y = 2,
+		puts(s),
+		p
+	)
+	fun puts(s:string) : void
+end
