@@ -28,6 +28,5 @@ public class EvalValue extends FullVisitor {
 	public EvalValue(Attributes attrs) {
 		this.attrs = attrs;
 	}
-	
-	// TODO
+
 }

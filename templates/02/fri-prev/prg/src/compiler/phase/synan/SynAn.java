@@ -156,8 +156,7 @@ public class SynAn extends Phase {
 		parseExpression();
 		endLog();
 	}
-	
-	// TODO
+
 
 	private void parseVariableDeclaration() {
 		begLog("VariableDeclaration");
@@ -185,7 +184,6 @@ public class SynAn extends Phase {
 		}
 		endLog();
 	}
-	
-	// TODO
+
 
 }

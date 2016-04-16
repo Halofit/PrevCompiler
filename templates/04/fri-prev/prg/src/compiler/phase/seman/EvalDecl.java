@@ -28,5 +28,4 @@ public class EvalDecl extends FullVisitor {
 	/** The symbol table. */
 	private SymbolTable symbolTable = new SymbolTable();
 
-	// TODO
 }
