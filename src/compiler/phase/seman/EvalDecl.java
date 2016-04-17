@@ -36,6 +36,7 @@ public class EvalDecl extends FullVisitor {
 	public void visit(WhereExpr whereExpr) {
 		symbolTable.enterScope();
 
+		boolean resolveBak = resolveOnlyBody;
 		resolveOnlyBody = false;
 		for (Decl d : whereExpr.decls) {
 			d.accept(this);
@@ -45,6 +46,7 @@ public class EvalDecl extends FullVisitor {
 		for (Decl d : whereExpr.decls) {
 			d.accept(this);
 		}
+		resolveOnlyBody = resolveBak;
 
 		//Finnaly resolve the nested expression
 		whereExpr.expr.accept(this);
@@ -57,10 +59,11 @@ public class EvalDecl extends FullVisitor {
 	public void visit(FunDef funDef) {
 		if (!resolveOnlyBody) {
 			symbolTable.insDecl(funDef.name, funDef);
-			funDef.type.accept(this);
 		}
 
 		if (resolveOnlyBody) {
+			funDef.type.accept(this);
+
 			symbolTable.enterScope();
 
 			for (ParDecl pd : funDef.pars) {
@@ -77,7 +80,7 @@ public class EvalDecl extends FullVisitor {
 	public void visit(FunDecl funDecl) {
 		if (!resolveOnlyBody) {
 			symbolTable.insDecl(funDecl.name, funDecl);
-
+		}else{
 			funDecl.type.accept(this);
 
 			symbolTable.enterScope();

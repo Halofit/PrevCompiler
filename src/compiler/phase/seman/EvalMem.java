@@ -26,6 +26,7 @@ public class EvalMem extends FullVisitor {
 				if (inMem == null || !inMem) {
 					SemAn.signalError("Can only reference objects in memory.", unExpr);
 				}
+				attrs.memAttr.set(unExpr, false);
 				break;
 			case VAL:
 				Typ subT = attrs.typAttr.get(unExpr.subExpr);

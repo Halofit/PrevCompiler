@@ -193,7 +193,7 @@ public class SymbolTable {
 	public Decl fndDecl(String nameSpace, String name) throws CannotFndNameDecl {
 		LinkedList<ScopedDecl> scopedDecls = symbolTable.get(nameSpace + name);
 		if ((scopedDecls == null) || (scopedDecls.isEmpty())) {
-			throw new CannotFndNameDecl("Declaration of " + nameSpace + "#" + name + " was not found");
+			throw new CannotFndNameDecl("Declaration of " + nameSpace + (nameSpace.equals("#") ? "" : "#") + name + " was not found");
 		} else {
 			return scopedDecls.peekFirst().decl;
 		}

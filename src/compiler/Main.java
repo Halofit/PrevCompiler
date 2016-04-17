@@ -21,7 +21,7 @@ public class Main {
 	 *            Command line arguments.
 	 */
 	public static void main(String args[]) {
-		// OK, start at the very beginning.
+		System.out.println();
 		System.out.println("This is PREV compiler (2016):");
 
 		try {
@@ -58,7 +58,6 @@ public class Main {
 				(new EvalValue(task.prgAttrs)).visit(task.prgAST);
 				(new EvalDecl(task.prgAttrs)).visit(task.prgAST);
 				(new EvalTyp(task.prgAttrs)).visit(task.prgAST);
-				(new EvalFinalTyp(task.prgAttrs)).visit(task.prgAST);
 				(new EvalMem(task.prgAttrs)).visit(task.prgAST);
 				seman.close();
 				if (task.phase.equals("seman"))
@@ -71,7 +70,8 @@ public class Main {
 			}
 		} catch (CompilerError errorReport) {
 			// As dead as a dodo. Print error message and signal error.
-			System.err.println(":-( " + errorReport.getMessage());
+			System.err.println(errorReport.getMessage());
+			System.out.println();
 			System.exit(1);
 		}
 

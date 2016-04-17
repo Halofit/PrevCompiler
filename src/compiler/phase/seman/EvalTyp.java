@@ -448,6 +448,8 @@ public class EvalTyp extends FullVisitor {
 	public void visit(WhereExpr whereExpr) {
 		//NOTE: DONT DO THIS super.visit(whereExpr); EXPAND:
 
+		boolean onlyBodyBak = evalOnlyBody;
+
 		//First set types
 		evalOnlyBody = false; //skip determining actual types
 		for (Decl d : whereExpr.decls) {
@@ -468,10 +470,20 @@ public class EvalTyp extends FullVisitor {
 			if (d instanceof FunDef) d.accept(this); //recheck entire functions -> not that expensive
 		}
 
-		//type check all declaration
+		//type check all declaration, and check for circularity
 		for (Decl d : whereExpr.decls) {
 			if (attrs.typAttr.get(d) == null) {
 				SemAn.signalError("Could not determine the type for all declarations.", whereExpr);
+			}
+
+			//Circularity check
+			if (d instanceof TypeDecl) {
+				Typ t = attrs.typAttr.get(d);
+				if (!isBaseType(t)) {
+					if (((TypName) t).isCircular()) {
+						SemAn.signalError("Detected a circular type: " + ((TypName) t).name, whereExpr);
+					}
+				}
 			}
 		}
 
@@ -479,6 +491,9 @@ public class EvalTyp extends FullVisitor {
 		whereExpr.expr.accept(this);
 		Typ innerExprT = attrs.typAttr.get(whereExpr.expr);
 		if (innerExprT == null) SemAn.signalError("Cannot determine nested type", whereExpr);
+
+		//Ensure you leave with the same flag as you entered, just in case
+		evalOnlyBody = onlyBodyBak;
 
 		attrs.typAttr.set(whereExpr, innerExprT);
 	}
@@ -532,6 +547,7 @@ public class EvalTyp extends FullVisitor {
 
 		Typ funT = attrs.typAttr.get(funDecl.type);
 		if (funT == null) SemAn.signalError("Cannot determine function type.", funDecl);
+		//funT = funT.actualTyp();
 		if (!isAssignable(funT) && !(funT instanceof VoidTyp)) {
 			SemAn.signalError("Function type must be assignable or void.", funDecl);
 		}
@@ -618,6 +634,10 @@ public class EvalTyp extends FullVisitor {
 		if (hiT == null) SemAn.signalError("Hi bound must have a type.", forExpr);
 		if (bodyT == null) SemAn.signalError("For body must have a type.", forExpr);
 
+		varT = varT.actualTyp();
+		loT = loT.actualTyp();
+		hiT = hiT.actualTyp();
+
 		//Do type checking on the for statement
 		if (!(varT instanceof IntegerTyp)) SemAn.signalError("For iteration variable must be an integer.", forExpr);
 		if (!(loT instanceof IntegerTyp)) SemAn.signalError("For lower bound must be an integer.", forExpr);
@@ -670,5 +690,11 @@ public class EvalTyp extends FullVisitor {
 
 	private static String namespaceFromHash(Object o) {
 		return ((Integer) o.hashCode()).toString();
+	}
+
+	private boolean isBaseType(Typ t) {
+		return (t instanceof AtomTyp ||
+				t instanceof ArrTyp ||
+				t instanceof RecTyp);
 	}
 }
