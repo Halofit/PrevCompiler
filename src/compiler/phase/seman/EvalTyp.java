@@ -129,9 +129,7 @@ public class EvalTyp extends FullVisitor {
 			case ASSIGN:
 				//if op1T is typ1 and opt2T is typ2 and typ1 is in memory than this is void type
 				if (!isAssignable(op1T)) {
-					SemAn.signalError("Type is not assignable " +
-									  op1T.getClass().getSimpleName()
-									  + ".", binExpr);
+					SemAn.signalError("Type is not assignable " + op1T.getClass().getSimpleName() + ".", binExpr);
 				}
 				if (!op1T.isStructEquivTo(op2T)) SemAn.signalError("Assignement operator type mismatch.", binExpr);
 				binExprT = new VoidTyp();
@@ -168,7 +166,7 @@ public class EvalTyp extends FullVisitor {
 					binExprT = new IntegerTyp();
 				} else {
 					SemAn.signalError("Arithmetic operation attempted with non-integers (got: " +
-									  op1T.getClass().getSimpleName() +
+									  op1T.getClass().getSimpleName() + " and " +
 									  op2T.getClass().getSimpleName() + ").", binExpr);
 				}
 				break;
@@ -222,22 +220,22 @@ public class EvalTyp extends FullVisitor {
 		switch (unExpr.oper) {
 			case ADD:
 			case SUB:
-				if (!(subT instanceof IntegerTyp)) {
+				if (!(subT.actualTyp() instanceof IntegerTyp)) {
 					SemAn.signalError("Unary operator + and - can only be applied to integer types", unExpr);
 				}
 				finalT = subT;
 				break;
 			case NOT:
-				if (!(subT instanceof BooleanTyp)) {
+				if (!(subT.actualTyp() instanceof BooleanTyp)) {
 					SemAn.signalError("Operator NOT(!) can only be applied to Boolean types", unExpr);
 				}
 				finalT = subT;
 				break;
 			case VAL:
-				if (!(subT instanceof PtrTyp)) {
+				if (!(subT.actualTyp() instanceof PtrTyp)) {
 					SemAn.signalError("Operator ^ can only be applied to pointer types", unExpr);
 				}
-				finalT = ((PtrTyp) subT).baseTyp;
+				finalT = ((PtrTyp) subT.actualTyp()).baseTyp;
 				break;
 			case MEM:
 				finalT = new PtrTyp(subT);
@@ -254,14 +252,14 @@ public class EvalTyp extends FullVisitor {
 		super.visit(castExpr);
 
 		Typ castTyp = attrs.typAttr.get(castExpr.type);
-		Typ exprTyp = attrs.typAttr.get(castExpr.expr);
-
 		if (castTyp == null) SemAn.signalError("Cannot determine cast type", castExpr);
+
+		Typ exprTyp = attrs.typAttr.get(castExpr.expr);
 		if (exprTyp == null) SemAn.signalError("Cannot determine expr type", castExpr);
 
-		if (!(castTyp instanceof PtrTyp)
-			|| !(exprTyp instanceof PtrTyp)
-			|| !(((PtrTyp) exprTyp).baseTyp instanceof VoidTyp)) {
+		if (!(castTyp.actualTyp() instanceof PtrTyp) ||
+			!(exprTyp.actualTyp() instanceof PtrTyp) ||
+			!(((PtrTyp) exprTyp.actualTyp()).baseTyp instanceof VoidTyp)) {
 			SemAn.signalError("Can only cast void pointer types to other ptr types", castExpr);
 		}
 
@@ -354,7 +352,7 @@ public class EvalTyp extends FullVisitor {
 		if (thenT == null) SemAn.signalError("Cannot determine then branch type.", ifExpr);
 		if (elseT == null) SemAn.signalError("Cannot determine else branch type.", ifExpr);
 
-		if (!(condT instanceof BooleanTyp)) SemAn.signalError("Condition must be of a boolean type", ifExpr);
+		if (!(condT.actualTyp() instanceof BooleanTyp)) SemAn.signalError("Condition must be of a boolean type", ifExpr);
 
 		attrs.typAttr.set(ifExpr, new VoidTyp());
 	}
@@ -392,7 +390,6 @@ public class EvalTyp extends FullVisitor {
 
 	@Override
 	public void visit(RecType recType) {
-		//TODO
 		super.visit(recType);
 
 		LinkedList<Typ> compTypes = new LinkedList<>();
@@ -548,7 +545,7 @@ public class EvalTyp extends FullVisitor {
 		Typ funT = attrs.typAttr.get(funDecl.type);
 		if (funT == null) SemAn.signalError("Cannot determine function type.", funDecl);
 		//funT = funT.actualTyp();
-		if (!isAssignable(funT) && !(funT instanceof VoidTyp)) {
+		if (!isAssignable(funT) && !(funT.actualTyp() instanceof VoidTyp)) {
 			SemAn.signalError("Function type must be assignable or void.", funDecl);
 		}
 
@@ -563,7 +560,7 @@ public class EvalTyp extends FullVisitor {
 		//check function type
 		Typ funT = attrs.typAttr.get(funDef.type);
 		if (funT == null) SemAn.signalError("Cannot determine function type.", funDef);
-		if (!isAssignable(funT) && !(funT instanceof VoidTyp)) {
+		if (!isAssignable(funT) && !(funT.actualTyp() instanceof VoidTyp)) {
 			SemAn.signalError("Function type must be assignable or void.", funDef);
 		}
 
@@ -587,10 +584,10 @@ public class EvalTyp extends FullVisitor {
 			funDef.body.accept(this);
 			Typ bodyT = attrs.typAttr.get(funDef.body);
 			if (bodyT == null) SemAn.signalError("Cannot determine function body type.", funDef);
-			if (!funT.isStructEquivTo(bodyT)) {
+			if (!funT.actualTyp().isStructEquivTo(bodyT.actualTyp())) {
 				SemAn.signalError("Return type mismatch, expected " +
-								  funT.getClass().getSimpleName() +
-								  " got " + bodyT.getClass().getSimpleName() + ".", funDef);
+								  funT.actualTyp().getClass().getSimpleName() +
+								  " got " + bodyT.actualTyp().getClass().getSimpleName() + ".", funDef);
 			}
 		}
 
@@ -613,7 +610,7 @@ public class EvalTyp extends FullVisitor {
 		if (condT == null) SemAn.signalError("While condition must have a type.", whileExpr);
 		if (bodyT == null) SemAn.signalError("While body must have a type.", whileExpr);
 
-		if (!(condT instanceof BooleanTyp)) SemAn.signalError("While codtidion must be a bool.", whileExpr);
+		if (!(condT.actualTyp() instanceof BooleanTyp)) SemAn.signalError("While codtidion must be a bool.", whileExpr);
 
 		//While statement is of typ void
 		attrs.typAttr.set(whileExpr, new VoidTyp());
@@ -634,14 +631,10 @@ public class EvalTyp extends FullVisitor {
 		if (hiT == null) SemAn.signalError("Hi bound must have a type.", forExpr);
 		if (bodyT == null) SemAn.signalError("For body must have a type.", forExpr);
 
-		varT = varT.actualTyp();
-		loT = loT.actualTyp();
-		hiT = hiT.actualTyp();
-
 		//Do type checking on the for statement
-		if (!(varT instanceof IntegerTyp)) SemAn.signalError("For iteration variable must be an integer.", forExpr);
-		if (!(loT instanceof IntegerTyp)) SemAn.signalError("For lower bound must be an integer.", forExpr);
-		if (!(hiT instanceof IntegerTyp)) SemAn.signalError("For high bound must be an integer.", forExpr);
+		if (!(varT.actualTyp() instanceof IntegerTyp)) SemAn.signalError("Iteration variable must be an integer.", forExpr);
+		if (!(loT.actualTyp() instanceof IntegerTyp)) SemAn.signalError("For lower bound must be an integer.", forExpr);
+		if (!(hiT.actualTyp() instanceof IntegerTyp)) SemAn.signalError("For high bound must be an integer.", forExpr);
 
 
 		//For statement is of typ void

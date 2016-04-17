@@ -1,0 +1,5 @@
+
+a = 3
+where
+	var a : char
+end

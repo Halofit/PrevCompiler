@@ -1,0 +1,7 @@
+ 
+i
+where
+  typ int:integer
+  var i:arr[4]int
+  fun ord(c:char):int=i
+end

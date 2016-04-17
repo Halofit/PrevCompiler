@@ -1,3 +1,5 @@
+#tests recursion and name shadowing between scopes (arguments & types have the same name)
+
 (gcd(256, 129))
 where
 	typ a: b

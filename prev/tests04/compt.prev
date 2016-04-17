@@ -1,0 +1,53 @@
+#This file checks that the compiler can handle arbitrary orders of 
+#declarations, whether pointer and array type declarations work 
+#correctly and memory checks work correctly
+
+(
+	b = true,
+	for i=0,100 : (
+		p.x = i,
+		if b then
+			pnt(@p, "Hello")
+		else
+			puts("Error")
+		end,
+		i
+	)
+	end,
+	asArr = toArr(@p),
+	free(asArr)
+)
+
+where
+	var i : int
+	var p : point
+	var b : bool
+	var asArr : pair_ptr
+	
+	fun toArr(p: point_ptr) : pair_ptr = (
+		i = malloc(2*8),
+		i^[0] = p^.x,
+		i^[1] = p^.y,
+		i
+	) where
+		var i : pair_ptr
+	end
+	
+	fun pnt(p: point_ptr, s: str) : point_ptr = (
+		p^.x = 3,
+		p^.y = 2,
+		puts(s),
+		p
+	)
+	fun puts(s:str) : void
+	fun malloc(size:integer) : ptr void
+	fun free(p:ptr void) : void
+	
+	typ point : rec{x: int, y: int}
+	typ point_ptr : ptr point
+	typ int : integer
+	typ str : string
+	typ bool : boolean
+	typ pair : arr[2] int
+	typ pair_ptr : ptr pair
+end

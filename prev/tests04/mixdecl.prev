@@ -1,3 +1,5 @@
+#tests mixed declarations
+
 (a = 3, b = a) 
 where 
 	var a : a_t 

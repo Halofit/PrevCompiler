@@ -6,5 +6,5 @@ where
 	fun putstr(s:string):void
 	fun itostr(i:int):string
 	var buf: arr[100] int
-	var i: integer
+	var i: int
 end

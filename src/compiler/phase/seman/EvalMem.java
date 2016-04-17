@@ -20,21 +20,23 @@ public class EvalMem extends FullVisitor {
 	public void visit(UnExpr unExpr) {
 		super.visit(unExpr);
 
+		boolean result = false;
+
 		switch (unExpr.oper) {
 			case MEM:
+				//just check
 				Boolean inMem = attrs.memAttr.get(unExpr.subExpr);
 				if (inMem == null || !inMem) {
 					SemAn.signalError("Can only reference objects in memory.", unExpr);
 				}
-				attrs.memAttr.set(unExpr, false);
 				break;
 			case VAL:
 				Typ subT = attrs.typAttr.get(unExpr.subExpr);
-				if (subT instanceof PtrTyp) attrs.memAttr.set(unExpr, true);
+				if (subT.actualTyp() instanceof PtrTyp) result = true;
 				break;
-			default:
-				attrs.memAttr.set(unExpr, false);
 		}
+
+		attrs.memAttr.set(unExpr, result);
 	}
 
 	@Override
@@ -45,6 +47,8 @@ public class EvalMem extends FullVisitor {
 		Typ lT;
 		Typ rT;
 
+		boolean result = false;
+
 		switch (binExpr.oper) {
 			case ASSIGN:
 				//Just check
@@ -52,26 +56,26 @@ public class EvalMem extends FullVisitor {
 				if (inMem == null || !inMem) {
 					SemAn.signalError("Left side of the assignement must be in memory.", binExpr);
 				}
-				attrs.memAttr.set(binExpr, false);
 				break;
 			case ARR:
 				lT = attrs.typAttr.get(binExpr.fstExpr);
 				rT = attrs.typAttr.get(binExpr.sndExpr);
-				if (lT instanceof ArrTyp && rT instanceof IntegerTyp) {
-					attrs.memAttr.set(binExpr, true);
+				if (lT.actualTyp() instanceof ArrTyp &&
+					rT.actualTyp() instanceof IntegerTyp) {
+					result = true;
 				}
 				break;
 			case REC:
 				//Write
 				lT = attrs.typAttr.get(binExpr.fstExpr);
 				rT = attrs.typAttr.get(binExpr.sndExpr);
-				if (lT != null && rT != null) {
-					attrs.memAttr.set(binExpr, true);
+				if (lT.actualTyp() != null && rT.actualTyp() != null) {
+					result = true;
 				}
 				break;
-			default:
-				attrs.memAttr.set(binExpr, false);
 		}
+
+		attrs.memAttr.set(binExpr, result);
 	}
 
 	@Override

@@ -1,0 +1,10 @@
+ 
+
+1+[k]i+(ord(j) where var j:integer end)+point.i
+where
+  var point:rec{i:integer,j:integer}
+  var i:integer
+  var j:integer
+  typ k:integer
+  fun ord(c:char):integer=(c+1,for i=1,2:i+2 end)
+end
