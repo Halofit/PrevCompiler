@@ -1,0 +1,466 @@
+\documentclass[10pt]{article}
+\usepackage{a4wide}
+\usepackage{times}
+\begin{document}
+
+\parindent=0pt
+\parskip=0.3\baselineskip
+
+\def\production#1#2{\noindent#1$ \longrightarrow $#2\par}
+\def\nont#1{\mbox{\textit{#1}}}
+\def\term#1{\mbox{\texttt{#1}}}
+
+\def\type#1{\mbox{\textsl{#1}}}
+\def\typattr#1{[\![\,#1\,]\!]_{\mbox{\tiny TYP}}}
+\def\valattr#1{[\![\,#1\,]\!]_{\mbox{\tiny VAL}}}
+\def\memattr#1{[\![\,#1\,]\!]_{\mbox{\tiny MEM}}}
+
+\title{\textbf{The PREV Language Specification}}
+\author{Bo\v stjan Slivnik}
+\date{\today}
+\maketitle
+
+\section{Lexical structure}
+
+The programs in the PREV programming language are written is 7-bit ASCII character set (all other characters are invalid).  A single character LF denotes the end of line regardless of the text file format.
+
+The (groups of) symbols of the PREV programming language are:
+\begin{itemize}
+\item \textbf{Symbols:}
+\begin{quote}
+\term{\symbol{"2B}}\ \ \term{\symbol{"26}}\ \ \term{\symbol{"3D}}\ \ \term{\symbol{"3A}}\ \ \term{\symbol{"2C}}\ \ \term{\symbol{"7D}}\ \ \term{\symbol{"5D}}\ \ \term{\symbol{"29}}\ \ \term{\symbol{"2E}}\ \ \term{\symbol{"2F}}\ \ \term{\symbol{"3D}\symbol{"3D}}\ \ \term{\symbol{"3E}\symbol{"3D}}\ \ \term{\symbol{"3E}}\ \ \term{\symbol{"3C}\symbol{"3D}}\ \ \term{\symbol{"3C}}\ \ \term{\symbol{"40}}\ \ \term{\symbol{"25}}\ \ \term{\symbol{"2A}}\ \ \term{\symbol{"21}\symbol{"3D}}\ \ \term{\symbol{"21}}\ \ \term{\symbol{"7B}}\ \ \term{\symbol{"5B}}\ \ \term{\symbol{"28}}\ \ \term{\symbol{"7C}}\ \ \term{\symbol{"2D}}\ \ \term{\symbol{"5E}}
+\end{quote}
+\item \textbf{Constants:}
+\begin{itemize}
+\item \textit{Boolean constants:} \term{true}\ \ \term{false}
+\item \textit{Integer constants:} An integer constant is a sequence of decimal digits optionally prefixed by a sign, i.e., ``\texttt{\symbol{"2B}}'' or ``\texttt{\symbol{"2D}}'', denoting a 64-bit signed integer, i.e., from the interval $ [-2^{63},2^{63}-1] $.
+\item \textit{Character constants:} A character constant consists of a single character name within single quotes.  A character name is either a character with an ASCII code from the interval $[32,126]$ (but not a backslash, a single or a double quote) or an escape sequence.  An escape sequence starts with a backslash character followed by a backslash (denoting a backslash), a single quote (denoting a single quote), a double quote (denoting a double quote), ``\texttt{t}'' (denoting TAB), or ``\texttt{n}'' (denoting LF).
+\item \textit{String constants:} A string constant is a possibly empty finite sequence of character names within double quotes.  A character name is either a character with an ASCII code from the interval $[32,126]$ (but not a backslash, a single or a double quote) or an escape sequence.  An escape sequence starts with a backslash character followed by a backslash (denoting a backslash), a single quote (denoting a single quote), a double quote (denoting a double quote), ``\texttt{t}'' (denoting TAB), or ``\texttt{n}'' (denoting LF).
+\item \textit{Pointer constant:} \term{null}
+\item \textit{Void constant:} \term{none}
+\end{itemize}
+\item \textbf{Type names:}
+\begin{quote}
+\term{boolean}\ \ \term{integer}\ \ \term{char}\ \ \term{string}\ \ \term{void}
+\end{quote}
+\item \textbf{Keywords:}
+\begin{quote}
+\term{arr}\ \ \term{else}\ \ \term{end}\ \ \term{for}\ \ \term{fun}\ \ \term{if}\ \ \term{then}\ \ \term{ptr}\ \ \term{rec}\ \ \term{typ}\ \ \term{var}\ \ \term{where}\ \ \term{while}
+\end{quote}
+\item \textbf{Identifiers:} An identifier is a nonempty finite sequence of letters, digits and underscores that starts with a letter or an underscore.
+\end{itemize}
+Additionaly, the source might include the following:
+\begin{itemize}
+\item \textbf{White space:} Characters CR, LF, TAB, or space.
+\item \textbf{Comments:} A comment is a sequence of character that starts with an octothorpe character, i.e., ``\texttt{\symbol{"23}}'', and ends with the LF character (regardless of the text file format).
+\end{itemize}
+
+To break the source file into individual symbols, the first-match-longest-match rule must be used.
+
+\section{Syntactic structure}
+
+The concrete syntax of the PREV programming language is defined by an LR(1) grammar.  Nonterminal and terminal symbols are written in italic and typewritter fonts, respectivelly.  Terminal symbols \term{IDENTIFIER}, \term{INTEGER}, \term{BOOLEAN}, \term{CHAR} and \term{STRING} denote (all) identifiers, integer constants, bool\-ean constants, character constants and string constants, respectivelly.  The start symbol of the grammar is \nont{Program}.  The LR(1) grammar contains the following productions:
+\medskip\par
+
+\begingroup
+\parskip=0pt
+\input grammar.tex
+\medskip\par
+\endgroup
+
+Note that the LR(1) grammar generates certain sentential forms which are prohibited by semantics.
+
+\section{Semantic rules}
+
+\subsection{Namespaces}
+
+\begin{enumerate}
+\item Names of types, functions, variables and parameters belong to one single global namespace.
+\item Names of record components belong to record-specific namespaces, i.e., each record defines its own namespace containing names of its components.
+\end{enumerate}
+
+\subsection{Scope}
+
+\begin{enumerate}
+
+\item $ \term{where} $-expression
+$$ \nont{expr}\ \term{where}\ \nont{decl}_1\ \nont{decl}_2\ \ldots\ \nont{decl}_n\  \term{end}$$
+creates a new scope:
+\begin{itemize}
+\item subexpression $ \nont{expr} $ and declarations $ \nont{decl}_i $, for $ i = 1,2,\ldots, n $, belong to the new scope;
+\item names declared by declarations $ \nont{decl}_i $, for $ i = 1,2,\ldots, n $, are visible in the scope (unless they are redeclared within inner scopes). 
+\end{itemize}
+
+\item Function declaration $$ \term{fun}\ \term{ID}\ \term{(} \term{ID}_1\term{:}\nont{type}_1\term{,}\term{ID}_2\term{:}\nont{type}_2\term{,}\ldots,\term{ID}_n\term{:}\nont{type}_n\term{)}\term{:}\ \nont{type}\ (\term{=}\ \nont{expr})_\mathrm{opt} $$
+creates a new scope:
+\begin{itemize}
+\item Function name $ \term{ID} $, function type $ \nont{type} $ and parameter types $ \nont{type}_i $, for $ i = 1,2,\ldots, n $, do not belong to the new scope.
+\item Parameter names $ \term{ID}_i $, for $ i = 1,2,\ldots, n $, and function body $ \nont{expr} $ (if specified) belong to the new scope and are visible in the entire new scope.
+\end{itemize}
+
+\end{enumerate}
+
+\subsection{Constant integer expressions}
+
+Let $ \mathrm{I} = \{(-2^{63})\ldots(+2^{63}-1)\} $.  Semantic function
+$$ \valattr{\cdot} \colon {\cal P} \rightarrow \mathrm{I} $$
+maps phrases of PREV to the integer values they denote.  It is defined by the following rules:
+%
+$$ \begin{array}{c}
+   \mbox{\textit{lexeme}}(\term{INTEGER}) \in \mathrm{I}
+   \\[2pt]\hline\\[-10pt]
+   \valattr{\term{INTEGER}} = \mbox{\textit{lexeme}}(\term{INTEGER})
+   \end{array} $$
+
+$$ \begin{array}{c}
+   \valattr{\nont{expr}} = n \quad
+   \mbox{op}\in\{\term{+},\term{-}\}
+   \\[2pt]\hline\\[-10pt]
+   \valattr{\mbox{op}\ \mbox{expr}} = \mbox{op}\ n
+   \end{array}
+  \quad
+   \begin{array}{c}
+   \valattr{\mbox{expr}_1} = n_1 \quad
+   \valattr{\mbox{expr}_2} = n_2 \quad
+   \mbox{op}\in\{\term{+},\term{-},\term{*},\term{/},\term{\%}\}
+   \\[2pt]\hline\\[-10pt]
+   \valattr{\mbox{expr}_1\ \mbox{op}\ \mbox{expr}_2} = n_1\ \mbox{op}\ n_2
+   \end{array} $$
+
+In all other cases the value of $ \valattr{\cdot} $ is undefined (denoted by $ \bot $).
+
+\subsection{Type system}
+
+A set
+$$
+\arraycolsep=1pt
+\begin{array}{rcll}
+\mathrm{T} & = & \{ \type{boolean}, 
+                    \type{integer}, 
+                    \type{char},
+                    \type{string},
+                    \type{void}\}
+               & \quad\quad\mbox{(atomic types)} \\[2pt]
+           &   & \cup\ \{ \type{arr}(n\times\tau) \ | \
+                          n \in \mathrm{I} \land \tau \in \mathrm{T} \}
+               & \quad\quad\mbox{(arrays)} \\[2pt]
+           &   & \cup\ \{ \type{rec}(\tau_1,\tau_2,\ldots,\tau_n) \ | \ 
+                          n > 0 \land \tau_1,\tau_2,\ldots,\tau_n \in \mathrm{T} \}
+               & \quad\quad\mbox{(records)} \\[2pt]
+           &   & \cup\ \{ \type{ptr}(\tau) \ | \ 
+                          \tau \in \mathrm{T} \}
+               & \quad\quad\mbox{(pointers)} \\[2pt]
+           &   & \cup\ \{ (\tau_1,\tau_2,\ldots,\tau_n)\rightarrow\tau \ | \
+                          n \geq 0 \land \tau_1,\tau_2,\ldots,\tau_n \in \mathrm{T} \}
+               & \quad\quad\mbox{(functions)}
+
+\end{array}
+$$
+denotes a set of all types of PREV.  Two types are equal if they share the same structure.
+
+Semantic function $ \typattr{.} $
+$$ \typattr{\cdot} \colon {\cal P} \rightarrow \mathrm{T} $$
+maps phrases of PREV to types.
+
+Let function $ \mbox{\textsc{DECL}} $ maps a type, function, variable or parameter name to its declaration according to the namespace and scope rules specified above and let $ \mbox{\textsc{DECL}}_\tau $ map a component name to its declaration within (a record) type $ \tau $.  If a name is undefined in the current namespace or scope, functions $ \mbox{\textsc{DECL}} $ and $ \mbox{\textsc{DECL}}_\tau $ return $ \bot $.  The semantic function $ \typattr{.} $ is defined by the rules in the following subsections.  In cases when no rule can be applied, the semantic function $ \typattr{.} $ is left undefined (denoted by $ \bot $).
+
+\subsubsection{Type expressions:}
+
+$$ \begin{array}{c}
+   \hline\\[-10pt]
+   \typattr{\term{boolean}} = \type{boolean}
+   \end{array}
+  \quad
+   \begin{array}{c}
+   \hline\\[-10pt]
+   \typattr{\term{integer}} = \type{integer}
+   \end{array} $$
+
+$$ \begin{array}{c}
+   \hline\\[-10pt]
+   \typattr{\term{char}} = \type{char}
+   \end{array}
+  \quad
+   \begin{array}{c}
+   \hline\\[-10pt]
+   \typattr{\term{string}} = \type{string}
+   \end{array}
+  \quad
+   \begin{array}{c}
+   \hline\\[-10pt]
+   \typattr{\term{void}} = \type{void}
+   \end{array} $$
+   
+$$ \begin{array}{c}
+   \valattr{\nont{expr}} = n \quad
+   n > 0 \quad
+   \typattr{\nont{type}} = \tau
+   \\[2pt]\hline\\[-10pt]
+   \typattr{\term{arr}\ \term{[}\nont{expr}\term{]}\ \nont{type}} = \type{arr}(n\times\tau)
+   \end{array}
+  \quad
+   \begin{array}{c}
+   \typattr{\nont{type}} = \tau
+   \\[2pt]\hline\\[-10pt]
+   \typattr{\term{ptr}\ \nont{type}} = \type{ptr}(\tau)
+   \end{array} $$
+
+$$ \begin{array}{c}
+   \forall i\colon \typattr{\nont{type}_i} = \tau_i
+   \\[2pt]\hline\\[-10pt]
+   \typattr{\term{rec}\ \term{\{}\ \nont{name}_1\term{:}\nont{type}_1\term{,}\nont{name}_2\term{:}\nont{type}_2\term{,}\ldots\term{,}\nont{name}_n\term{:}\nont{type}_n\ \term{\}}} = \type{rec}(\tau_1,\tau_2,\ldots,\tau_n)
+   \end{array} $$
+
+$$ \begin{array}{c}
+   \typattr{\mbox{\textsc{DECL}}(\nont{typ-name})} = \tau
+   \\[2pt]\hline\\[-10pt]
+   \typattr{\nont{typ-name}} = \tau
+   \end{array} $$
+  
+\subsubsection{Value expressions:}
+
+\medskip
+
+$$ \begin{array}{c}
+   \hline\\[-10pt]
+   \typattr{\term{BOOLEAN}} = \type{boolean}
+   \end{array}
+  \quad
+   \begin{array}{c}
+   \hline\\[-10pt]
+   \typattr{\term{INTEGER}} = \type{integer}
+   \end{array} $$
+
+$$ \begin{array}{c}
+   \hline\\[-10pt]
+   \typattr{\term{CHAR}} = \type{char}
+   \end{array}
+  \quad
+   \begin{array}{c}
+   \hline\\[-10pt]
+   \typattr{\term{STRING}} = \type{string}
+   \end{array} $$
+
+$$ \begin{array}{c}
+   \hline\\[-10pt]
+   \typattr{\term{none}} = \type{void}
+   \end{array}
+  \quad
+   \begin{array}{c}
+   \hline\\[-10pt]
+   \typattr{\term{null}} = \type{ptr}(\type{void})
+   \end{array} $$
+
+$$ \begin{array}{c}
+   \typattr{\nont{expr}} = \type{boolean}
+   \\[2pt]\hline\\[-10pt]
+   \typattr{\term{!}\,\nont{expr}} = \type{boolean}
+   \end{array}
+  \quad
+   \begin{array}{c}
+   \typattr{\nont{expr}} = \type{integer} \quad
+   \mbox{op}\in\{\term{+},\term{-}\}
+   \\[2pt]\hline\\[-10pt]
+   \typattr{\mbox{op}\ \nont{expr}} = \type{integer}
+   \end{array} $$
+
+$$ \begin{array}{c}
+   \typattr{\nont{expr}_1} = \type{integer} \quad
+   \typattr{\nont{expr}_2} = \type{integer} \quad
+   \mbox{op}\in\{\term{+},\term{-},\term{*},\term{/},\term{\%}\}
+   \\[2pt]\hline\\[-10pt]
+   \typattr{\nont{expr}_1\ \mbox{op}\ \nont{expr}_2} = \type{integer}
+   \end{array} $$
+ 
+$$ \begin{array}{c}
+   \typattr{\nont{expr}_1} = \type{boolean} \quad
+   \typattr{\nont{expr}_2} = \type{boolean} \quad
+   \mbox{op}\in\{\term{\&},\term{|}\}
+   \\[2pt]\hline\\[-10pt]
+   \typattr{\nont{expr}_1\ \mbox{op}\ \nont{expr}_2} = \type{boolean}
+   \end{array} $$
+  
+$$ \begin{array}{c}
+   \typattr{\nont{expr}_1} = \tau_1 \quad
+   \typattr{\nont{expr}_2} = \tau_2 \quad
+   \mbox{op}\in\{\term{==},\term{!=},\term{<},\term{>},\term{<=},\term{>=}\}\\[2pt]
+   \tau_1,\tau_2 \in \{\type{boolean},\type{integer},\type{char}\} \cup \{\type{ptr}(\tau)\ | \ \tau \in \mbox{T} \} \quad \tau_1 = \tau_2
+   \\[2pt]\hline\\[-10pt]
+   \typattr{\nont{expr}_1\ \mbox{op}\ \nont{expr}_2} = \type{boolean}
+   \end{array} $$
+
+$$ \begin{array}{c}
+   \typattr{\nont{expr}_1} = \tau_1 \quad
+   \typattr{\nont{expr}_2} = \tau_2 \quad
+   \memattr{\nont{expr}_1} = \mbox{\textsf{true}} \\[2pt]
+   \tau_1,\tau_2 \in \{\type{boolean},\type{integer},\type{char},\type{string}\} \cup \{\type{ptr}(\tau)\ | \ \tau \in \mbox{T} \} \quad \tau_1 = \tau_2
+   \\[2pt]\hline\\[-10pt]
+   \typattr{\nont{expr}_1\ \term{=}\ \nont{expr}_2} = \type{void}
+   \end{array} $$
+
+$$ \begin{array}{c}
+   \typattr{\mbox{\textsc{decl}}(\nont{var-name})} = \tau
+   \\[2pt]\hline\\[-10pt]
+   \typattr{\nont{var-name}} = \tau
+   \end{array}
+  \quad
+   \begin{array}{c}
+   \typattr{\mbox{\textsc{decl}}(\nont{par-name})} = \tau
+   \\[2pt]\hline\\[-10pt]
+   \typattr{\nont{par-name}} = \tau
+   \end{array} $$
+
+$$ \begin{array}{c}
+   \forall i\colon \typattr{\nont{expr}_i} = \tau_i \quad
+   \typattr{\mbox{\textsc{decl}}(\nont{fun-name})} = (\tau_1,\tau_2,\ldots,\tau_n)\rightarrow\tau
+   \\[2pt]\hline\\[-10pt]
+   \typattr{\nont{fun-name}\term{(}\nont{expr}_1\term{,}\nont{expr}_2\term{,}\ldots\term{,}\nont{expr}_n\term{)}} = \tau
+   \end{array} $$
+
+$$ \begin{array}{c}
+   \typattr{\nont{expr}} = \tau \quad \typattr{\mbox{\textsc{decl}}_\tau(\nont{comp-name})} = \tau'
+   \\[2pt]\hline\\[-10pt]
+   \typattr{\nont{expr}\term{.}\nont{comp-name}} = \tau'
+   \end{array} $$
+
+$$ \begin{array}{c}
+   \typattr{\nont{expr}_1} = \type{arr}(n\times\tau) \quad 
+   \typattr{\nont{expr}_2} = \type{integer}
+   \\[2pt]\hline\\[-10pt]
+   \typattr{\nont{expr}_1\term{[}\nont{expr}_2\term{]}} = \tau
+   \end{array} $$
+
+$$ \begin{array}{c}
+   \typattr{\nont{expr}} = \tau \quad
+   \memattr{\nont{expr}} = \mbox{\textsf{true}}
+   \\[2pt]\hline\\[-10pt]
+   \typattr{\term{@}\nont{expr}} = \type{ptr}(\tau)
+   \end{array}
+  \quad
+   \begin{array}{c}
+   \typattr{\nont{expr}} = \type{ptr}(\tau)
+   \\[2pt]\hline\\[-10pt]
+   \typattr{\nont{expr}\term{\^}} = \tau
+   \end{array} $$
+
+$$ \begin{array}{c}
+   \typattr{\nont{type}} = \type{ptr}(\tau) \quad
+   \typattr{\nont{expr}} = \type{ptr}(\type{void})
+   \\[2pt]\hline\\[-10pt]
+   \typattr{\term{[}\nont{type}\term{]}\nont{expr}} = \type{ptr}(\tau)
+   \end{array} $$
+
+$$ \begin{array}{c}
+   \forall i\colon\typattr{\nont{expr}_i} \not=\bot \quad
+   \typattr{\nont{expr}_n} = \tau
+   \\[2pt]\hline\\[-10pt]
+   \typattr{\term{(}\nont{expr}_1\term{,}\nont{expr}_2\term{,}\ldots\term{,}\nont{expr}_n\term{)}} = \tau
+   \end{array} $$
+
+$$ \begin{array}{c}
+   \typattr{\nont{cond-expr}} = \type{boolean} \quad
+   \typattr{\nont{then-body}} \not= \bot \quad
+   \typattr{\nont{else-body}} \not= \bot
+   \\[2pt]\hline\\[-10pt]
+   \typattr{\term{if}\ \nont{cond-expr}\ \term{then}\ \nont{then-body}\ \term{else}\ \nont{else-body}\ \term{end}} = \type{void}
+   \end{array} $$
+
+$$ \begin{array}{c}
+   \typattr{\nont{var-name}} = \type{integer} \!\!\quad
+   \typattr{\nont{lo-expr}} = \type{integer} \!\!\quad
+   \typattr{\nont{hi-expr}} = \type{integer} \!\!\quad
+   \typattr{\nont{body}} \not= \bot
+   \\[2pt]\hline\\[-10pt]
+   \typattr{\term{for}\ \nont{var-name}\term{:}\nont{lo-expr}\term{,}\nont{hi-expr}\term{:}\nont{body}\ \term{end}} = \type{void}
+   \end{array} $$
+
+$$ \begin{array}{c}
+   \typattr{\nont{cond-expr}} = \type{boolean} \quad
+   \typattr{\nont{body}} \not= \bot
+   \\[2pt]\hline\\[-10pt]
+   \typattr{\term{while}\ \nont{cond-expr}\term{:}\nont{body}\ \term{end}} = \type{void}
+   \end{array} $$
+   
+$$ \begin{array}{c}
+   \forall i\colon \typattr{\nont{decl}_i} \not= \bot \quad
+   \typattr{\nont{expr}} = \tau
+   \\[2pt]\hline\\[-10pt]
+   \typattr{\nont{expr}\ \term{where}\  \nont{decl}_1\term{,}\nont{decl}_2\term{,}\ldots\term{,}\nont{decl}_n\ \term{end}} = \tau
+   \end{array} $$
+
+\subsubsection{Declarations:}
+
+$$ \begin{array}{c}
+   \typattr{\nont{type}} = \tau
+   \\[2pt]\hline\\[-10pt]
+   \typattr{\term{typ}\ \nont{typ-name}\term{:}\nont{type}} = \tau
+   \end{array} $$
+
+$$ \begin{array}{c}
+   \forall i\colon \typattr{\nont{decl}_i} = \tau_i \quad
+   \forall i\colon \tau_i \in \{\type{boolean},\type{integer},\type{char},\type{string}\} \cup \{\type{ptr}(\tau)\ | \ \tau \in \mbox{T} \} \\[2pt]
+   \typattr{\nont{type}} = \tau \quad
+   \tau \in \{\type{boolean},\type{integer},\type{char},\type{string},\type{void}\} \cup \{\type{ptr}(\tau)\ | \ \tau \in \mbox{T} \} \\[2pt]
+   \typattr{\nont{expr}} = \tau
+   \\[2pt]\hline\\[-10pt]
+   \typattr{\term{fun}\ \nont{fun-name}\term{(}\nont{decl}_1\term{,}\nont{decl}_2\term{,}\ldots\term{,}\nont{decl}_n\term{)}\term{:}\nont{type}\ (\term{=}\ \nont{expr})_\mathrm{opt}} = (\tau_1,\tau_2\ldots,\tau_n)\rightarrow\tau
+   \end{array} $$
+
+$$ \begin{array}{c}
+   \typattr{\nont{type}} = \tau
+   \\[2pt]\hline\\[-10pt]
+   \typattr{\term{var}\ \nont{var-name}\term{:}\nont{type}} = \tau
+   \end{array}
+  \quad
+   \begin{array}{c}
+   \typattr{\nont{type}} = \tau
+   \\[2pt]\hline\\[-10pt]
+   \typattr{\nont{par-name}\term{:}\nont{type}} = \tau
+   \end{array}
+  \quad
+   \begin{array}{c}
+   \typattr{\nont{type}} = \tau
+   \\[2pt]\hline\\[-10pt]
+   \typattr{\nont{comp-name}\term{:}\nont{type}} = \tau
+   \end{array} $$
+
+\subsection{Memory objects}
+
+Semantic function $ \memattr{\cdot} $
+$$ \memattr{\cdot} \colon {\cal P} \rightarrow \{ \mbox{\textsf{true}},\mbox{\textsf{false}} \} $$
+maps phrases of PREV to boolean values: it maps a phrase to $ \mbox{\textsf{true}} $ if and only if it is a value expression and denotes an object in memory.  It is defined by the following rules:
+
+$$ \begin{array}{c}
+   \typattr{\mbox{\textsc{decl}}(\nont{var-name})} = \tau
+   \\[2pt]\hline\\[-10pt]
+   \memattr{\nont{var-name}} = \mbox{\textsf{true}}
+   \end{array}
+  \quad
+   \begin{array}{c}
+   \typattr{\mbox{\textsc{decl}}(\nont{par-name})} = \tau
+   \\[2pt]\hline\\[-10pt]
+   \memattr{\nont{par-name}} = \mbox{\textsf{true}}
+   \end{array} $$
+   
+$$ \begin{array}{c}
+   \typattr{\nont{expr}} = \tau \quad \typattr{\mbox{\textsc{decl}}_\tau(\nont{comp-name})} = \tau'
+   \\[2pt]\hline\\[-10pt]
+   \memattr{\nont{expr}\term{.}\nont{comp-name}} = \mbox{\textsf{true}}
+   \end{array} $$
+
+$$ \begin{array}{c}
+   \typattr{\nont{expr}_1} = \type{arr}(n\times\tau) \quad 
+   \typattr{\nont{expr}_2} = \type{integer}
+   \\[2pt]\hline\\[-10pt]
+   \memattr{\nont{expr}_1\term{[}\nont{expr}_2\term{]}} = \mbox{\textsf{true}}
+   \end{array} $$
+
+$$ \begin{array}{c}
+   \typattr{\nont{expr}} = \type{ptr}(\tau)
+   \\[2pt]\hline\\[-10pt]
+   \memattr{\nont{expr}\term{\^}} = \mbox{\textsf{true}}
+   \end{array} $$
+
+In cases when no rule can be applied, the value of semantic function $ \memattr{.} $ is $ \mbox{\textsf{false}} $.
+
+\end{document}
