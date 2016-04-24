@@ -1,6 +1,6 @@
 package compiler.data.typ;
 
-import compiler.common.logger.*;
+import compiler.common.logger.Logger;
 
 /**
  * @author sliva

@@ -5,6 +5,8 @@
 bindir = ../out/production/Compiler
 xsldir = ./xsl
 
+%.frames.xml	: %.prev
+	java -classpath $(bindir) compiler.Main --xsldir=$(xsldir) --phase=frames --loggedphases=frames $<
 
 %.seman.xml	: %.prev
 	java -classpath $(bindir) compiler.Main --xsldir=$(xsldir) --phase=seman --loggedphases=seman $<

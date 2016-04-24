@@ -1,9 +1,9 @@
 package compiler.data.ast.attr;
 
-import compiler.data.acc.*;
+import compiler.data.acc.Access;
 import compiler.data.ast.*;
-import compiler.data.typ.*;
-import compiler.data.frm.*;
+import compiler.data.frm.Frame;
+import compiler.data.typ.Typ;
 
 /**
  * @author sliva
@@ -14,7 +14,7 @@ public class Attributes {
 	 * Values of simple integer constant expressions. Value <code>null</code>
 	 * signals that the value of the attribute cannot be computed.
 	 */
-	public Attribute<Expr, Long> valueAttr = new Attribute<Expr, Long>();
+	public Attribute<Expr, Long> valueAttr = new Attribute<>();
 
 	/**
 	 * Declarations of declarable entities, i.e., every entry denotes a link
@@ -22,7 +22,7 @@ public class Attributes {
 	 * declared. Value <code>null</code> signals that the value of the attribute
 	 * cannot be computed.
 	 */
-	public Attribute<Declarable, Decl> declAttr = new Attribute<Declarable, Decl>();
+	public Attribute<Declarable, Decl> declAttr = new Attribute<>();
 
 	/**
 	 * A type associated with an AST node. If the AST node denotes
@@ -36,23 +36,22 @@ public class Attributes {
 	 * Value <code>null</code> signals that the value of the attribute cannot be
 	 * computed.
 	 */
-	public Attribute<Typeable, Typ> typAttr = new Attribute<Typeable, Typ>();
+	public Attribute<Typeable, Typ> typAttr = new Attribute<>();
 
 	/**
 	 * A flag signaling whether an expression evaluates to an address (and
 	 * provided it is of assignable type can therefore stand on the left side of
 	 * an assignment).
 	 */
-	public Attribute<Expr, Boolean> memAttr = new Attribute<Expr, Boolean>();
+	public Attribute<Expr, Boolean> memAttr = new Attribute<>();
 
 	/**
 	 * A function's stack frame.
 	 */
-	public Attribute<FunDecl, Frame> frmAttr = new Attribute<FunDecl, Frame>();
+	public Attribute<FunDecl, Frame> frmAttr = new Attribute<>();
 
 	/**
 	 * A variable's access.
 	 */
-	public Attribute<VarDecl, Access> accAttr = new Attribute<VarDecl, Access>();
-
+	public Attribute<VarDecl, Access> accAttr = new Attribute<>();
 }

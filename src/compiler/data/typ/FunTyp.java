@@ -1,9 +1,9 @@
 package compiler.data.typ;
 
-import java.util.*;
+import compiler.common.logger.Logger;
+import compiler.common.report.InternalCompilerError;
 
-import compiler.common.logger.*;
-import compiler.common.report.*;
+import java.util.LinkedList;
 
 /**
  * @author sliva

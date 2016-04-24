@@ -1,9 +1,12 @@
 package compiler.phase.seman;
 
-import java.util.*;
+import compiler.common.report.InternalCompilerError;
+import compiler.common.report.Position;
+import compiler.data.ast.Decl;
 
-import compiler.common.report.*;
-import compiler.data.ast.*;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Stack;
 
 /**
  * Symbol table.

@@ -1,9 +1,9 @@
 package compiler.phase.frames;
 
-import compiler.common.logger.*;
+import compiler.common.logger.Logger;
 import compiler.data.ast.*;
-import compiler.data.ast.attr.*;
-import compiler.phase.seman.*;
+import compiler.data.ast.attr.Attributes;
+import compiler.phase.seman.SemAnToXML;
 
 /**
  * A visitor for printing out the XML description of the abstract syntax tree

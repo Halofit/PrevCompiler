@@ -1,7 +1,8 @@
 package compiler.phase.lexan;
 
-import compiler.common.logger.*;
-import compiler.common.report.*;
+import compiler.common.logger.Loggable;
+import compiler.common.logger.Logger;
+import compiler.common.report.Position;
 
 /**
  * A lexical symbol.

@@ -1,6 +1,6 @@
 package compiler.data.acc;
 
-import compiler.common.logger.*;
+import compiler.common.logger.Loggable;
 
 /**
  * The access to a variable.
@@ -13,10 +13,10 @@ public abstract class Access implements Loggable {
 	 * The size of a variable.
 	 */
 	public final long size;
-	
+
 	/**
 	 * Constructs a new access.
-	 * 
+	 *
 	 * @param size
 	 *            The size of a variable.
 	 */

@@ -1,9 +1,9 @@
 package compiler.phase.abstr;
 
-import compiler.common.logger.*;
-import compiler.common.report.*;
+import compiler.common.logger.Logger;
+import compiler.common.report.Position;
 import compiler.data.ast.*;
-import compiler.data.ast.code.*;
+import compiler.data.ast.code.Visitor;
 
 /**
  * A visitor for printing out the XML description of the abstract syntax tree.

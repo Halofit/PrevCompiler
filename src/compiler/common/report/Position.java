@@ -1,6 +1,7 @@
 package compiler.common.report;
 
-import compiler.common.logger.*;
+import compiler.common.logger.Loggable;
+import compiler.common.logger.Logger;
 
 /**
  * Denotes the position of a text within a file.

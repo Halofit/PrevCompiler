@@ -1,9 +1,9 @@
 package compiler.data.ast.attr;
 
-import java.util.*;
+import compiler.common.report.InternalCompilerError;
+import compiler.data.ast.AST;
 
-import compiler.common.report.*;
-import compiler.data.ast.*;
+import java.util.HashMap;
 
 /**
  * AST node's attribute.

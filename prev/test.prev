@@ -1,15 +1,15 @@
 (banner="Hello, world.\n",putstr(banner),0)
 where
   fun putstr(s:string):void
-  fun f1(i:integer):integer=f1(i)+f2(i,'a',"A")
-    where
-      var c:char
-      var r:rec { x:integer, y:integer, c:char }
-      fun f2(j:integer,c:char,s:string):integer=i+j
-        where
-	  var k:integer
-	  var a:arr[10]integer
-	end
+  fun f1(i:integer):integer=f1(i)+f2(i,'a',"A") #8+8,8 outsize=25
+    where #local vars = 1 + 17 = 18
+      var c:char #1
+      var r:rec { x:integer, y:integer, c:char } # 17 {8, 8, 1}
+      fun f2(j:integer,c:char,s:string):integer=i+j  #params : 8 1 8 = 17+8, 8 => input=25
+        where #local vars = 88
+		  var k:integer # 8
+		  var a:arr[10]integer # 8*10
+		end
     end
   var banner:string
 end

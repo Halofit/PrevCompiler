@@ -1,11 +1,14 @@
 package compiler;
 
-import compiler.common.report.*;
-import compiler.phase.lexan.*;
-import compiler.phase.synan.*;
-import compiler.phase.abstr.*;
+import compiler.common.report.CompilerError;
+import compiler.common.report.Report;
+import compiler.phase.abstr.Abstr;
+import compiler.phase.frames.EvalFrames;
+import compiler.phase.frames.Frames;
+import compiler.phase.lexan.LexAn;
+import compiler.phase.lexan.Symbol;
 import compiler.phase.seman.*;
-import compiler.phase.frames.*;
+import compiler.phase.synan.SynAn;
 
 /**
  * The compiler's entry point.

@@ -163,7 +163,7 @@
 	<text>&#xA0;</text>
  	<span style="white-space:nowrap">
 	  <xsl:if test="@label!=''">
-	    <xsl:text>level=</xsl:text>
+	    <xsl:text>label=</xsl:text>
 	    <xsl:value-of select="@label"/>
 	    <text>&#xA0;</text>
 	  </xsl:if>

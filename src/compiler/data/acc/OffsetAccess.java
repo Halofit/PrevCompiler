@@ -1,6 +1,6 @@
 package compiler.data.acc;
 
-import compiler.common.logger.*;
+import compiler.common.logger.Logger;
 
 /**
  * Access to a variable using an offset, i.e., relative to either FP

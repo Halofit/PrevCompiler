@@ -1,9 +1,9 @@
 package compiler.data.ast;
 
-import java.util.*;
+import compiler.common.report.Position;
+import compiler.data.ast.code.Visitor;
 
-import compiler.common.report.*;
-import compiler.data.ast.code.*;
+import java.util.LinkedList;
 
 /**
  * @author sliva

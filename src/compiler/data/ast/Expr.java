@@ -1,6 +1,6 @@
 package compiler.data.ast;
 
-import compiler.common.report.*;
+import compiler.common.report.Position;
 
 /**
  * @author sliva

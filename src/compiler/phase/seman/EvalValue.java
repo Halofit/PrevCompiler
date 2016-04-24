@@ -1,10 +1,11 @@
 package compiler.phase.seman;
 
-import compiler.common.report.*;
 import compiler.common.report.PhaseErrors.SemAnError;
-import compiler.data.ast.*;
-import compiler.data.ast.attr.*;
-import compiler.data.ast.code.*;
+import compiler.data.ast.AtomExpr;
+import compiler.data.ast.BinExpr;
+import compiler.data.ast.UnExpr;
+import compiler.data.ast.attr.Attributes;
+import compiler.data.ast.code.FullVisitor;
 
 /**
  * Computes the value of simple integer constant expressions.

@@ -1,7 +1,7 @@
 package compiler.data.ast;
 
-import compiler.common.report.*;
-import compiler.data.ast.code.*;
+import compiler.common.report.Position;
+import compiler.data.ast.code.Visitor;
 
 /**
  * Denotes an error in sentential form denoting a declaration error.

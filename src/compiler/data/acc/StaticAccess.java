@@ -1,6 +1,6 @@
 package compiler.data.acc;
 
-import compiler.common.logger.*;
+import compiler.common.logger.Logger;
 
 /**
  * Access to a static variable.

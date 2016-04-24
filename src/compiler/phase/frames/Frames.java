@@ -1,7 +1,7 @@
 package compiler.phase.frames;
 
-import compiler.*;
-import compiler.phase.*;
+import compiler.Task;
+import compiler.phase.Phase;
 
 /**
  * Evaluation of stack frames and variable accesses.

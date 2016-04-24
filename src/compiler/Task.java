@@ -1,8 +1,9 @@
 package compiler;
 
-import compiler.common.report.*;
-import compiler.data.ast.*;
-import compiler.data.ast.attr.*;
+import compiler.common.report.CompilerError;
+import compiler.common.report.Report;
+import compiler.data.ast.Program;
+import compiler.data.ast.attr.Attributes;
 
 /**
  * The parameters and internal data of the compilation process.

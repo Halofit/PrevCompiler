@@ -1,7 +1,7 @@
 package compiler.phase;
 
-import compiler.*;
-import compiler.common.logger.*;
+import compiler.Task;
+import compiler.common.logger.Logger;
 
 /**
  * @author sliva

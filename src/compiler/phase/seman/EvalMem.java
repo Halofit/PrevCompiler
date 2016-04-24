@@ -1,9 +1,12 @@
 package compiler.phase.seman;
 
 import compiler.data.ast.*;
-import compiler.data.ast.attr.*;
-import compiler.data.ast.code.*;
-import compiler.data.typ.*;
+import compiler.data.ast.attr.Attributes;
+import compiler.data.ast.code.FullVisitor;
+import compiler.data.typ.ArrTyp;
+import compiler.data.typ.IntegerTyp;
+import compiler.data.typ.PtrTyp;
+import compiler.data.typ.Typ;
 
 /**
  * @author sliva

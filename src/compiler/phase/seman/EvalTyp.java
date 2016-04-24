@@ -198,7 +198,6 @@ public class EvalTyp extends FullVisitor {
 
 				Typ compT = attrs.typAttr.get(decl.type);
 				if (compT == null) SemAn.signalError("Cannot determine component's type.", binExpr);
-
 				binExprT = compT;
 				break;
 

@@ -1,7 +1,7 @@
 package compiler.phase.abstr;
 
-import compiler.*;
-import compiler.phase.*;
+import compiler.Task;
+import compiler.phase.Phase;
 
 /**
  * The construction of the abstract syntax tree.

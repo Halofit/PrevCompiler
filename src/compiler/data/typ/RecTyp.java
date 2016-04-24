@@ -1,8 +1,8 @@
 package compiler.data.typ;
 
-import java.util.*;
+import compiler.common.logger.Logger;
 
-import compiler.common.logger.*;
+import java.util.LinkedList;
 
 /**
  * @author sliva

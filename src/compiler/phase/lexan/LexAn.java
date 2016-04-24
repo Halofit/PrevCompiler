@@ -1,12 +1,13 @@
 package compiler.phase.lexan;
 
+import compiler.Task;
+import compiler.common.report.PhaseErrors.LexAnError;
+import compiler.common.report.Position;
+import compiler.common.report.Report;
+import compiler.phase.Phase;
+
 import java.io.*;
 import java.util.Arrays;
-
-import compiler.*;
-import compiler.common.report.*;
-import compiler.common.report.PhaseErrors.LexAnError;
-import compiler.phase.*;
 
 /**
  * The lexical analyzer.
