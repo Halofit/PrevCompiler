@@ -22,6 +22,5 @@ public class EvalFrames extends FullVisitor {
 		this.attrs = attrs;
 	}
 
-	// TODO
 
 }

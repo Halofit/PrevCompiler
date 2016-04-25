@@ -1,5 +1,7 @@
 package compiler.phase.frames;
 
+import compiler.common.report.PhaseErrors.StackFrameError;
+import compiler.common.report.Report;
 import compiler.data.acc.Access;
 import compiler.data.acc.OffsetAccess;
 import compiler.data.acc.StaticAccess;
@@ -10,6 +12,8 @@ import compiler.data.frm.Frame;
 import compiler.data.typ.PtrTyp;
 import compiler.data.typ.Typ;
 import compiler.data.typ.VoidTyp;
+
+import java.util.ArrayList;
 
 /**
  * Frame and access evaluator.
@@ -28,20 +32,21 @@ public class EvalFrames extends FullVisitor {
 
 	private long parametersSize; //For calculating parameter's offset and the inpCallSize -> also includes Static Link !!!!!
 
-
 	private static final String functionNamePrefix = "function";
 
+	private ArrayList<String> topLevelLabels;
 
 	public EvalFrames(Attributes attrs) {
 		this.attrs = attrs;
 		level = 0;
+		topLevelLabels = new ArrayList<>();
 	}
 
 
 	@Override
 	public void visit(WhereExpr whereExpr) {
-		//As allways reverse the ordering
-		//TODO is this required
+		//As always reverse the ordering
+
 		for (int d = 0; d < whereExpr.numDecls(); d++) {
 			whereExpr.decl(d).accept(this);
 		}
@@ -69,8 +74,9 @@ public class EvalFrames extends FullVisitor {
 
 		String label;
 		if (level == 0) {
-			//TODO handle multiple decls ->
 			label = "_" + funDef.name;
+			if(topLevelLabels.contains(label)) throw new StackFrameError(funDef.toString() + "| Duplicate top-level name detected");
+			topLevelLabels.add(label);
 		} else {
 			label = functionNamePrefix + nestedFunctionCounter + "___" + funDef.name;
 			nestedFunctionCounter++;
@@ -93,20 +99,40 @@ public class EvalFrames extends FullVisitor {
 
 	@Override
 	public void visit(FunDecl funDecl) {
-		//backup
+		//Backup prevous values
 		long parametersSizeBak = parametersSize;
+
+		//reset for this function values
 		parametersSize = 0;
+
 		parametersSize += new PtrTyp(new VoidTyp()).size(); //Add the size of a pointer for the static pointer
 
+		level++;
 		super.visit(funDecl);
+		level--;
+
+		String label;
+		if (level == 0) {
+			label = "_" + funDecl.name;
+			if(topLevelLabels.contains(label)) throw new StackFrameError(funDecl.toString() + "| Duplicate top-level name detected");
+			topLevelLabels.add(label);
+		} else {
+			label = functionNamePrefix + nestedFunctionCounter + "___" + funDecl.name;
+			nestedFunctionCounter++;
+			Report.warning(funDecl, "Non top-level function declaration found. This function is not visible outside of the local scope.");
+		}
 
 		long inpCallSize = Math.max(parametersSize, attrs.typAttr.get(funDecl.type).actualTyp().size());
 
+		Frame frame = new Frame(level, label, inpCallSize, 0, 0, 0, 0);
+		attrs.frmAttr.set(funDecl, frame);
+
+
+		//Restore previous values
+		parametersSize = parametersSizeBak;
+
 		//Add this functions size:
 		outCallSize = Math.max(inpCallSize, outCallSize);
-
-		//restore
-		parametersSize = parametersSizeBak;
 	}
 
 
@@ -120,8 +146,10 @@ public class EvalFrames extends FullVisitor {
 		Access acc;
 		if (level == 0) {
 			//static variable
-			//TODO handle multiple declarations
 			String label = "_" + varDecl.name;
+			if(topLevelLabels.contains(label)) throw new StackFrameError(varDecl.toString() + "| Duplicate top-level name detected");
+			topLevelLabels.add(label);
+
 			acc = new StaticAccess(label, t.size());
 		} else {
 			//stack variable
