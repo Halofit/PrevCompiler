@@ -1,0 +1,12 @@
+putstr("Hello")
+where
+	fun putstr(s:string):void
+	fun f(i:integer):integer = 5
+		where 
+			fun undecl():integer #this should trigger the warning
+			fun f1():void=none
+			where 
+				fun f2(a:integer) : integer = 5
+			end
+		end
+end

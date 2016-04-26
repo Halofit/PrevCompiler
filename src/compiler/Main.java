@@ -3,6 +3,7 @@ package compiler;
 import compiler.common.report.CompilerError;
 import compiler.common.report.Report;
 import compiler.phase.abstr.Abstr;
+import compiler.phase.frames.EvalFrameOut;
 import compiler.phase.frames.EvalFrames;
 import compiler.phase.frames.Frames;
 import compiler.phase.lexan.LexAn;
@@ -73,6 +74,7 @@ public class Main {
 				// Frames and accesses.
 				Frames frames = new Frames(task);
 				(new EvalFrames(task.prgAttrs)).visit(task.prgAST);
+				(new EvalFrameOut(task.prgAttrs)).visit(task.prgAST);
 				frames.close();
 				if (task.phase.equals("frames"))
 					break;
@@ -87,11 +89,9 @@ public class Main {
 		}
 
 		if (Report.getNumWarnings() > 0) {
-			// There is still room for improvement.
 			Report.warning("Have you seen all warning messages?");
 			System.exit(0);
 		} else {
-			// Let's hope it ever comes this far.
 			Report.info("Done.");
 			System.exit(0);
 		}

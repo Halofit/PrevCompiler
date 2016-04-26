@@ -797,7 +797,14 @@ public class SynAn extends Phase {
 				if (args == null) {
 					expr = new VarName(new Position(atom), atom.lexeme);
 				} else {
-					expr = new FunCall(new Position(atom, args.getLast()), atom.lexeme, args);
+					Position p;
+					if(args.size() == 0){
+						p = new Position(atom);
+					}else{
+						p = new Position(atom, args.getLast());
+					}
+
+					expr = new FunCall(p, atom.lexeme, args);
 				}
 
 				break;

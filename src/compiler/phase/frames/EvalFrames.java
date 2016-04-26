@@ -14,6 +14,7 @@ import compiler.data.typ.Typ;
 import compiler.data.typ.VoidTyp;
 
 import java.util.ArrayList;
+import java.util.Stack;
 
 /**
  * Frame and access evaluator.
@@ -28,7 +29,6 @@ public class EvalFrames extends FullVisitor {
 	private long nestedFunctionCounter; //Counter of non-top level functions, used for name generation
 
 	private long localVariablesSize; //for calculating size of all local variables
-	private long outCallSize; //for calculating the size of the output part of the stack frame (SL + output parameters)
 
 	private long parametersSize; //For calculating parameter's offset and the inpCallSize -> also includes Static Link !!!!!
 
@@ -58,12 +58,10 @@ public class EvalFrames extends FullVisitor {
 	public void visit(FunDef funDef) {
 		//Backup prevous values
 		long variableBak = localVariablesSize;
-		long outCallBak = outCallSize;
 		long parametersSizeBak = parametersSize;
 
 		//reset for this function values
 		localVariablesSize = 0;
-		outCallSize = 0;
 		parametersSize = 0;
 
 		parametersSize += new PtrTyp(new VoidTyp()).size(); //Add the size of a pointer for the static pointer
@@ -75,7 +73,9 @@ public class EvalFrames extends FullVisitor {
 		String label;
 		if (level == 0) {
 			label = "_" + funDef.name;
-			if(topLevelLabels.contains(label)) throw new StackFrameError(funDef.toString() + "| Duplicate top-level name detected");
+			if (topLevelLabels.contains(label)) {
+				throw new StackFrameError(funDef.toString() + "| Duplicate top-level name detected (" + funDef.name + ").");
+			}
 			topLevelLabels.add(label);
 		} else {
 			label = functionNamePrefix + nestedFunctionCounter + "___" + funDef.name;
@@ -84,17 +84,13 @@ public class EvalFrames extends FullVisitor {
 
 		long inpCallSize = Math.max(parametersSize, attrs.typAttr.get(funDef.type).actualTyp().size());
 
-		Frame frame = new Frame(level, label, inpCallSize, localVariablesSize, 0, 0, outCallSize);
+		Frame frame = new Frame(level, label, inpCallSize, localVariablesSize, 0, 0, 0);
 		attrs.frmAttr.set(funDef, frame);
 
 
 		//Restore previous values
 		localVariablesSize = variableBak;
-		outCallSize = outCallBak;
 		parametersSize = parametersSizeBak;
-
-		//Add this functions size:
-		outCallSize = Math.max(inpCallSize, outCallSize);
 	}
 
 	@Override
@@ -114,12 +110,15 @@ public class EvalFrames extends FullVisitor {
 		String label;
 		if (level == 0) {
 			label = "_" + funDecl.name;
-			if(topLevelLabels.contains(label)) throw new StackFrameError(funDecl.toString() + "| Duplicate top-level name detected");
+			if (topLevelLabels.contains(label)) {
+				throw new StackFrameError(funDecl.toString() + "| Duplicate top-level name detected (" + funDecl.name + ").");
+			}
 			topLevelLabels.add(label);
 		} else {
 			label = functionNamePrefix + nestedFunctionCounter + "___" + funDecl.name;
 			nestedFunctionCounter++;
-			Report.warning(funDecl, "Non top-level function declaration found. This function is not visible outside of the local scope.");
+			Report.warning(funDecl,
+						   "Non top-level function declaration found. This function is not visible outside of the local scope (" + funDecl.name + ").");
 		}
 
 		long inpCallSize = Math.max(parametersSize, attrs.typAttr.get(funDecl.type).actualTyp().size());
@@ -131,8 +130,6 @@ public class EvalFrames extends FullVisitor {
 		//Restore previous values
 		parametersSize = parametersSizeBak;
 
-		//Add this functions size:
-		outCallSize = Math.max(inpCallSize, outCallSize);
 	}
 
 
@@ -147,7 +144,9 @@ public class EvalFrames extends FullVisitor {
 		if (level == 0) {
 			//static variable
 			String label = "_" + varDecl.name;
-			if(topLevelLabels.contains(label)) throw new StackFrameError(varDecl.toString() + "| Duplicate top-level name detected");
+			if (topLevelLabels.contains(label)) {
+				throw new StackFrameError(varDecl.toString() + "| Duplicate top-level name detected (" + varDecl.name + ").");
+			}
 			topLevelLabels.add(label);
 
 			acc = new StaticAccess(label, t.size());

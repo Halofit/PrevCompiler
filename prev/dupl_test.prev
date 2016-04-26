@@ -1,0 +1,3 @@
+(f() where fun f() : void = none end,
+ f() where fun f() : void = none end,
+ f   where var f   : integer     end)

@@ -1,0 +1,11 @@
+do(1,2)
+where
+	fun do(a:integer, b:integer): integer = add(turn(a), turn(b))
+	where
+		fun turn(a : integer): integer = -a
+		fun add(a:integer, b:integer): integer = a+first(b,b,b,b,b,b,b)
+			where
+				fun first(b1:integer,b2:integer,b3:integer,b4:integer,b5:integer,b6:integer,b7:integer) :integer = b1
+			end
+	end
+end
