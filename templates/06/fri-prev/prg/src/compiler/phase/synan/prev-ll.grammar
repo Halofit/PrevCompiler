@@ -1,0 +1,89 @@
+Program -> Expression .
+Expression -> AssignmentExpression Expression' .
+Expression' -> WHERE Declarations END Expression' .
+Expression' -> .
+Expressions -> Expression Expressions' .
+Expressions' -> COMMA Expression Expressions' .
+Expressions' -> .
+AssignmentExpression -> DisjunctiveExpression AssignmentExpression' .
+AssignmentExpression' -> .
+AssignmentExpression' -> ASSIGN DisjunctiveExpression .
+DisjunctiveExpression -> ConjunctiveExpression DisjunctiveExpression' .
+DisjunctiveExpression' -> OR ConjunctiveExpression DisjunctiveExpression' .
+DisjunctiveExpression' -> .
+ConjunctiveExpression -> RelationalExpression ConjunctiveExpression' .
+ConjunctiveExpression' -> AND RelationalExpression ConjunctiveExpression' .
+ConjunctiveExpression' -> .
+RelationalExpression -> AdditiveExpression RelationalExpression' .
+RelationalExpression' -> .
+RelationalExpression' -> EQU AdditiveExpression .
+RelationalExpression' -> NEQ AdditiveExpression .
+RelationalExpression' -> LTH AdditiveExpression .
+RelationalExpression' -> GTH AdditiveExpression .
+RelationalExpression' -> LEQ AdditiveExpression .
+RelationalExpression' -> GEQ AdditiveExpression .
+AdditiveExpression -> MultiplicativeExpression AdditiveExpression' .
+AdditiveExpression' -> ADD MultiplicativeExpression AdditiveExpression' .
+AdditiveExpression' -> SUB MultiplicativeExpression AdditiveExpression' .
+AdditiveExpression' -> .
+MultiplicativeExpression -> PrefixExpression MultiplicativeExpression' .
+MultiplicativeExpression' -> MUL PrefixExpression MultiplicativeExpression' .
+MultiplicativeExpression' -> DIV PrefixExpression MultiplicativeExpression' .
+MultiplicativeExpression' -> MOD PrefixExpression MultiplicativeExpression' .
+MultiplicativeExpression' -> .
+PrefixExpression -> PostfixExpression .
+PrefixExpression -> ADD PrefixExpression .
+PrefixExpression -> SUB PrefixExpression .
+PrefixExpression -> NOT PrefixExpression .
+PrefixExpression -> MEM PrefixExpression .
+PrefixExpression -> OPENING_BRACKET Type CLOSING_BRACKET PrefixExpression .
+PostfixExpression -> AtomicExpression PostfixExpression' .
+PostfixExpression' -> OPENING_BRACKET Expression CLOSING_BRACKET PostfixExpression' .
+PostfixExpression' -> DOT IDENTIFIER PostfixExpression' .
+PostfixExpression' -> VAL PostfixExpression' .
+PostfixExpression' -> .
+AtomicExpression -> CONST_INTEGER .
+AtomicExpression -> CONST_BOOLEAN .
+AtomicExpression -> CONST_CHAR .
+AtomicExpression -> CONST_STRING .
+AtomicExpression -> CONST_NULL .
+AtomicExpression -> CONST_NONE .
+AtomicExpression -> IDENTIFIER ArgumentsOpt .
+AtomicExpression -> OPENING_PARENTHESIS Expressions CLOSING_PARENTHESIS .
+AtomicExpression -> IF Expression THEN Expression ELSE Expression END .
+AtomicExpression -> FOR IDENTIFIER ASSIGN Expression COMMA Expression COLON Expression END .
+AtomicExpression -> WHILE Expression COLON Expression END .
+ArgumentsOpt -> .
+ArgumentsOpt -> OPENING_PARENTHESIS ArgumentsOpt' .
+ArgumentsOpt' -> Expressions CLOSING_PARENTHESIS .
+ArgumentsOpt' -> CLOSING_PARENTHESIS .
+Declarations -> Declaration Declarations' .
+Declarations' -> Declaration Declarations' .
+Declarations' -> .
+Declaration -> TypeDeclaration .
+Declaration -> FunctionDeclaration .
+Declaration -> VariableDeclaration .
+TypeDeclaration -> TYP IDENTIFIER COLON Type .
+FunctionDeclaration -> FUN IDENTIFIER OPENING_PARENTHESIS ParametersOpt CLOSING_PARENTHESIS COLON Type FunctionBodyOpt .
+ParametersOpt -> .
+ParametersOpt -> Parameters .
+Parameters -> Parameter Parameters' .
+Parameters' -> COMMA Parameter Parameters' .
+Parameters' -> .
+Parameter -> IDENTIFIER COLON Type .
+FunctionBodyOpt -> .
+FunctionBodyOpt -> ASSIGN Expression .
+VariableDeclaration -> VAR IDENTIFIER COLON Type .
+Type -> INTEGER .
+Type -> BOOLEAN .
+Type -> CHAR .
+Type -> STRING .
+Type -> VOID .
+Type -> ARR OPENING_BRACKET Expression CLOSING_BRACKET Type .
+Type -> REC OPENING_BRACE Components CLOSING_BRACE .
+Type -> PTR Type .
+Type -> IDENTIFIER .
+Components -> Component Components' .
+Components' -> COMMA Component Components' .
+Components' -> .
+Component -> IDENTIFIER COLON Type .

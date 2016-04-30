@@ -6,6 +6,8 @@ import compiler.phase.abstr.Abstr;
 import compiler.phase.frames.EvalFrameOut;
 import compiler.phase.frames.EvalFrames;
 import compiler.phase.frames.Frames;
+import compiler.phase.imcode.EvalImcode;
+import compiler.phase.imcode.Imcode;
 import compiler.phase.lexan.LexAn;
 import compiler.phase.lexan.Symbol;
 import compiler.phase.seman.*;
@@ -79,6 +81,14 @@ public class Main {
 				if (task.phase.equals("frames"))
 					break;
 
+				
+				// Intermediate code generation.
+				Imcode imcode = new Imcode(task);
+				(new EvalImcode(task.prgAttrs, task.fragments)).visit(task.prgAST);
+				imcode.close();
+				if (task.phase.equals("imcode"))
+					break;
+				
 				break;
 			}
 		} catch (CompilerError errorReport) {

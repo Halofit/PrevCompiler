@@ -2,7 +2,9 @@ package compiler.data.ast.attr;
 
 import compiler.data.acc.Access;
 import compiler.data.ast.*;
+import compiler.data.frg.Fragment;
 import compiler.data.frm.Frame;
+import compiler.data.imc.IMC;
 import compiler.data.typ.Typ;
 
 /**
@@ -54,4 +56,14 @@ public class Attributes {
 	 * A variable's access.
 	 */
 	public Attribute<VarDecl, Access> accAttr = new Attribute<>();
+
+	/**
+	 * Intermediate code - expressions.
+	 */
+	public Attribute<ASTNode, IMC> imcAttr = new Attribute<ASTNode, IMC>();
+
+	/**
+	 * Intermediate code fragments.
+	 */
+	public Attribute<ASTNode, Fragment> frgAttr = new Attribute<ASTNode, Fragment>();
 }

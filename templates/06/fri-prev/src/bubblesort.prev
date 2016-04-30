@@ -1,0 +1,23 @@
+(bubblesort(@nums)
+,0)
+where
+  fun bubblesort(a:ptr arr[100]integer):void=
+      (for i=1,99:
+         for j=0,i-1:
+	   if a^[j]>a^[j+1] then
+	     (tmp=a^[j],a^[i]=a^[j+1],a^[j+1]=tmp,none)
+	     where
+	       var tmp:integer
+	     end
+	   else
+	     none
+	   end
+	 end
+       end
+      ,none)
+      where
+        var i:integer
+	var j:integer
+      end
+  var nums:arr[100]integer
+end

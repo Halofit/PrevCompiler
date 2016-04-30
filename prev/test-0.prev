@@ -1,0 +1,15 @@
+(banner="Hello, world.\n",putstr(banner),0)
+where
+  fun putstr(s:string):void
+  fun f1(i:integer):integer=f1(i)+f2(i,'a',"A")
+    where
+      var c:char
+      var r:rec { x:integer, y:integer, c:char }
+      fun f2(j:integer,c:char,s:string):integer=i+j
+        where
+	  var k:integer
+	  var a:arr[10]integer
+	end
+    end
+  var banner:string
+end
