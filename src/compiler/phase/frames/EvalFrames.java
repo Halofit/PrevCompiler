@@ -14,7 +14,6 @@ import compiler.data.typ.Typ;
 import compiler.data.typ.VoidTyp;
 
 import java.util.ArrayList;
-import java.util.Stack;
 
 /**
  * Frame and access evaluator.
@@ -32,7 +31,7 @@ public class EvalFrames extends FullVisitor {
 
 	private long parametersSize; //For calculating parameter's offset and the inpCallSize -> also includes Static Link !!!!!
 
-	private static final String functionNamePrefix = "function";
+	private static final String functionNamePrefix = "fun";
 
 	private ArrayList<String> topLevelLabels;
 
@@ -85,7 +84,9 @@ public class EvalFrames extends FullVisitor {
 
 		long inpCallSize = Math.max(parametersSize, attrs.typAttr.get(funDef.type).actualTyp().size());
 
-		Frame frame = new Frame(level, label, inpCallSize, localVariablesSize, 0, 0, 0);
+		//NOTE: level + 1 is so that the function level is the same as the level of variables inside the function
+		//			this should not effect any other check, since difference between function levels remains the same
+		Frame frame = new Frame(level+1, label, inpCallSize, localVariablesSize, 0, 0, 0);
 		attrs.frmAttr.set(funDef, frame);
 
 
@@ -194,9 +195,11 @@ public class EvalFrames extends FullVisitor {
 		super.visit(compDecl);
 		Typ t = attrs.typAttr.get(compDecl);
 		t = t.actualTyp();
-		recordSize += t.size();
 
 		Access a = new OffsetAccess(-1, recordSize, t.size());
+		recordSize += t.size();
+
+
 		attrs.accAttr.set(compDecl, a);
 	}
 

@@ -1,0 +1,13 @@
+f1(1) 
+where #1
+	fun f1(i:integer) : void = (f2(i), g1(), none)
+		where #2
+			fun f2(i:integer) : integer = f3(i)
+				where #3
+					fun f3(i:integer) : integer = g3()
+					fun g3() : integer = (g1(), g2()) 
+				end	
+			fun g2() : integer = 4
+		end		
+	fun g1() : integer = 3
+end

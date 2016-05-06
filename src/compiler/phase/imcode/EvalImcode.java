@@ -48,17 +48,17 @@ public class EvalImcode extends FullVisitor {
 	public void visit(Program program) {
 		final String label = "_";
 
-		Frame frame = new Frame(-1, label, 0, 0, 0, 0, EvalFrameOut.globalProgramOutSize);
+		Frame frame = new Frame(0, label, 0, 0, 0, 0, EvalFrameOut.globalProgramOutSize);
 		CodeFragment tempFrag = new CodeFragment(frame, 0, 0, null);
 		codeFragments.push(tempFrag);
 		super.visit(program);
 		codeFragments.pop();
 
 		IMC globalProg = attrs.imcAttr.get(program.expr);
-		if(globalProg == null){
+		if (globalProg == null) {
 			throw new InternalCompilerError();
 		}
-		if(globalProg instanceof IMCExpr){
+		if (globalProg instanceof IMCExpr) {
 			globalProg = new ESTMT((IMCExpr) globalProg);
 		}
 
@@ -85,9 +85,9 @@ public class EvalImcode extends FullVisitor {
 		codeFragments.pop();
 		IMC preExpr = attrs.imcAttr.get(funDef.body);
 		IMCExpr expr;
-		if(preExpr instanceof IMCStmt){
+		if (preExpr instanceof IMCStmt) {
 			expr = new SEXPR((IMCStmt) preExpr, new NOP());
-		}else{
+		} else {
 			expr = (IMCExpr) preExpr;
 		}
 
@@ -103,7 +103,6 @@ public class EvalImcode extends FullVisitor {
 		//super.visit(funDecl);
 		//NOTHING don't even go deeper, probably
 	}
-
 
 
 	@Override
@@ -160,10 +159,17 @@ public class EvalImcode extends FullVisitor {
 				code = new BINOP(BINOP.Oper.MOD, left, right);
 				break;
 			case ARR:
+				//We need to remove the variable dereferencement on the left
+				if(!(left instanceof MEM)) throw new InternalCompilerError();
+				left = ((MEM) left).addr;
+
 				BINOP indexedAccess = new BINOP(BINOP.Oper.MUL, right, new CONST(t.size()));
 				code = new MEM(new BINOP(BINOP.Oper.ADD, left, indexedAccess), t.size());
 				break;
 			case REC:
+				//We need to remove the variable dereferencement on the left
+				if(!(left instanceof MEM)) throw new InternalCompilerError();
+				left = ((MEM) left).addr;
 				code = new MEM(new BINOP(BINOP.Oper.ADD, left, right), t.size());
 				break;
 			default:
@@ -195,7 +201,9 @@ public class EvalImcode extends FullVisitor {
 				code = new MEM(expr, t.size());
 				break;
 			case MEM:
-				code = expr;
+				if(!(expr instanceof MEM)) throw new InternalCompilerError();
+				//Remove the MEM dereferencing, and return the address directly
+				code = ((MEM)expr).addr;
 				break;
 			default:
 				throw new InternalCompilerError();
@@ -274,7 +282,7 @@ public class EvalImcode extends FullVisitor {
 
 			IMCExpr fpTemp = new TEMP(codeFragments.peek().FP);
 
-			int levelDiff = acc.level - codeFragments.peek().frame.level;
+			int levelDiff = codeFragments.peek().frame.level - acc.level;
 			if (levelDiff < 0) throw new InternalCompilerError();
 
 			while (levelDiff != 0) {
@@ -286,6 +294,7 @@ public class EvalImcode extends FullVisitor {
 			StaticAccess acc = (StaticAccess) a;
 			code = new NAME(acc.label);
 		}
+		code = new MEM((IMCExpr) code, t.size());
 
 		attrs.imcAttr.set(varName, code);
 	}
@@ -297,16 +306,21 @@ public class EvalImcode extends FullVisitor {
 		FunDecl decl = (FunDecl) attrs.declAttr.get(funCall);
 		Frame frame = attrs.frmAttr.get(decl);
 
-		//call_size_level - callee_level
+		//caller_level - callee_level
 		int levelDiff = codeFragments.peek().frame.level - frame.level;
 
+		//System.out.println("Level diff(" + funCall.name() + "): " + levelDiff + " |" + codeFragments.peek().frame.level + ", " + frame.level);
 		if (levelDiff < -1) throw new InternalCompilerError();
+
 		IMCExpr staticLink = new TEMP(codeFragments.peek().FP);
 
-		long counter = -1;
-		while (counter < levelDiff) {
-			staticLink = new MEM(staticLink, pointerSize);
-			counter++;
+		//If not calling a global function (callig a global just pass something irelevant)
+		if(!frame.label.startsWith("_")){
+			long counter = -1;
+			while (counter < levelDiff) {
+				staticLink = new MEM(staticLink, pointerSize);
+				counter++;
+			}
 		}
 
 		Vector<IMCExpr> exprs = new Vector<>();
@@ -469,14 +483,13 @@ public class EvalImcode extends FullVisitor {
 	}
 
 
-
 	@Override
 	public void visit(VarDecl varDecl) {
 		super.visit(varDecl);
 
 		Access a = attrs.accAttr.get(varDecl);
 
-		if(a instanceof StaticAccess){
+		if (a instanceof StaticAccess) {
 			StaticAccess acc = (StaticAccess) a;
 			Typ t = attrs.typAttr.get(varDecl);
 			DataFragment fragment = new DataFragment(acc.label, t.size());
