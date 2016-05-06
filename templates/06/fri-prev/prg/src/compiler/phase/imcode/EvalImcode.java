@@ -68,7 +68,6 @@ public class EvalImcode extends FullVisitor {
 		}
 	}
 
-	// TODO
 	
 	@Override
 	public void visit(FunDef funDef) {
@@ -91,7 +90,6 @@ public class EvalImcode extends FullVisitor {
 		attrs.imcAttr.set(funDef, move);
 		fragments.put(fragment.label, fragment);
 	}
-	
-	// TODO
+
 
 }

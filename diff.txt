@@ -1,0 +1,1991 @@
+
+Only in src/compiler/common/report: PhaseErrors
+
+
+diff -rw src/compiler/data/acc/OffsetAccess.java srcCopy/compiler/data/acc/OffsetAccess.java
+3c3
+< import compiler.common.logger.Logger;
+---
+> import compiler.common.logger.*;
+13a14,18
+> 	 * The static level.
+> 	 */
+> 	public final int level;
+> 
+> 	/**
+20a26,27
+> 	 * @param level
+> 	 *            The static level (or -1 if this is a record component).
+26c33
+< 	public OffsetAccess(long offset, long size) {
+---
+> 	public OffsetAccess(int level, long offset, long size) {
+27a35
+> 		this.level = level;
+33a42
+> 		if (level >= 0) logger.addAttribute("level", Long.toString(level));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+diff -rw src/compiler/phase/synan/SynAn.java srcCopy/compiler/phase/synan/SynAn.java
+3,15c3
+< import compiler.Task;
+< import compiler.common.logger.Transformer;
+< import compiler.common.report.PhaseErrors.SynAnError;
+< import compiler.common.report.Position;
+< import compiler.common.report.Report;
+< import compiler.data.ast.*;
+< import compiler.phase.Phase;
+< import compiler.phase.lexan.LexAn;
+< import compiler.phase.lexan.Symbol;
+< import org.w3c.dom.Document;
+< import org.w3c.dom.Element;
+< import org.w3c.dom.Node;
+< import org.w3c.dom.NodeList;
+---
+> import java.util.*;
+17c5
+< import java.util.LinkedList;
+---
+> import org.w3c.dom.*;
+18a7,12
+> import compiler.*;
+> import compiler.common.logger.*;
+> import compiler.common.report.*;
+> import compiler.data.ast.*;
+> import compiler.phase.*;
+> import compiler.phase.lexan.*;
+27,29c21
+< 	/**
+< 	 * The lexical analyzer.
+< 	 */
+---
+> 	/** The lexical analyzer. */
+35,36c27,28
+< 	 * @ param lexAn
+< 	 * The lexical analyzer.
+---
+> 	 * @param task
+> 	 *            The parameters and internal data of the compilation process.
+41,44c33,34
+< 
+< 		if (this.logger != null) {
+< 
+< 			this.logger.setTransformer(
+---
+> 		if (logger != null)
+> 		this.logger.setTransformer(//
+65,66c55,56
+< 								StringBuilder production = new StringBuilder();
+< 								production.append(nodeName).append(" -->");
+---
+> 							StringBuffer production = new StringBuffer();
+> 							production.append(nodeName + " -->");
+70c60
+< 									production.append(" ").append(childName);
+---
+> 								production.append(" " + childName);
+86d75
+< 	}
+99,101c88
+< 	/**
+< 	 * The parser's lookahead buffer.
+< 	 */
+---
+> 	/** The parser's lookahead buffer. */
+119a107,119
+> 	 * Logs the error token inserted when a missing lexical symbol has been
+> 	 * reported.
+> 	 * 
+> 	 * @return The error token (the symbol in the lookahead buffer is to be used
+> 	 *         later).
+> 	 */
+> 	private Symbol nextSymbolIsError() {
+> 		Symbol error = new Symbol(Symbol.Token.ERROR, "", new Position("", 0, 0));
+> 		error.log(logger);
+> 		return error;
+> 	}
+> 
+> 	/**
+122c122,123
+< 	 * @param nontName The name of a nonterminal the internal node represents.
+---
+> 	 * @param nontName
+> 	 *            The name of a nonterminal the internal node represents.
+125c126,127
+< 		if (logger == null) return;
+---
+> 		if (logger == null)
+> 			return;
+134c136,137
+< 		if (logger == null) return;
+---
+> 		if (logger == null)
+> 			return;
+140c143
+< 	 * <p>
+---
+> 	 * 
+141a145,146
+> 	 * 
+> 	 * @return The root of the abstract syntax tree.
+145,147c150,151
+< 		Program prg = parseProgram();
+< 
+< 		if (laSymbol.token != Symbol.Token.EOF) {
+---
+> 		Program program = parseProgram();
+> 		if (laSymbol.token != Symbol.Token.EOF)
+148a153
+> 		return program;
+151,180d155
+< 		return prg;
+< 	}
+< 
+< 
+< 	private Symbol skip(Symbol.Token token) {
+< 		if (laSymbol.token == token) {
+< 			return nextSymbol();
+< 		} else {
+< 			SynAnError error = new SynAnError("[skip] expected " + token
+< 					+ " got " + laSymbol.token + " at " + laSymbol.getPosition());
+< 
+< 			throw new SynAnError("[skip] expected " + token + " got "
+< 					+ laSymbol.token + " at " + laSymbol.getPosition()
+< 					+ " " + (error.getStackTrace()[1]));
+< 		}
+< 	}
+< 
+< 
+< 	private void signalError(String funName) {
+< 		throw new SynAnError("[" + funName + "]" + laSymbol.getPosition() + " | " + laSymbol.token);
+< 	}
+< 
+< 	private void signalError(String funName, String expect) {
+< 		throw new SynAnError("[" + funName + "]"
+< 				+ " At " + laSymbol.getPosition()
+< 				+ " got " + laSymbol.token
+< 				+ " expected " + expect);
+< 	}
+< 
+< 
+184d158
+< 	//Program -> Expression .
+185a160
+> 		Program result;
+187,193c162,163
+< 		Expr expr = parseExpression();
+< 
+< 		if (laSymbol.token != Symbol.Token.EOF) {
+< 			throw new SynAnError("At " + laSymbol.getPosition()
+< 					+ " expected EOF, got" + laSymbol.token);
+< 		}
+< 
+---
+> 		Expr astExpr = parseExpression();
+> 		result = new Program((Position) astExpr, astExpr);
+195c165
+< 		return new Program(new Position(expr), expr);
+---
+> 		return result;
+198d167
+< 	//Expression -> AssignmentExpression ExpressionPrime .
+199a169
+> 		Expr result;
+201,202c171,172
+< 		Expr op1 = parseAssignmentExpression();
+< 		Expr expr = parseExpressionPrime(op1);
+---
+> 		Expr astExpr = parseAssignmentExpression();
+> 		result = parseExpressionRest(astExpr);
+204c174
+< 		return expr;
+---
+> 		return result;
+207,211c177,179
+< 	//ExpressionPrime -> where Declarations end ExpressionPrime .
+< 	//ExpressionPrime -> .
+< 	private Expr parseExpressionPrime(Expr op1) {
+< 		begLog("ExpressionPrime");
+< 		Expr expr;
+---
+> 	private Expr parseExpressionRest(Expr astExpr) {
+> 		Expr result;
+> 		begLog("ExpressionRest");
+213,232c181,192
+< 			case WHERE:
+< 				skip(Symbol.Token.WHERE);
+< 				LinkedList<Decl> decls = parseDeclarations();
+< 				Symbol endToken = skip(Symbol.Token.END);
+< 				Expr where = new WhereExpr(new Position(op1, endToken), op1, decls);
+< 				expr = parseExpressionPrime(where);
+< 				break;
+< 
+< 			case END:
+< 			case COMMA:
+< 			case CLOSING_BRACKET:
+< 			case CLOSING_PARENTHESIS:
+< 			case THEN:
+< 			case ELSE:
+< 			case COLON:
+< 			case TYP:
+< 			case FUN:
+< 			case VAR:
+< 			case EOF:
+< 				expr = op1;
+---
+> 		case WHERE: {
+> 			nextSymbol();
+> 			LinkedList<Decl> astDecls = parseDeclarations();
+> 			Symbol symEND;
+> 			if (laSymbol.token == Symbol.Token.END) {
+> 				symEND = nextSymbol();
+> 			} else {
+> 				Report.warning(laSymbol, "Missing keyword 'end' inserted.");
+> 				symEND = nextSymbolIsError();
+> 			}
+> 			result = new WhereExpr(new Position(astExpr, symEND), astExpr, astDecls);
+> 			result = parseExpressionRest(result);
+234c194
+< 
+---
+> 		}
+236,238c196,197
+< 				expr = null;
+< 				signalError("ExpressionPrime", "where or end of expr");
+< 
+---
+> 			result = astExpr;
+> 			break;
+241,242c200
+< 
+< 		return expr;
+---
+> 		return result;
+245,246d202
+< 
+< 	//Expressions -> Expression ExpressionsPrime .
+247a204
+> 		LinkedList<Expr> result;
+249,250c206,208
+< 		Expr expr = parseExpression();
+< 		LinkedList<Expr> exprs = parseExpressionsPrime();
+---
+> 		Expr astExpr = parseExpression();
+> 		result = parseExpressionsRest();
+> 		result.addFirst(astExpr);
+252,253c210
+< 		exprs.add(0, expr);
+< 		return exprs;
+---
+> 		return result;
+256,260c213,215
+< 	//ExpressionsPrime -> comma Expression ExpressionsPrime .
+< 	//ExpressionsPrime -> .
+< 	private LinkedList<Expr> parseExpressionsPrime() {
+< 		begLog("ExpressionsPrime");
+< 		LinkedList<Expr> exprs;
+---
+> 	private LinkedList<Expr> parseExpressionsRest() {
+> 		LinkedList<Expr> result;
+> 		begLog("ExpressionsRest");
+263,269c218,221
+< 				skip(Symbol.Token.COMMA);
+< 				Expr expr = parseExpression();
+< 				exprs = parseExpressionsPrime();
+< 				exprs.add(0, expr);
+< 				break;
+< 			case CLOSING_PARENTHESIS:
+< 				exprs = new LinkedList<>();
+---
+> 			nextSymbol();
+> 			Expr astExpr = parseExpression();
+> 			result = parseExpressionsRest();
+> 			result.addFirst(astExpr);
+272,273c224,225
+< 				exprs = null;
+< 				signalError("ExpressionsPrime", "comma (,) or closing parethesis |)|");
+---
+> 			result = new LinkedList<Expr>();
+> 			break;
+276c228
+< 		return exprs;
+---
+> 		return result;
+279d230
+< 	//AssignmentExpression -> DisjunctiveExpression AssignmentExpressionPrime .
+280a232
+> 		Expr result;
+282,283c234,235
+< 		Expr op1 = parseDisjunctiveExpression();
+< 		Expr expr = parseAssignmentExpressionPrime(op1);
+---
+> 		Expr astExpr = parseDisjunctiveExpression();
+> 		result = parseAssignmentExpressionRest(astExpr);
+285c237
+< 		return expr;
+---
+> 		return result;
+288,294c240,242
+< 
+< 	//AssignmentExpressionPrime -> .
+< 	//AssignmentExpressionPrime -> assign DisjunctiveExpression .
+< 	private Expr parseAssignmentExpressionPrime(Expr op1) {
+< 		begLog("AssignmentExpressionPrime");
+< 		Expr expr;
+< 
+---
+> 	private Expr parseAssignmentExpressionRest(Expr astFstExpr) {
+> 		Expr result;
+> 		begLog("AssignmentExpressionRest");
+297,314c245,247
+< 				skip(Symbol.Token.ASSIGN);
+< 				Expr op2 = parseDisjunctiveExpression();
+< 				expr = new BinExpr(new Position(op1, op2), BinExpr.Oper.ASSIGN, op1, op2);
+< 				break;
+< 
+< 			case WHERE:
+< 			case END:
+< 			case COMMA:
+< 			case CLOSING_BRACKET:
+< 			case CLOSING_PARENTHESIS:
+< 			case THEN:
+< 			case ELSE:
+< 			case COLON:
+< 			case TYP:
+< 			case FUN:
+< 			case VAR:
+< 			case EOF:
+< 				expr = op1;
+---
+> 			nextSymbol();
+> 			Expr astSndExpr = parseDisjunctiveExpression();
+> 			result = new BinExpr(new Position(astFstExpr, astSndExpr), BinExpr.Oper.ASSIGN, astFstExpr, astSndExpr);
+316d248
+< 
+318,319c250,251
+< 				expr = null;
+< 				signalError("AssignmentExpressionPrime", "assignment or next statement");
+---
+> 			result = astFstExpr;
+> 			break;
+321d252
+< 
+323c254
+< 		return expr;
+---
+> 		return result;
+326d256
+< 	//DisjunctiveExpression -> ConjunctiveExpression DisjunctiveExpressionPrime .
+327a258
+> 		Expr result;
+329,330c260,261
+< 		Expr op1 = parseConjunctiveExpression();
+< 		Expr expr = parseDisjunctiveExpressionPrime(op1);
+---
+> 		Expr astExpr = parseConjunctiveExpression();
+> 		result = parseDisjunctiveExpressionRest(astExpr);
+332c263
+< 		return expr;
+---
+> 		return result;
+335,339c266,268
+< 	//DisjunctiveExpressionPrime -> or ConjunctiveExpression DisjunctiveExpressionPrime .
+< 	//DisjunctiveExpressionPrime -> .
+< 	private Expr parseDisjunctiveExpressionPrime(Expr op1) {
+< 		begLog("DisjunctiveExpressionPrime");
+< 		Expr expr;
+---
+> 	private Expr parseDisjunctiveExpressionRest(Expr astFstExpr) {
+> 		Expr result;
+> 		begLog("DisjunctiveExpressionRest");
+342,360c271,274
+< 				skip(Symbol.Token.OR);
+< 				Expr op2 = parseConjunctiveExpression();
+< 				Expr conjunctiveExpr = new BinExpr(new Position(op1, op2), BinExpr.Oper.OR, op1, op2);
+< 				expr = parseDisjunctiveExpressionPrime(conjunctiveExpr);
+< 				break;
+< 			case WHERE:
+< 			case END:
+< 			case COMMA:
+< 			case ASSIGN:
+< 			case CLOSING_BRACKET:
+< 			case CLOSING_PARENTHESIS:
+< 			case THEN:
+< 			case ELSE:
+< 			case COLON:
+< 			case TYP:
+< 			case FUN:
+< 			case VAR:
+< 			case EOF:
+< 				expr = op1;
+---
+> 			nextSymbol();
+> 			Expr astSndExpr = parseConjunctiveExpression();
+> 			result = parseDisjunctiveExpressionRest(
+> 					new BinExpr(new Position(astFstExpr, astSndExpr), BinExpr.Oper.OR, astFstExpr, astSndExpr));
+363,364c277,278
+< 				expr = null;
+< 				signalError("DisjunctiveExpressionPrime");
+---
+> 			result = astFstExpr;
+> 			break;
+367c281
+< 		return expr;
+---
+> 		return result;
+370d283
+< 	//ConjunctiveExpression -> RelationalExpression ConjunctiveExpressionPrime .
+371a285
+> 		Expr result;
+373,374c287,288
+< 		Expr op1 = parseRelationalExpression();
+< 		Expr expr = parseConjunctiveExpressionPrime(op1);
+---
+> 		Expr astExpr = parseRelationalExpression();
+> 		result = parseConjunctiveExpressionRest(astExpr);
+376c290
+< 		return expr;
+---
+> 		return result;
+379,383c293,295
+< 	//ConjunctiveExpressionPrime -> and RelationalExpression ConjunctiveExpressionPrime .
+< 	//ConjunctiveExpressionPrime -> .
+< 	private Expr parseConjunctiveExpressionPrime(Expr op1) {
+< 		begLog("ConjunctiveExpressionPrime");
+< 		Expr expr;
+---
+> 	private Expr parseConjunctiveExpressionRest(Expr astFstExpr) {
+> 		Expr result;
+> 		begLog("ConjunctiveExpressionRest");
+386,405c298,301
+< 				skip(Symbol.Token.AND);
+< 				Expr op2 = parseRelationalExpression();
+< 				Expr relationalExpr = new BinExpr(new Position(op1, op2), BinExpr.Oper.AND, op1, op2);
+< 				expr = parseConjunctiveExpressionPrime(relationalExpr);
+< 				break;
+< 			case WHERE:
+< 			case END:
+< 			case COMMA:
+< 			case ASSIGN:
+< 			case OR:
+< 			case CLOSING_BRACKET:
+< 			case CLOSING_PARENTHESIS:
+< 			case THEN:
+< 			case ELSE:
+< 			case COLON:
+< 			case TYP:
+< 			case FUN:
+< 			case VAR:
+< 			case EOF:
+< 				expr = op1;
+---
+> 			nextSymbol();
+> 			Expr astSndExpr = parseRelationalExpression();
+> 			result = parseConjunctiveExpressionRest(
+> 					new BinExpr(new Position(astFstExpr, astSndExpr), BinExpr.Oper.AND, astFstExpr, astSndExpr));
+408,409c304,305
+< 				expr = null;
+< 				signalError("ConjunctiveExpressionPrime");
+---
+> 			result = astFstExpr;
+> 			break;
+412c308
+< 		return expr;
+---
+> 		return result;
+415d310
+< 	//RelationalExpression -> AdditiveExpression RelationalExpressionPrime .
+416a312
+> 		Expr result;
+418,419c314,315
+< 		Expr op1 = parseAdditiveExpression();
+< 		Expr expr = parseRelationalExpressionPrime(op1);
+---
+> 		Expr astExpr = parseAdditiveExpression();
+> 		result = parseRelationalExpressionRest(astExpr);
+421c317
+< 		return expr;
+---
+> 		return result;
+424,464c320,327
+< 	//RelationalExpressionPrime -> .
+< 	//RelationalExpressionPrime -> equ AdditiveExpression .
+< 	//RelationalExpressionPrime -> neq AdditiveExpression .
+< 	//RelationalExpressionPrime -> lth AdditiveExpression .
+< 	//RelationalExpressionPrime -> gth AdditiveExpression .
+< 	//RelationalExpressionPrime -> leq AdditiveExpression .
+< 	//RelationalExpressionPrime -> geq AdditiveExpression .
+< 	private Expr parseRelationalExpressionPrime(Expr op1) {
+< 		begLog("RelationalExpressionPrime");
+< 		Expr expr;
+< 		Expr op2;
+< 		switch (laSymbol.token) {
+< 			case EQU:
+< 				skip(Symbol.Token.EQU);
+< 				op2 = parseAdditiveExpression();
+< 				expr = new BinExpr(new Position(op1, op2), BinExpr.Oper.EQU, op1, op2);
+< 				break;
+< 			case NEQ:
+< 				skip(Symbol.Token.NEQ);
+< 				op2 = parseAdditiveExpression();
+< 				expr = new BinExpr(new Position(op1, op2), BinExpr.Oper.NEQ, op1, op2);
+< 				break;
+< 			case LTH:
+< 				skip(Symbol.Token.LTH);
+< 				op2 = parseAdditiveExpression();
+< 				expr = new BinExpr(new Position(op1, op2), BinExpr.Oper.LTH, op1, op2);
+< 				break;
+< 			case GTH:
+< 				skip(Symbol.Token.GTH);
+< 				op2 = parseAdditiveExpression();
+< 				expr = new BinExpr(new Position(op1, op2), BinExpr.Oper.GTH, op1, op2);
+< 				break;
+< 			case LEQ:
+< 				skip(Symbol.Token.LEQ);
+< 				op2 = parseAdditiveExpression();
+< 				expr = new BinExpr(new Position(op1, op2), BinExpr.Oper.LEQ, op1, op2);
+< 				break;
+< 			case GEQ:
+< 				skip(Symbol.Token.GEQ);
+< 				op2 = parseAdditiveExpression();
+< 				expr = new BinExpr(new Position(op1, op2), BinExpr.Oper.GEQ, op1, op2);
+---
+> 	private Expr parseRelationalExpressionRest(Expr astFstExpr) {
+> 		Expr result;
+> 		begLog("RelationalExpressionRest");
+> 		switch (laSymbol.token) {
+> 		case EQU: {
+> 			nextSymbol();
+> 			Expr astSndExpr = parseAdditiveExpression();
+> 			result = new BinExpr(new Position(astFstExpr, astSndExpr), BinExpr.Oper.EQU, astFstExpr, astSndExpr);
+466,482c329,333
+< 
+< 			case WHERE:
+< 			case END:
+< 			case COMMA:
+< 			case ASSIGN:
+< 			case OR:
+< 			case AND:
+< 			case CLOSING_BRACKET:
+< 			case CLOSING_PARENTHESIS:
+< 			case THEN:
+< 			case ELSE:
+< 			case COLON:
+< 			case TYP:
+< 			case FUN:
+< 			case VAR:
+< 			case EOF:
+< 				expr = op1;
+---
+> 		}
+> 		case NEQ: {
+> 			nextSymbol();
+> 			Expr astSndExpr = parseAdditiveExpression();
+> 			result = new BinExpr(new Position(astFstExpr, astSndExpr), BinExpr.Oper.NEQ, astFstExpr, astSndExpr);
+483a335,359
+> 		}
+> 		case LTH: {
+> 			nextSymbol();
+> 			Expr astSndExpr = parseAdditiveExpression();
+> 			result = new BinExpr(new Position(astFstExpr, astSndExpr), BinExpr.Oper.LTH, astFstExpr, astSndExpr);
+> 			break;
+> 		}
+> 		case GTH: {
+> 			nextSymbol();
+> 			Expr astSndExpr = parseAdditiveExpression();
+> 			result = new BinExpr(new Position(astFstExpr, astSndExpr), BinExpr.Oper.GTH, astFstExpr, astSndExpr);
+> 			break;
+> 		}
+> 		case LEQ: {
+> 			nextSymbol();
+> 			Expr astSndExpr = parseAdditiveExpression();
+> 			result = new BinExpr(new Position(astFstExpr, astSndExpr), BinExpr.Oper.LEQ, astFstExpr, astSndExpr);
+> 			break;
+> 		}
+> 		case GEQ: {
+> 			nextSymbol();
+> 			Expr astSndExpr = parseAdditiveExpression();
+> 			result = new BinExpr(new Position(astFstExpr, astSndExpr), BinExpr.Oper.GEQ, astFstExpr, astSndExpr);
+> 			break;
+> 		}
+485,486c361,362
+< 				expr = null;
+< 				signalError("RelationalExpressionPrime");
+---
+> 			result = astFstExpr;
+> 			break;
+489c365
+< 		return expr;
+---
+> 		return result;
+492d367
+< 	//AdditiveExpression -> MultiplicativeExpression AdditiveExpressionPrime .
+493a369
+> 		Expr result;
+495,496c371,372
+< 		Expr op1 = parseMultiplicativeExpression();
+< 		Expr expr = parseAdditiveExpressionPrime(op1);
+---
+> 		Expr astExpr = parseMultiplicativeExpression();
+> 		result = parseAdditiveExpressionRest(astExpr);
+498c374
+< 		return expr;
+---
+> 		return result;
+501,520c377,385
+< 	//AdditiveExpressionPrime -> add MultiplicativeExpression AdditiveExpressionPrime .
+< 	//AdditiveExpressionPrime -> sub MultiplicativeExpression AdditiveExpressionPrime .
+< 	//AdditiveExpressionPrime -> .
+< 	private Expr parseAdditiveExpressionPrime(Expr op1) {
+< 		begLog("AdditiveExpressionPrime");
+< 		Expr op2;
+< 		Expr expr;
+< 		BinExpr additiveExpr;
+< 		switch (laSymbol.token) {
+< 			case ADD:
+< 				skip(Symbol.Token.ADD);
+< 				op2 = parseMultiplicativeExpression();
+< 				additiveExpr = new BinExpr(new Position(op1, op2), BinExpr.Oper.ADD, op1, op2);
+< 				expr = parseAdditiveExpressionPrime(additiveExpr);
+< 				break;
+< 			case SUB:
+< 				skip(Symbol.Token.SUB);
+< 				op2 = parseMultiplicativeExpression();
+< 				additiveExpr = new BinExpr(new Position(op1, op2), BinExpr.Oper.SUB, op1, op2);
+< 				expr = parseAdditiveExpressionPrime(additiveExpr);
+---
+> 	private Expr parseAdditiveExpressionRest(Expr astFstExpr) {
+> 		Expr result;
+> 		begLog("AdditiveExpressionRest");
+> 		switch (laSymbol.token) {
+> 		case ADD: {
+> 			nextSymbol();
+> 			Expr astSndExpr = parseMultiplicativeExpression();
+> 			result = parseAdditiveExpressionRest(
+> 					new BinExpr(new Position(astFstExpr, astSndExpr), BinExpr.Oper.ADD, astFstExpr, astSndExpr));
+522,544c387,392
+< 
+< 			case WHERE:
+< 			case END:
+< 			case COMMA:
+< 			case ASSIGN:
+< 			case OR:
+< 			case AND:
+< 			case EQU:
+< 			case NEQ:
+< 			case LTH:
+< 			case GTH:
+< 			case LEQ:
+< 			case GEQ:
+< 			case CLOSING_BRACKET:
+< 			case CLOSING_PARENTHESIS:
+< 			case THEN:
+< 			case ELSE:
+< 			case COLON:
+< 			case TYP:
+< 			case FUN:
+< 			case VAR:
+< 			case EOF:
+< 				expr = op1;
+---
+> 		}
+> 		case SUB: {
+> 			nextSymbol();
+> 			Expr astSndExpr = parseMultiplicativeExpression();
+> 			result = parseAdditiveExpressionRest(
+> 					new BinExpr(new Position(astFstExpr, astSndExpr), BinExpr.Oper.SUB, astFstExpr, astSndExpr));
+546c394
+< 
+---
+> 		}
+548,550c396,397
+< 				expr = null;
+< 				signalError("AdditiveExpressionPrime");
+< 
+---
+> 			result = astFstExpr;
+> 			break;
+553c400
+< 		return expr;
+---
+> 		return result;
+556d402
+< 	//MultiplicativeExpression -> PrefixExpression MultiplicativeExpressionPrime .
+557a404
+> 		Expr result;
+559,560c406,407
+< 		Expr op1 = parsePrefixExpression();
+< 		Expr expr = parseMultiplicativeExpressionPrime(op1);
+---
+> 		Expr astExpr = parsePrefixExpression();
+> 		result = parseMultiplicativeExpressionRest(astExpr);
+562c409
+< 		return expr;
+---
+> 		return result;
+565,617c412,434
+< 	//MultiplicativeExpressionPrime -> mul PrefixExpression MultiplicativeExpressionPrime .
+< 	//MultiplicativeExpressionPrime -> div PrefixExpression MultiplicativeExpressionPrime .
+< 	//MultiplicativeExpressionPrime -> mod PrefixExpression MultiplicativeExpressionPrime .
+< 	//MultiplicativeExpressionPrime -> .
+< 	private Expr parseMultiplicativeExpressionPrime(Expr op1) {
+< 		begLog("MultiplicativeExpressionPrime");
+< 		Expr expr;
+< 		Expr op2;
+< 		Expr multExpr;
+< 		switch (laSymbol.token) {
+< 			case MUL:
+< 				skip(Symbol.Token.MUL);
+< 				op2 = parsePrefixExpression();
+< 				multExpr = new BinExpr(new Position(op1, op2), BinExpr.Oper.MUL, op1, op2);
+< 				expr = parseMultiplicativeExpressionPrime(multExpr);
+< 				break;
+< 			case DIV:
+< 				skip(Symbol.Token.DIV);
+< 				op2 = parsePrefixExpression();
+< 				multExpr = new BinExpr(new Position(op1, op2), BinExpr.Oper.DIV, op1, op2);
+< 				expr = parseMultiplicativeExpressionPrime(multExpr);
+< 				break;
+< 			case MOD:
+< 				skip(Symbol.Token.MOD);
+< 				op2 = parsePrefixExpression();
+< 				multExpr = new BinExpr(new Position(op1, op2), BinExpr.Oper.MOD, op1, op2);
+< 				expr = parseMultiplicativeExpressionPrime(multExpr);
+< 				break;
+< 
+< 			case WHERE:
+< 			case END:
+< 			case COMMA:
+< 			case ASSIGN:
+< 			case OR:
+< 			case AND:
+< 			case EQU:
+< 			case NEQ:
+< 			case LTH:
+< 			case GTH:
+< 			case LEQ:
+< 			case GEQ:
+< 			case ADD:
+< 			case SUB:
+< 			case CLOSING_BRACKET:
+< 			case CLOSING_PARENTHESIS:
+< 			case THEN:
+< 			case ELSE:
+< 			case COLON:
+< 			case TYP:
+< 			case FUN:
+< 			case VAR:
+< 			case EOF:
+< 				expr = op1;
+---
+> 	private Expr parseMultiplicativeExpressionRest(Expr astFstExpr) {
+> 		Expr result;
+> 		begLog("MultiplicativeExpressionRest");
+> 		switch (laSymbol.token) {
+> 		case MUL: {
+> 			nextSymbol();
+> 			Expr astSndExpr = parsePrefixExpression();
+> 			result = parseMultiplicativeExpressionRest(
+> 					new BinExpr(new Position(astFstExpr, astSndExpr), BinExpr.Oper.MUL, astFstExpr, astSndExpr));
+> 			break;
+> 		}
+> 		case DIV: {
+> 			nextSymbol();
+> 			Expr astSndExpr = parsePrefixExpression();
+> 			result = parseMultiplicativeExpressionRest(
+> 					new BinExpr(new Position(astFstExpr, astSndExpr), BinExpr.Oper.DIV, astFstExpr, astSndExpr));
+> 			break;
+> 		}
+> 		case MOD: {
+> 			nextSymbol();
+> 			Expr astSndExpr = parsePrefixExpression();
+> 			result = parseMultiplicativeExpressionRest(
+> 					new BinExpr(new Position(astFstExpr, astSndExpr), BinExpr.Oper.MOD, astFstExpr, astSndExpr));
+619c436
+< 
+---
+> 		}
+621,622c438,439
+< 				expr = null;
+< 				signalError("MultiplicativeExpressionPrime");
+---
+> 			result = astFstExpr;
+> 			break;
+625c442
+< 		return expr;
+---
+> 		return result;
+628,633d444
+< 	//PrefixExpression -> PostfixExpression .
+< 	//PrefixExpression -> add PrefixExpression .
+< 	//PrefixExpression -> sub PrefixExpression .
+< 	//PrefixExpression -> not PrefixExpression .
+< 	//PrefixExpression -> mem PrefixExpression .
+< 	//PrefixExpression -> lbracket Type rbracket PrefixExpression .
+634a446
+> 		Expr result;
+636,639d447
+< 		Expr expr;
+< 		Expr op1;
+< 		Symbol prefSymbol;
+< 
+641,644c449,452
+< 			case ADD:
+< 				prefSymbol = skip(Symbol.Token.ADD);
+< 				op1 = parsePrefixExpression();
+< 				expr = new UnExpr(new Position(prefSymbol, op1), UnExpr.Oper.ADD, op1);
+---
+> 		case ADD: {
+> 			Symbol symADD = nextSymbol();
+> 			Expr astExpr = parsePrefixExpression();
+> 			result = new UnExpr(new Position(symADD, astExpr), UnExpr.Oper.ADD, astExpr);
+646,649c454,458
+< 			case SUB:
+< 				prefSymbol = skip(Symbol.Token.SUB);
+< 				op1 = parsePrefixExpression();
+< 				expr = new UnExpr(new Position(prefSymbol, op1), UnExpr.Oper.SUB, op1);
+---
+> 		}
+> 		case SUB: {
+> 			Symbol symSUB = nextSymbol();
+> 			Expr astExpr = parsePrefixExpression();
+> 			result = new UnExpr(new Position(symSUB, astExpr), UnExpr.Oper.SUB, astExpr);
+651,654c460,464
+< 			case NOT:
+< 				prefSymbol = skip(Symbol.Token.NOT);
+< 				op1 = parsePrefixExpression();
+< 				expr = new UnExpr(new Position(prefSymbol, op1), UnExpr.Oper.NOT, op1);
+---
+> 		}
+> 		case NOT: {
+> 			Symbol symNOT = nextSymbol();
+> 			Expr astExpr = parsePrefixExpression();
+> 			result = new UnExpr(new Position(symNOT, astExpr), UnExpr.Oper.NOT, astExpr);
+656,659c466,470
+< 			case MEM:
+< 				prefSymbol = skip(Symbol.Token.MEM);
+< 				op1 = parsePrefixExpression();
+< 				expr = new UnExpr(new Position(prefSymbol, op1), UnExpr.Oper.MEM, op1);
+---
+> 		}
+> 		case MEM: {
+> 			Symbol symMEM = nextSymbol();
+> 			Expr astExpr = parsePrefixExpression();
+> 			result = new UnExpr(new Position(symMEM, astExpr), UnExpr.Oper.MEM, astExpr);
+661,666c472,483
+< 			case OPENING_BRACKET:
+< 				prefSymbol = skip(Symbol.Token.OPENING_BRACKET);
+< 				Type type = parseType();
+< 				skip(Symbol.Token.CLOSING_BRACKET);
+< 				op1 = parsePrefixExpression();
+< 				expr = new CastExpr(new Position(prefSymbol, op1), type, op1);
+---
+> 		}
+> 		case OPENING_BRACKET: {
+> 			Symbol symOPENING_BRACKET = nextSymbol();
+> 			Type astType = parseType();
+> 			if (laSymbol.token == Symbol.Token.CLOSING_BRACKET) {
+> 				nextSymbol();
+> 			} else {
+> 				Report.warning(laSymbol, "Missing symbol ']' inserted.");
+> 				nextSymbolIsError();
+> 			}
+> 			Expr astExpr = parsePrefixExpression();
+> 			result = new CastExpr(new Position(symOPENING_BRACKET, astExpr), astType, astExpr);
+667a485
+> 		}
+669c487
+< 				expr = parsePostfixExpression();
+---
+> 			result = parsePostfixExpression();
+673c491
+< 		return expr;
+---
+> 		return result;
+676d493
+< 	//PostfixExpression -> AtomicExpression PostfixExpressionPrime .
+677a495
+> 		Expr result;
+679,680c497,498
+< 		Expr op1 = parseAtomicExpression();
+< 		Expr expr = parsePostfixExpressionPrime(op1);
+---
+> 		Expr astExpr = parseAtomicExpression();
+> 		result = parsePostfixExpressionRest(astExpr);
+682c500
+< 		return expr;
+---
+> 		return result;
+685,714c503,518
+< 	//PostfixExpressionPrime -> lbracket Expression rbracket PostfixExpressionPrime .
+< 	//PostfixExpressionPrime -> dot IDENTIFIER PostfixExpressionPrime .
+< 	//PostfixExpressionPrime -> val PostfixExpressionPrime .
+< 	//PostfixExpressionPrime -> .
+< 	private Expr parsePostfixExpressionPrime(Expr op1) {
+< 		begLog("PostfixExpressionPrime");
+< 		Expr expr;
+< 		Expr op2;
+< 		Symbol postfixEnd;
+< 		Expr postfixExpr;
+< 		switch (laSymbol.token) {
+< 			case OPENING_BRACKET: //prefix [expr]
+< 				skip(Symbol.Token.OPENING_BRACKET);
+< 				op2 = parseExpression();
+< 				postfixEnd = skip(Symbol.Token.CLOSING_BRACKET);
+< 				postfixExpr = new BinExpr(new Position(op1, postfixEnd), BinExpr.Oper.ARR, op1, op2);
+< 				expr = parsePostfixExpressionPrime(postfixExpr);
+< 				break;
+< 
+< 			case DOT:
+< 				skip(Symbol.Token.DOT);
+< 				Symbol id = skip(Symbol.Token.IDENTIFIER);
+< 				op2 = new CompName(laSymbol, id.lexeme);
+< 				postfixExpr = new BinExpr(new Position(op1, op2), BinExpr.Oper.REC, op1, op2);
+< 				expr = parsePostfixExpressionPrime(postfixExpr);
+< 				break;
+< 			case VAL:
+< 				Symbol valSym = skip(Symbol.Token.VAL);
+< 				UnExpr valExpr = new UnExpr(new Position(op1, valSym), UnExpr.Oper.VAL, op1);
+< 				expr = parsePostfixExpressionPrime(valExpr);
+---
+> 	private Expr parsePostfixExpressionRest(Expr astFstExpr) {
+> 		Expr result;
+> 		begLog("PostfixExpressionRest");
+> 		switch (laSymbol.token) {
+> 		case OPENING_BRACKET: {
+> 			nextSymbol();
+> 			Expr astSndExpr = parseExpression();
+> 			Symbol symCLOSING_BRACKET;
+> 			if (laSymbol.token == Symbol.Token.CLOSING_BRACKET) {
+> 				symCLOSING_BRACKET = nextSymbol();
+> 			} else {
+> 				Report.warning(laSymbol, "Symbol ']' inserted.");
+> 				symCLOSING_BRACKET = nextSymbolIsError();
+> 			}
+> 			result = parsePostfixExpressionRest(new BinExpr(new Position(astFstExpr, symCLOSING_BRACKET),
+> 					BinExpr.Oper.ARR, astFstExpr, astSndExpr));
+716,743c520,532
+< 
+< 			case WHERE:
+< 			case END:
+< 			case COMMA:
+< 			case ASSIGN:
+< 			case OR:
+< 			case AND:
+< 			case EQU:
+< 			case NEQ:
+< 			case LTH:
+< 			case GTH:
+< 			case LEQ:
+< 			case GEQ:
+< 			case ADD:
+< 			case SUB:
+< 			case MUL:
+< 			case DIV:
+< 			case MOD:
+< 			case CLOSING_BRACKET:
+< 			case CLOSING_PARENTHESIS:
+< 			case THEN:
+< 			case ELSE:
+< 			case COLON:
+< 			case TYP:
+< 			case FUN:
+< 			case VAR:
+< 			case EOF:
+< 				expr = op1;
+---
+> 		}
+> 		case DOT: {
+> 			nextSymbol();
+> 			Symbol symIDENTIFIER;
+> 			if (laSymbol.token == Symbol.Token.IDENTIFIER) {
+> 				symIDENTIFIER = nextSymbol();
+> 			} else {
+> 				Report.warning(laSymbol, "Missing identifier inserted.");
+> 				symIDENTIFIER = nextSymbolIsError();
+> 			}
+> 			CompName astCompName = new CompName(new Position(symIDENTIFIER), symIDENTIFIER.lexeme);
+> 			result = parsePostfixExpressionRest(
+> 					new BinExpr(new Position(astFstExpr, astCompName), BinExpr.Oper.REC, astFstExpr, astCompName));
+745c534,540
+< 
+---
+> 		}
+> 		case VAL: {
+> 			Symbol symVAL = nextSymbol();
+> 			result = parsePostfixExpressionRest(
+> 					new UnExpr(new Position(astFstExpr, symVAL), UnExpr.Oper.VAL, astFstExpr));
+> 			break;
+> 		}
+747,748c542,543
+< 				expr = null;
+< 				signalError("PostfixExpressionPrime", "comma or end of expression");
+---
+> 			result = astFstExpr;
+> 			break;
+751c546
+< 		return expr;
+---
+> 		return result;
+754,764d548
+< 	//AtomicExpression -> INTEGER .
+< 	//AtomicExpression -> BOOLEAN .
+< 	//AtomicExpression -> CHAR .
+< 	//AtomicExpression -> STRING .
+< 	//AtomicExpression -> null .
+< 	//AtomicExpression -> none .
+< 	//AtomicExpression -> IDENTIFIER ArgumentsOpt .
+< 	//AtomicExpression -> lparen Expressions rparen .
+< 	//AtomicExpression -> if Expression then Expression else Expression end .
+< 	//AtomicExpression -> for IDENTIFIER assign Expression comma Expression colon Expression end .
+< 	//AtomicExpression -> while Expression colon Expression end .
+765a550
+> 		Expr result;
+767,768d551
+< 		Expr expr;
+< 		Symbol atom;
+770,792c553,555
+< 			case CONST_INTEGER:
+< 				atom = skip(Symbol.Token.CONST_INTEGER);
+< 				expr = new AtomExpr(new Position(atom), AtomExpr.AtomTypes.INTEGER, atom.lexeme);
+< 				break;
+< 			case CONST_BOOLEAN:
+< 				atom = skip(Symbol.Token.CONST_BOOLEAN);
+< 				expr = new AtomExpr(new Position(atom), AtomExpr.AtomTypes.BOOLEAN, atom.lexeme);
+< 				break;
+< 			case CONST_CHAR:
+< 				atom = skip(Symbol.Token.CONST_CHAR);
+< 				expr = new AtomExpr(new Position(atom), AtomExpr.AtomTypes.CHAR, atom.lexeme);
+< 				break;
+< 			case CONST_STRING:
+< 				atom = skip(Symbol.Token.CONST_STRING);
+< 				expr = new AtomExpr(new Position(atom), AtomExpr.AtomTypes.STRING, atom.lexeme);
+< 				break;
+< 			case CONST_NULL:
+< 				atom = skip(Symbol.Token.CONST_NULL);
+< 				expr = new AtomExpr(new Position(atom), AtomExpr.AtomTypes.PTR, atom.lexeme);
+< 				break;
+< 			case CONST_NONE:
+< 				atom = skip(Symbol.Token.CONST_NONE);
+< 				expr = new AtomExpr(new Position(atom), AtomExpr.AtomTypes.VOID, atom.lexeme);
+---
+> 		case CONST_INTEGER: {
+> 			Symbol symCONST_INTEGER = nextSymbol();
+> 			result = new AtomExpr((Position) symCONST_INTEGER, AtomExpr.AtomTypes.INTEGER, symCONST_INTEGER.lexeme);
+794,804d556
+< 			case IDENTIFIER:
+< 				atom = skip(Symbol.Token.IDENTIFIER);
+< 				LinkedList<Expr> args = parseArgumentsOpt();
+< 				if (args == null) {
+< 					expr = new VarName(new Position(atom), atom.lexeme);
+< 				} else {
+< 					Position p;
+< 					if(args.size() == 0){
+< 						p = new Position(atom);
+< 					}else{
+< 						p = new Position(atom, args.getLast());
+806,807c558,561
+< 
+< 					expr = new FunCall(p, atom.lexeme, args);
+---
+> 		case CONST_BOOLEAN: {
+> 			Symbol symCONST_BOOLEAN = nextSymbol();
+> 			result = new AtomExpr((Position) symCONST_BOOLEAN, AtomExpr.AtomTypes.BOOLEAN, symCONST_BOOLEAN.lexeme);
+> 			break;
+809c563,565
+< 
+---
+> 		case CONST_CHAR: {
+> 			Symbol symCONST_CHAR = nextSymbol();
+> 			result = new AtomExpr((Position) symCONST_CHAR, AtomExpr.AtomTypes.CHAR, symCONST_CHAR.lexeme);
+811,816c567,593
+< 			case OPENING_PARENTHESIS:
+< 				Symbol lparen = skip(Symbol.Token.OPENING_PARENTHESIS);
+< 				LinkedList<Expr> exprs = parseExpressions();
+< 				Symbol rparen = skip(Symbol.Token.CLOSING_PARENTHESIS);
+< 				if (exprs.size() == 1) {
+< 					expr = exprs.get(0);
+---
+> 		}
+> 		case CONST_STRING: {
+> 			Symbol symCONST_STRING = nextSymbol();
+> 			result = new AtomExpr((Position) symCONST_STRING, AtomExpr.AtomTypes.STRING, symCONST_STRING.lexeme);
+> 			break;
+> 		}
+> 		case CONST_NULL: {
+> 			Symbol symCONST_NULL = nextSymbol();
+> 			result = new AtomExpr((Position) symCONST_NULL, AtomExpr.AtomTypes.PTR, null);
+> 			break;
+> 		}
+> 		case CONST_NONE: {
+> 			Symbol symCONST_NONE = nextSymbol();
+> 			result = new AtomExpr((Position) symCONST_NONE, AtomExpr.AtomTypes.VOID, null);
+> 			break;
+> 		}
+> 		case IDENTIFIER: {
+> 			Symbol symIDENTIFIER = nextSymbol();
+> 			result = parseArgumentsOpt(symIDENTIFIER);
+> 			break;
+> 		}
+> 		case OPENING_PARENTHESIS: {
+> 			Symbol symOPENING_PARENTHESIS = nextSymbol();
+> 			LinkedList<Expr> astExprs = parseExpressions();
+> 			Symbol symCLOSING_PARENTHESIS;
+> 			if (laSymbol.token == Symbol.Token.CLOSING_PARENTHESIS) {
+> 				symCLOSING_PARENTHESIS = nextSymbol();
+818c595,596
+< 					expr = new Exprs(new Position(lparen, rparen), exprs);
+---
+> 				Report.warning(laSymbol, "Missing symbol ')' inserted.");
+> 				symCLOSING_PARENTHESIS = nextSymbolIsError();
+819a598,601
+> 			if (astExprs.size() == 1)
+> 				result = astExprs.get(0);
+> 			else
+> 				result = new Exprs(new Position(symOPENING_PARENTHESIS, symCLOSING_PARENTHESIS), astExprs);
+821,830c603,628
+< 			//AtomicExpression -> if Expression then Expression else Expression end .
+< 			case IF:
+< 				Symbol ifSym = skip(Symbol.Token.IF);
+< 				Expr ifCond = parseExpression();
+< 				skip(Symbol.Token.THEN);
+< 				Expr thenExpr = parseExpression();
+< 				skip(Symbol.Token.ELSE);
+< 				Expr elseExpr = parseExpression();
+< 				Symbol ifEndSym = skip(Symbol.Token.END);
+< 				expr = new IfExpr(new Position(ifSym, ifEndSym), ifCond, thenExpr, elseExpr);
+---
+> 		}
+> 		case IF: {
+> 			Symbol symIF = nextSymbol();
+> 			Expr astCond = parseExpression();
+> 			if (laSymbol.token == Symbol.Token.THEN) {
+> 				nextSymbol();
+> 			} else {
+> 				Report.warning(laSymbol, "Missing keyword 'then' inserted.");
+> 				nextSymbolIsError();
+> 			}
+> 			Expr astThenExpr = parseExpression();
+> 			if (laSymbol.token == Symbol.Token.ELSE) {
+> 				nextSymbol();
+> 			} else {
+> 				Report.warning(laSymbol, "Missing keyword 'else' inserted.");
+> 				nextSymbolIsError();
+> 			}
+> 			Expr astElseExpr = parseExpression();
+> 			Symbol symEND;
+> 			if (laSymbol.token == Symbol.Token.END) {
+> 				symEND = nextSymbol();
+> 			} else {
+> 				Report.warning(laSymbol, "Missing keyword 'end' inserted.");
+> 				symEND = nextSymbolIsError();
+> 			}
+> 			result = new IfExpr(new Position(symIF, symEND), astCond, astThenExpr, astElseExpr);
+832,844c630,669
+< 			//AtomicExpression -> for IDENTIFIER assign Expression comma Expression colon Expression end .
+< 			case FOR:
+< 				Symbol forSym = skip(Symbol.Token.FOR);
+< 				Symbol id = skip(Symbol.Token.IDENTIFIER);
+< 				VarName iterVar = new VarName(new Position(id), id.lexeme);
+< 				skip(Symbol.Token.ASSIGN);
+< 				Expr lowBound = parseExpression();
+< 				skip(Symbol.Token.COMMA);
+< 				Expr highBound = parseExpression();
+< 				skip(Symbol.Token.COLON);
+< 				Expr forBody = parseExpression();
+< 				Symbol forEndSym = skip(Symbol.Token.END);
+< 				expr = new ForExpr(new Position(forSym, forEndSym), iterVar, lowBound, highBound, forBody);
+---
+> 		}
+> 		case FOR: {
+> 			Symbol symFOR = nextSymbol();
+> 			Symbol symIDENTIFIER;
+> 			if (laSymbol.token == Symbol.Token.IDENTIFIER) {
+> 				symIDENTIFIER = nextSymbol();
+> 			} else {
+> 				Report.warning(laSymbol, "Missing identifier inserted.");
+> 				symIDENTIFIER = nextSymbolIsError();
+> 			}
+> 			if (laSymbol.token == Symbol.Token.ASSIGN) {
+> 				nextSymbol();
+> 			} else {
+> 				Report.warning(laSymbol, "Missing symbol '=' inserted.");
+> 				nextSymbolIsError();
+> 			}
+> 			Expr astLoBound = parseExpression();
+> 			if (laSymbol.token == Symbol.Token.COMMA) {
+> 				nextSymbol();
+> 			} else {
+> 				Report.warning(laSymbol, "Missing symbol ',' inserted.");
+> 				nextSymbolIsError();
+> 			}
+> 			Expr astHiBound = parseExpression();
+> 			if (laSymbol.token == Symbol.Token.COLON) {
+> 				nextSymbol();
+> 			} else {
+> 				Report.warning(laSymbol, "Missing keyword ':' inserted.");
+> 				nextSymbolIsError();
+> 			}
+> 			Expr astBody = parseExpression();
+> 			Symbol symEND;
+> 			if (laSymbol.token == Symbol.Token.END) {
+> 				symEND = nextSymbol();
+> 			} else {
+> 				Report.warning(laSymbol, "Missing keyword 'end' inserted.");
+> 				symEND = nextSymbolIsError();
+> 			}
+> 			result = new ForExpr(new Position(symFOR, symEND),
+> 					new VarName((Position) symIDENTIFIER, symIDENTIFIER.lexeme), astLoBound, astHiBound, astBody);
+846,854c671,689
+< 
+< 			//AtomicExpression -> while Expression colon Expression end .
+< 			case WHILE:
+< 				Symbol whileSym = skip(Symbol.Token.WHILE);
+< 				Expr whileCond = parseExpression();
+< 				skip(Symbol.Token.COLON);
+< 				Expr whileBody = parseExpression();
+< 				Symbol whileEndSym = skip(Symbol.Token.END);
+< 				expr = new WhileExpr(new Position(whileSym, whileEndSym), whileCond, whileBody);
+---
+> 		}
+> 		case WHILE: {
+> 			Symbol symWHILE = nextSymbol();
+> 			Expr astCond = parseExpression();
+> 			if (laSymbol.token == Symbol.Token.COLON) {
+> 				nextSymbol();
+> 			} else {
+> 				Report.warning(laSymbol, "Missing symbol ':' inserted.");
+> 				nextSymbolIsError();
+> 			}
+> 			Expr astBody = parseExpression();
+> 			Symbol symEND;
+> 			if (laSymbol.token == Symbol.Token.END) {
+> 				symEND = nextSymbol();
+> 			} else {
+> 				Report.warning(laSymbol, "Missing keyword 'end' inserted.");
+> 				symEND = nextSymbolIsError();
+> 			}
+> 			result = new WhileExpr(new Position(symWHILE, symEND), astCond, astBody);
+856c691
+< 
+---
+> 		}
+858,860c693,695
+< 				expr = null;
+< 				signalError("AtomicExpression");
+< 
+---
+> 			Report.warning(laSymbol, "Missing expression inserted.");
+> 			nextSymbolIsError();
+> 			result = new ExprError();
+862d696
+< 
+864c698
+< 		return expr;
+---
+> 		return result;
+867,869c701,702
+< 	// ArgumentsOpt -> .
+< 	// ArgumentsOpt -> lparen ArgumentsOpt' .
+< 	private LinkedList<Expr> parseArgumentsOpt() {
+---
+> 	private Expr parseArgumentsOpt(Symbol symIDENTIFIER) {
+> 		Expr result;
+871,872d703
+< 		LinkedList<Expr> exprs;
+< 
+875,908c706,707
+< 				skip(Symbol.Token.OPENING_PARENTHESIS);
+< 				exprs = parseArgumentsOptPrime();
+< 				break;
+< 
+< 			case WHERE:
+< 			case END:
+< 			case COMMA:
+< 			case ASSIGN:
+< 			case OR:
+< 			case AND:
+< 			case EQU:
+< 			case NEQ:
+< 			case LTH:
+< 			case GTH:
+< 			case LEQ:
+< 			case GEQ:
+< 			case ADD:
+< 			case SUB:
+< 			case MUL:
+< 			case DIV:
+< 			case MOD:
+< 			case OPENING_BRACKET:
+< 			case CLOSING_BRACKET:
+< 			case DOT:
+< 			case VAL:
+< 			case CLOSING_PARENTHESIS:
+< 			case THEN:
+< 			case ELSE:
+< 			case COLON:
+< 			case TYP:
+< 			case FUN:
+< 			case VAR:
+< 			case EOF:
+< 				exprs = null;
+---
+> 			nextSymbol();
+> 			result = parseArgumentsOptRest(symIDENTIFIER);
+911,912c710,711
+< 				exprs = null;
+< 				signalError("ArgumentsOpt");
+---
+> 			result = new VarName((Position) symIDENTIFIER, symIDENTIFIER.lexeme);
+> 			break;
+914d712
+< 
+916c714
+< 		return exprs;
+---
+> 		return result;
+919,922c717,718
+< 
+< 	//ArgumentsOpt' -> Expressions rparen .
+< 	//ArgumentsOpt' -> rparen .
+< 	private LinkedList<Expr> parseArgumentsOptPrime() {
+---
+> 	private Expr parseArgumentsOptRest(Symbol symIDENTIFIER) {
+> 		Expr result;
+924,925c720
+< 		LinkedList<Expr> exprs;
+< 
+---
+> 		Symbol symCLOSING_PARENTHESIS;
+928,929c723,724
+< 				exprs = new LinkedList<>();
+< 				skip(Symbol.Token.CLOSING_PARENTHESIS);
+---
+> 			symCLOSING_PARENTHESIS = nextSymbol();
+> 			result = new FunCall(new Position(symIDENTIFIER, symCLOSING_PARENTHESIS), symIDENTIFIER.lexeme, new LinkedList<Expr>());
+932,933c727,734
+< 				exprs = parseExpressions();
+< 				skip(Symbol.Token.CLOSING_PARENTHESIS);
+---
+> 			LinkedList<Expr> astExprs = parseExpressions();
+> 			if (laSymbol.token == Symbol.Token.CLOSING_PARENTHESIS) {
+> 				symCLOSING_PARENTHESIS = nextSymbol();
+> 			} else {
+> 				Report.warning(laSymbol, "Missing symbol ')' inserted.");
+> 				symCLOSING_PARENTHESIS = nextSymbolIsError();
+> 			}
+> 			result = new FunCall(new Position(symIDENTIFIER, symCLOSING_PARENTHESIS), symIDENTIFIER.lexeme, astExprs);
+935d735
+< 
+937c737
+< 		return exprs;
+---
+> 		return result;
+940d739
+< 	//Declarations -> Declaration DeclarationsPrime .
+941a741
+> 		LinkedList<Decl> result;
+943,947c743,747
+< 		Decl decl = parseDeclaration();
+< 		LinkedList<Decl> decls = parseDeclarationsPrime();
+< 		decls.add(0, decl);
+< 		endLog();
+< 		return decls;
+---
+> 		Decl astDecl = parseDeclaration();
+> 		result = parseDeclarationsRest();
+> 		result.addFirst(astDecl);
+> 		endLog();
+> 		return result;
+950,954c750,752
+< 	//DeclarationsPrime -> Declaration DeclarationsPrime .
+< 	//DeclarationsPrime -> .
+< 	private LinkedList<Decl> parseDeclarationsPrime() {
+< 		begLog("DeclarationsPrime");
+< 		LinkedList<Decl> decls;
+---
+> 	private LinkedList<Decl> parseDeclarationsRest() {
+> 		LinkedList<Decl> result;
+> 		begLog("DeclarationsRest");
+959,964c757,759
+< 				Decl decl = parseDeclaration();
+< 				decls = parseDeclarationsPrime();
+< 				decls.add(0, decl);
+< 				break;
+< 			case END:
+< 				decls = new LinkedList<>();
+---
+> 			Decl astDecl = parseDeclaration();
+> 			result = parseDeclarationsRest();
+> 			result.addFirst(astDecl);
+967,968c762
+< 				decls = null;
+< 				signalError("DeclarationsPrime", "end or a declaration");
+---
+> 			result = new LinkedList<Decl>();
+970d763
+< 
+972c765
+< 		return decls;
+---
+> 		return result;
+975,977d767
+< 	//Declaration -> TypeDeclaration .
+< 	//Declaration -> FunctionDeclaration .
+< 	//Declaration -> VariableDeclaration .
+978a769
+> 		Decl result;
+980d770
+< 		Decl decl;
+983c773
+< 				decl = parseTypeDeclaration();
+---
+> 			result = parseTypeDeclaration();
+986c776
+< 				decl = parseFunctionDeclaration();
+---
+> 			result = parseFunctionDeclaration();
+989c779
+< 				decl = parseVariableDeclaration();
+---
+> 			result = parseVariableDeclaration();
+992,993c782,784
+< 				decl = null;
+< 				signalError("Declaration");
+---
+> 			Report.warning(laSymbol, "Missing declaration inserted.");
+> 			nextSymbolIsError();
+> 			result = new DeclError();
+996c787
+< 		return decl;
+---
+> 		return result;
+999d789
+< 	//TypeDeclaration -> typ IDENTIFIER colon Type .
+1000a791
+> 		TypeDecl result;
+1002,1007c793,815
+< 		Symbol typSym = skip(Symbol.Token.TYP);
+< 		Symbol id = skip(Symbol.Token.IDENTIFIER);
+< 		skip(Symbol.Token.COLON);
+< 		Type type = parseType();
+< 		TypeDecl decl = new TypeDecl(new Position(typSym, type), id.lexeme, type);
+< 
+---
+> 		switch (laSymbol.token) {
+> 		case TYP: {
+> 			Symbol symTYP = nextSymbol();
+> 			Symbol symIDENTIFIER;
+> 			if (laSymbol.token == Symbol.Token.IDENTIFIER) {
+> 				symIDENTIFIER = nextSymbol();
+> 			} else {
+> 				Report.warning(laSymbol, "Missing identifier inserted.");
+> 				symIDENTIFIER = nextSymbolIsError();
+> 			}
+> 			if (laSymbol.token == Symbol.Token.COLON) {
+> 				nextSymbol();
+> 			} else {
+> 				Report.warning(laSymbol, "Missing symbol ':' inserted.");
+> 				nextSymbolIsError();
+> 			}
+> 			Type astType = parseType();
+> 			result = new TypeDecl(new Position(symTYP, astType), symIDENTIFIER.lexeme, astType);
+> 			break;
+> 		}
+> 		default:
+> 			throw new InternalCompilerError();
+> 		}
+1009c817
+< 		return decl;
+---
+> 		return result;
+1012d819
+< 	//FunctionDeclaration -> fun IDENTIFIER lparen ParametersOpt rparen colon Type FunctionBodyOpt .
+1013a821
+> 		FunDecl result;
+1015,1026c823,834
+< 		Symbol funSym = skip(Symbol.Token.FUN);
+< 		Symbol id = skip(Symbol.Token.IDENTIFIER);
+< 		skip(Symbol.Token.OPENING_PARENTHESIS);
+< 		LinkedList<ParDecl> params = parseParametersOpt();
+< 		skip(Symbol.Token.CLOSING_PARENTHESIS);
+< 		skip(Symbol.Token.COLON);
+< 		Type type = parseType();
+< 		Expr body = parseFunctionBodyOpt();
+< 
+< 		FunDecl decl;
+< 		if (body == null) {
+< 			decl = new FunDecl(new Position(funSym, type), id.lexeme, params, type);
+---
+> 		switch (laSymbol.token) {
+> 		case FUN: {
+> 			Symbol symFUN = nextSymbol();
+> 			Symbol symIDENTIFIER;
+> 			if (laSymbol.token == Symbol.Token.IDENTIFIER) {
+> 				symIDENTIFIER = nextSymbol();
+> 			} else {
+> 				Report.warning(laSymbol, "Missing identifier inserted.");
+> 				symIDENTIFIER = nextSymbolIsError();
+> 			}
+> 			if (laSymbol.token == Symbol.Token.OPENING_PARENTHESIS) {
+> 				nextSymbol();
+1028c836,867
+< 			decl = new FunDef(new Position(funSym, body), id.lexeme, params, type, body);
+---
+> 				Report.warning(laSymbol, "Missing symbol '(' inserted.");
+> 				nextSymbolIsError();
+> 			}
+> 			LinkedList<ParDecl> astPars = parseParametersOpt();
+> 			if (laSymbol.token == Symbol.Token.CLOSING_PARENTHESIS) {
+> 				nextSymbol();
+> 			} else {
+> 				Report.warning(laSymbol, "Missing symbol ')' inserted.");
+> 				nextSymbolIsError();
+> 			}
+> 			if (laSymbol.token == Symbol.Token.COLON) {
+> 				nextSymbol();
+> 			} else {
+> 				Report.warning(laSymbol, "Missing symbol ':' inserted.");
+> 				nextSymbolIsError();
+> 			}
+> 			Type astType = parseType();
+> 			switch (laSymbol.token) {
+> 			case ASSIGN:
+> 				Expr astBody = parseFunctionBodyOpt();
+> 				result = new FunDef(new Position(symFUN, astBody), symIDENTIFIER.lexeme, astPars, astType, astBody);
+> 				break;
+> 			default:
+> 				result = new FunDecl(new Position(symFUN, astType), symIDENTIFIER.lexeme, astPars, astType);
+> 			}
+> 			break;
+> 		}
+> 		default:
+> 			throw new InternalCompilerError();
+> 		}
+> 		endLog();
+> 		return result;
+1030a870,880
+> 	private Expr parseFunctionBodyOpt() {
+> 		Expr result;
+> 		begLog("FunctionBodyOpt");
+> 		switch (laSymbol.token) {
+> 		case ASSIGN:
+> 			nextSymbol();
+> 			result = parseExpression();
+> 			break;
+> 		default:
+> 			throw new InternalCompilerError();
+> 		}
+1032c882
+< 		return decl;
+---
+> 		return result;
+1035,1036d884
+< 	//ParametersOpt -> .
+< 	//ParametersOpt -> Parameters .
+1037a886
+> 		LinkedList<ParDecl> result;
+1039d887
+< 		LinkedList<ParDecl> params;
+1042,1045c890
+< 				params = parseParameters();
+< 				break;
+< 			case CLOSING_PARENTHESIS:
+< 				params = new LinkedList<>();
+---
+> 			result = parseParameters();
+1048,1049c893
+< 				params = null;
+< 				signalError("ParametersOpt");
+---
+> 			result = new LinkedList<ParDecl>();
+1052,1053c896
+< 
+< 		return params;
+---
+> 		return result;
+1056d898
+< 	//Parameters -> Parameter ParametersPrime .
+1057a900
+> 		LinkedList<ParDecl> result;
+1059,1063c902,906
+< 		ParDecl param = parseParameter();
+< 		LinkedList<ParDecl> params = parseParametersPrime();
+< 		params.add(0, param);
+< 		endLog();
+< 		return params;
+---
+> 		ParDecl astPar = parseParameter();
+> 		result = parseParametersRest();
+> 		result.addFirst(astPar);
+> 		endLog();
+> 		return result;
+1066,1070c909,911
+< 	//ParametersPrime -> comma Parameter ParametersPrime .
+< 	//ParametersPrime -> .
+< 	private LinkedList<ParDecl> parseParametersPrime() {
+< 		begLog("ParametersPrime");
+< 		LinkedList<ParDecl> params;
+---
+> 	private LinkedList<ParDecl> parseParametersRest() {
+> 		LinkedList<ParDecl> result;
+> 		begLog("ParametersRest");
+1073,1080c914,917
+< 				skip(Symbol.Token.COMMA);
+< 				ParDecl param = parseParameter();
+< 				params = parseParametersPrime();
+< 				params.add(0, param);
+< 				break;
+< 
+< 			case CLOSING_PARENTHESIS:
+< 				params = new LinkedList<>();
+---
+> 			nextSymbol();
+> 			ParDecl astPar = parseParameter();
+> 			result = parseParametersRest();
+> 			result.addFirst(astPar);
+1083,1084c920
+< 				params = null;
+< 				signalError("ParametersPrime", "comma <,> or closing paren |)|");
+---
+> 			result = new LinkedList<ParDecl>();
+1087c923
+< 		return params;
+---
+> 		return result;
+1090d925
+< 	//Parameter -> IDENTIFIER colon Type .
+1091a927
+> 		ParDecl result;
+1093,1095c929,943
+< 		Symbol id = skip(Symbol.Token.IDENTIFIER);
+< 		skip(Symbol.Token.COLON);
+< 		Type type = parseType();
+---
+> 		Symbol symIDENTIFIER;
+> 		if (laSymbol.token == Symbol.Token.IDENTIFIER) {
+> 			symIDENTIFIER = nextSymbol();
+> 		} else {
+> 			Report.warning(laSymbol, "Missing identifier inserted.");
+> 			symIDENTIFIER = nextSymbolIsError();
+> 		}
+> 		if (laSymbol.token == Symbol.Token.COLON) {
+> 			nextSymbol();
+> 		} else {
+> 			Report.warning(laSymbol, "Missing symbol ':' inserted.");
+> 			nextSymbolIsError();
+> 		}
+> 		Type astType = parseType();
+> 		result = new ParDecl(new Position(symIDENTIFIER, astType), symIDENTIFIER.lexeme, astType);
+1097c945
+< 		return new ParDecl(new Position(id, type), id.lexeme, type);
+---
+> 		return result;
+1100,1104c948,950
+< 	//FunctionBodyOpt -> .
+< 	//FunctionBodyOpt -> assign Expression .
+< 	private Expr parseFunctionBodyOpt() {
+< 		begLog("FunctionBodyOpt");
+< 		Expr expr;
+---
+> 	private VarDecl parseVariableDeclaration() {
+> 		VarDecl result;
+> 		begLog("VariableDeclaration");
+1106,1114c952,968
+< 			case ASSIGN:
+< 				skip(Symbol.Token.ASSIGN);
+< 				expr = parseExpression();
+< 				break;
+< 			case END:
+< 			case TYP:
+< 			case FUN:
+< 			case VAR:
+< 				expr = null;
+---
+> 		case VAR: {
+> 			Symbol symVar = nextSymbol();
+> 			Symbol symId;
+> 			if (laSymbol.token == Symbol.Token.IDENTIFIER) {
+> 				symId = nextSymbol();
+> 			} else {
+> 				Report.warning(laSymbol, "Missing identifier inserted.");
+> 				symId = nextSymbolIsError();
+> 			}
+> 			if (laSymbol.token == Symbol.Token.COLON) {
+> 				nextSymbol();
+> 			} else {
+> 				Report.warning(laSymbol, "Missing symbol ':' inserted.");
+> 				nextSymbolIsError();
+> 			}
+> 			Type astType = parseType();
+> 			result = new VarDecl(new Position(symVar, astType), symId.lexeme, astType);
+1115a970
+> 		}
+1117,1118c972
+< 				expr = null;
+< 				signalError("FunctionBodyOpt");
+---
+> 			throw new InternalCompilerError();
+1121,1122c975
+< 
+< 		return expr;
+---
+> 		return result;
+1125,1146d977
+< 	//VariableDeclaration -> var IDENTIFIER colon Type .
+< 	private VarDecl parseVariableDeclaration() {
+< 		begLog("VariableDeclaration");
+< 		Symbol varSym = skip(Symbol.Token.VAR);
+< 		Symbol id = skip(Symbol.Token.IDENTIFIER);
+< 		skip(Symbol.Token.COLON);
+< 		Type type = parseType();
+< 		VarDecl decl = new VarDecl(new Position(varSym, type), id.lexeme, type);
+< 
+< 		endLog();
+< 		return decl;
+< 	}
+< 
+< 	//Type -> integer .
+< 	//Type -> boolean .
+< 	//Type -> char .
+< 	//Type -> string .
+< 	//Type -> void .
+< 	//Type -> arr lbracket Expression rbracket Type .
+< 	//Type -> rec lbrace Components rbrace .
+< 	//Type -> ptr Type .
+< 	//Type -> IDENTIFIER .
+1147a979
+> 		Type result;
+1149,1150d980
+< 		Symbol typeStartSym;
+< 		Type type;
+1152,1191c982,984
+< 			case INTEGER:
+< 				typeStartSym = skip(Symbol.Token.INTEGER);
+< 				type = new AtomType(new Position(typeStartSym), AtomType.AtomTypes.INTEGER);
+< 				break;
+< 			case BOOLEAN:
+< 				typeStartSym = skip(Symbol.Token.BOOLEAN);
+< 				type = new AtomType(new Position(typeStartSym), AtomType.AtomTypes.BOOLEAN);
+< 				break;
+< 			case CHAR:
+< 				typeStartSym = skip(Symbol.Token.CHAR);
+< 				type = new AtomType(new Position(typeStartSym), AtomType.AtomTypes.CHAR);
+< 				break;
+< 			case STRING:
+< 				typeStartSym = skip(Symbol.Token.STRING);
+< 				type = new AtomType(new Position(typeStartSym), AtomType.AtomTypes.STRING);
+< 				break;
+< 			case VOID:
+< 				typeStartSym = skip(Symbol.Token.VOID);
+< 				type = new AtomType(new Position(typeStartSym), AtomType.AtomTypes.VOID);
+< 				break;
+< 			case ARR:
+< 				typeStartSym = skip(Symbol.Token.ARR);
+< 				skip(Symbol.Token.OPENING_BRACKET);
+< 				Expr size = parseExpression();
+< 				skip(Symbol.Token.CLOSING_BRACKET);
+< 				Type arrType = parseType();
+< 
+< 				type = new ArrType(new Position(typeStartSym, arrType), size, arrType);
+< 				break;
+< 			case REC:
+< 				typeStartSym = skip(Symbol.Token.REC);
+< 				skip(Symbol.Token.OPENING_BRACE);
+< 				LinkedList<CompDecl> comps = parseComponents();
+< 				Symbol rbraceSym = skip(Symbol.Token.CLOSING_BRACE);
+< 				type = new RecType(new Position(typeStartSym, rbraceSym), comps);
+< 				break;
+< 			case PTR:
+< 				typeStartSym = skip(Symbol.Token.PTR);
+< 				Type ptrType = parseType();
+< 				type = new PtrType(new Position(typeStartSym, ptrType), ptrType);
+---
+> 		case INTEGER: {
+> 			Symbol symINTEGER = nextSymbol();
+> 			result = new AtomType((Position) symINTEGER, AtomType.AtomTypes.INTEGER);
+1193,1195c986,1042
+< 			case IDENTIFIER:
+< 				Symbol typeName = skip(Symbol.Token.IDENTIFIER);
+< 				type = new TypeName(new Position(typeName), typeName.lexeme);
+---
+> 		}
+> 		case BOOLEAN: {
+> 			Symbol symBOOLEAN = nextSymbol();
+> 			result = new AtomType((Position) symBOOLEAN, AtomType.AtomTypes.BOOLEAN);
+> 			break;
+> 		}
+> 		case CHAR: {
+> 			Symbol symCHAR = nextSymbol();
+> 			result = new AtomType((Position) symCHAR, AtomType.AtomTypes.CHAR);
+> 			break;
+> 		}
+> 		case STRING: {
+> 			Symbol symSTRING = nextSymbol();
+> 			result = new AtomType((Position) symSTRING, AtomType.AtomTypes.STRING);
+> 			break;
+> 		}
+> 		case VOID: {
+> 			Symbol symVOID = nextSymbol();
+> 			result = new AtomType((Position) symVOID, AtomType.AtomTypes.VOID);
+> 			break;
+> 		}
+> 		case ARR: {
+> 			Symbol symARR = nextSymbol();
+> 			if (laSymbol.token == Symbol.Token.OPENING_BRACKET) {
+> 				nextSymbol();
+> 			} else {
+> 				Report.warning(laSymbol, "Missing symbol '[' inserted.");
+> 				nextSymbolIsError();
+> 			}
+> 			Expr astSize = parseExpression();
+> 			if (laSymbol.token == Symbol.Token.CLOSING_BRACKET) {
+> 				nextSymbol();
+> 			} else {
+> 				Report.warning(laSymbol, "Missing symbol ']' inserted.");
+> 				nextSymbolIsError();
+> 			}
+> 			Type astType = parseType();
+> 			result = new ArrType(new Position(symARR, astType), astSize, astType);
+> 			break;
+> 		}
+> 		case REC: {
+> 			Symbol symREC = nextSymbol();
+> 			if (laSymbol.token == Symbol.Token.OPENING_BRACE) {
+> 				nextSymbol();
+> 			} else {
+> 				Report.warning(laSymbol, "Missing symbol '{' inserted.");
+> 				nextSymbolIsError();
+> 			}
+> 			LinkedList<CompDecl> astComps = parseComponents();
+> 			Symbol symCLOSING_BRACE;
+> 			if (laSymbol.token == Symbol.Token.CLOSING_BRACE) {
+> 				symCLOSING_BRACE = nextSymbol();
+> 			} else {
+> 				Report.warning(laSymbol, "Missing symbol '}' inserted.");
+> 				symCLOSING_BRACE = nextSymbolIsError();
+> 			}
+> 			result = new RecType(new Position(symREC, symCLOSING_BRACE), astComps);
+1196a1044,1055
+> 		}
+> 		case PTR: {
+> 			Symbol symPTR = nextSymbol();
+> 			Type astType = parseType();
+> 			result = new PtrType(new Position(symPTR, astType), astType);
+> 			break;
+> 		}
+> 		case IDENTIFIER: {
+> 			Symbol symIDENTIFIER = nextSymbol();
+> 			result = new TypeName((Position) symIDENTIFIER, symIDENTIFIER.lexeme);
+> 			break;
+> 		}
+1198,1199c1057,1059
+< 				type = null;
+< 				signalError("Type");
+---
+> 			Report.warning(laSymbol, "Missing type expression inserted.");
+> 			nextSymbolIsError();
+> 			result = new TypeError();
+1201d1060
+< 
+1203c1062
+< 		return type;
+---
+> 		return result;
+1206d1064
+< 	//Components -> Component ComponentsPrime .
+1207a1066
+> 		LinkedList<CompDecl> result;
+1209,1212c1068,1070
+< 		CompDecl comp = parseComponent();
+< 		LinkedList<CompDecl> comps = parseComponentsPrime();
+< 		comps.add(0, comp);
+< 
+---
+> 		CompDecl astComp = parseComponent();
+> 		result = parseComponentsRest();
+> 		result.addFirst(astComp);
+1214c1072
+< 		return comps;
+---
+> 		return result;
+1217,1221c1075,1077
+< 	//ComponentsPrime -> comma Component ComponentsPrime .
+< 	//ComponentsPrime -> .
+< 	private LinkedList<CompDecl> parseComponentsPrime() {
+< 		begLog("ComponentsPrime");
+< 		LinkedList<CompDecl> comps;
+---
+> 	private LinkedList<CompDecl> parseComponentsRest() {
+> 		LinkedList<CompDecl> result;
+> 		begLog("ComponentsRest");
+1224,1230c1080,1083
+< 				skip(Symbol.Token.COMMA);
+< 				CompDecl comp = parseComponent();
+< 				comps = parseComponentsPrime();
+< 				comps.add(0, comp);
+< 				break;
+< 			case CLOSING_BRACE:
+< 				comps = new LinkedList<>();
+---
+> 			nextSymbol();
+> 			CompDecl astComp = parseComponent();
+> 			result = parseComponentsRest();
+> 			result.addFirst(astComp);
+1233,1234c1086
+< 				comps = null;
+< 				signalError("ComponentsPrime");
+---
+> 			result = new LinkedList<CompDecl>();
+1237,1238c1089
+< 
+< 		return comps;
+---
+> 		return result;
+1241d1091
+< 	//Component -> IDENTIFIER colon Type .
+1242a1093
+> 		CompDecl result;
+1244,1248c1095,1109
+< 		Symbol id = skip(Symbol.Token.IDENTIFIER);
+< 		skip(Symbol.Token.COLON);
+< 		Type type = parseType();
+< 		CompDecl decl = new CompDecl(new Position(id, type), id.lexeme, type);
+< 
+---
+> 		Symbol symIDENTIFIER;
+> 		if (laSymbol.token == Symbol.Token.IDENTIFIER) {
+> 			symIDENTIFIER = nextSymbol();
+> 		} else {
+> 			Report.warning(laSymbol, "Missing identifier inserted.");
+> 			symIDENTIFIER = nextSymbolIsError();
+> 		}
+> 		if (laSymbol.token == Symbol.Token.COLON) {
+> 			nextSymbol();
+> 		} else {
+> 			Report.warning(laSymbol, "Missing symbol ':' inserted.");
+> 			nextSymbolIsError();
+> 		}
+> 		Type astType = parseType();
+> 		result = new CompDecl(new Position(symIDENTIFIER, astType), symIDENTIFIER.lexeme, astType);
+1250c1111
+< 		return decl;
+---
+> 		return result;
+1251a1113
+> 

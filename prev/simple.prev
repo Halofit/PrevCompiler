@@ -1,0 +1,5 @@
+i = 2*j+1
+where
+	var i:integer
+	var j:integer
+end

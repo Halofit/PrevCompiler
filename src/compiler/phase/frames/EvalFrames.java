@@ -54,6 +54,7 @@ public class EvalFrames extends FullVisitor {
 		whereExpr.expr.accept(this);
 	}
 
+
 	@Override
 	public void visit(FunDef funDef) {
 		//Backup prevous values
@@ -153,7 +154,7 @@ public class EvalFrames extends FullVisitor {
 		} else {
 			//stack variable
 			long offset = -localVariablesSize;
-			acc = new OffsetAccess(offset, t.size());
+			acc = new OffsetAccess(level, offset, t.size());
 		}
 
 		attrs.accAttr.set(varDecl, acc);
@@ -168,7 +169,7 @@ public class EvalFrames extends FullVisitor {
 		t = t.actualTyp();
 
 		//For parameters offset goes before increment (since they go the other way)
-		Access acc = new OffsetAccess(parametersSize, t.size());
+		Access acc = new OffsetAccess(level, parametersSize, t.size());
 		attrs.accAttr.set(parDecl, acc);
 
 		parametersSize += t.size();
@@ -195,7 +196,8 @@ public class EvalFrames extends FullVisitor {
 		t = t.actualTyp();
 		recordSize += t.size();
 
-		Access a = new OffsetAccess(recordSize, t.size());
+		Access a = new OffsetAccess(-1, recordSize, t.size());
 		attrs.accAttr.set(compDecl, a);
 	}
+
 }
