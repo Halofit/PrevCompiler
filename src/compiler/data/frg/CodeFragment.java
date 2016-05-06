@@ -44,14 +44,14 @@ public class CodeFragment extends Fragment {
 		this.FP = FP;
 		this.RV = RV;
 		this.stmt = stmt;
-		this.linCode = (this.stmt == null) ? null : this.stmt.linCode();
+		this.linCode = null;// (this.stmt == null) ? null : this.stmt.linCode();
 	}
 
 	@Override
 	public void toXML(Logger logger) {
 		logger.begElement("frg");
 		logger.addAttribute("kind", "CODE FRAGMENT " + "(" + label + "," + "FP=" + FP + "," + "RV=" + RV  + ")");
-		linCode.toXML(logger);
+		stmt.toXML(logger);
 		logger.endElement();
 	}
 

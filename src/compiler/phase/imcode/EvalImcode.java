@@ -195,7 +195,7 @@ public class EvalImcode extends FullVisitor {
 				code = new MEM(expr, t.size());
 				break;
 			case MEM:
-				code = expr; //TODO -> this is probably correct, no need to MEM it -> variable should give it's address
+				code = expr;
 				break;
 			default:
 				throw new InternalCompilerError();
@@ -281,10 +281,10 @@ public class EvalImcode extends FullVisitor {
 				fpTemp = new MEM(fpTemp, pointerSize);
 				levelDiff--;
 			}
-			code = new MEM(new BINOP(BINOP.Oper.ADD, fpTemp, new CONST(acc.offset)), t.size());
+			code = new BINOP(BINOP.Oper.ADD, fpTemp, new CONST(acc.offset));
 		} else {
 			StaticAccess acc = (StaticAccess) a;
-			code = new MEM(new NAME(acc.label), t.size());
+			code = new NAME(acc.label);
 		}
 
 		attrs.imcAttr.set(varName, code);
