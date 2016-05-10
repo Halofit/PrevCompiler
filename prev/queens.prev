@@ -1,0 +1,61 @@
+(q=0,solve(@qs,0),1)
+
+where
+
+  var q:integer
+  var qs:arr[8]integer
+  fun solve(qs:ptr arr[8]integer,I:integer):void=
+      (
+       if (I==8) then
+         (q=q+1,printInt(q),printStr(":\n"),
+	  for j=0,7:
+	    (for i=0,7:
+	        (if ((qs^)[i]==j) then
+	           printChr('X')
+	         else
+	           printChr('.')
+	         end,
+		 printChr(' '))
+	     end,
+	     printChr('\n'))
+	  end,
+	  printChr('\n'))
+	 where var i:integer var j:integer end
+       else
+         (for j=0,7:
+	    (
+	     check=true,
+	     for i=0,I-1:
+	       (check=check&((qs^)[i]!=j),
+	        check=check&((qs^)[i]-j!=i-I),
+		check=check&((qs^)[i]-j!=I-i),
+	        none)
+	     end,
+	     if check then
+	       (
+	        (qs^)[I]=j,
+		solve(qs,I+1),
+	        none
+	       )
+	     else
+	       none
+	     end,
+	     none
+	    )
+	  end
+	 )
+	 where
+	   var i:integer
+	   var j:integer
+	   var check:boolean
+	 end
+       end
+      )
+
+  # STDLIB
+  
+  fun printChr(c:char):void
+  fun printInt(i:integer):void
+  fun printStr(s:string):void
+
+end

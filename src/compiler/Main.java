@@ -10,6 +10,7 @@ import compiler.phase.imcode.EvalImcode;
 import compiler.phase.imcode.Imcode;
 import compiler.phase.lexan.LexAn;
 import compiler.phase.lexan.Symbol;
+import compiler.phase.lincode.LinCode;
 import compiler.phase.seman.*;
 import compiler.phase.synan.SynAn;
 
@@ -88,11 +89,18 @@ public class Main {
 				imcode.close();
 				if (task.phase.equals("imcode"))
 					break;
+
+				
+				// Linearization of the intermediate code.
+				LinCode linCode = new LinCode(task);
+				//(new EvalLinCode(task.fragments)).visit(task.prgAST);
+				linCode.close();
+				if (task.phase.equals("lincode"))
+					break;
 				
 				break;
 			}
 		} catch (CompilerError errorReport) {
-			// As dead as a dodo. Print error message and signal error.
 			System.err.println(errorReport.getMessage());
 			System.out.println();
 			System.exit(1);
