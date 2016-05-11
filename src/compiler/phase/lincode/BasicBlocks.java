@@ -31,7 +31,6 @@ public class BasicBlocks {
 	}
 
 	private void transform(CodeFragment fragment) {
-		System.out.println("Working on : " + fragment.label);
 
 		if(fragment.linCode == null) {
 			System.err.println("Fragment has a null linearised code.");
@@ -82,6 +81,8 @@ public class BasicBlocks {
 			ordBlk.add(nextBlock);
 		}
 
+		ordBlk.add(exitBlock);
+
 		fragment.linCode = reserialiseBlocks(ordBlk);
 	}
 
@@ -115,7 +116,13 @@ public class BasicBlocks {
 		boolean lastWasJump = true;
 
 		for(IMCStmt s : code.stmts){
-			Block lastBlock = blocks.getLast();
+			Block lastBlock;
+
+			if(blocks.size() != 0) {
+				lastBlock = blocks.getLast();
+			}else{
+				lastBlock = null;
+			}
 
 			if(s instanceof LABEL){
 				if(lastWasJump){

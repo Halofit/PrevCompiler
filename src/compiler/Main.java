@@ -87,17 +87,21 @@ public class Main {
 				// Intermediate code generation.
 				Imcode imcode = new Imcode(task);
 				(new EvalImcode(task.prgAttrs, task.fragments)).visit(task.prgAST);
+
+				//Do basic blocks -> linearisation should have been done here
+				BasicBlocks bblocs = new BasicBlocks(task);
+				bblocs.transform();
+
+
 				imcode.close();
 				if (task.phase.equals("imcode"))
 					break;
 
-				
+
 				// Linearization of the intermediate code.
 				LinCode linCode = new LinCode(task);
 				//(new EvalLinCode(task.fragments)).visit(task.prgAST);
 				linCode.close();
-				BasicBlocks bblocs = new BasicBlocks(task);
-				bblocs.transform();
 				if (task.phase.equals("lincode"))
 					break;
 				
