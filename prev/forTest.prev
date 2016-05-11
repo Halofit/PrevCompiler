@@ -1,0 +1,7 @@
+for i=1,5:
+	printInt(i)
+end
+where
+	var i:integer
+	fun printInt(a: integer) : void
+end

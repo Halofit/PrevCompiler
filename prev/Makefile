@@ -6,6 +6,9 @@ bindir = ../out/production/Compiler
 xsldir = ./xsl
 
 
+%.lincode.xml	: %.prev
+	java -classpath $(bindir) compiler.Main --xsldir=$(xsldir) --phase=lincode --loggedphases=lincode,imcode $<
+
 %.imcode.xml	: %.prev
 	java -classpath $(bindir) compiler.Main --xsldir=$(xsldir) --phase=imcode --loggedphases=imcode $<
 

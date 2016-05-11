@@ -1,0 +1,8 @@
+f(1) 
+where
+	fun f(i:integer) : void = 
+		i = 2*j+1
+		where #1
+			var j:integer
+		end
+end

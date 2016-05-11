@@ -1,0 +1,8 @@
+(i = 0, 
+while i< 5 :
+	(printInt(i), i = i + 1)
+end)
+where
+	var i:integer
+	fun printInt(a: integer) : void
+end

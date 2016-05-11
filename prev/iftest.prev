@@ -1,0 +1,11 @@
+(if true
+	then 
+		j = 1
+	else
+		j = 2
+end,
+printInt(j))
+where
+	var j:integer
+	fun printInt(a: integer) : void
+end

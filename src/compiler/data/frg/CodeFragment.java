@@ -51,7 +51,7 @@ public class CodeFragment extends Fragment {
 	public void toXML(Logger logger) {
 		logger.begElement("frg");
 		logger.addAttribute("kind", "CODE FRAGMENT " + "(" + label + "," + "FP=" + FP + "," + "RV=" + RV  + ")");
-		//linCode.toXML(logger);
+		linCode.toXML(logger);
 		logger.endElement();
 	}
 

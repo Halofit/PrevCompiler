@@ -2,6 +2,7 @@ package compiler.phase.lincode;
 
 import java.util.*;
 
+import com.sun.org.apache.xpath.internal.SourceTree;
 import compiler.*;
 import compiler.common.report.*;
 import compiler.phase.*;
@@ -130,7 +131,10 @@ public class LinCode extends Phase {
 
 	private void execute(CodeFragment codeFrg) {
 
-		if (codeFrg == null) throw new InternalCompilerError();
+		if (codeFrg == null) {
+			System.out.println("Declared function not defined.");
+			throw new InternalCompilerError();
+		}
 
 		if (debug) System.err.printf("BEG CODE FRAGMENT %s\n", codeFrg.label);
 
@@ -310,6 +314,7 @@ public class LinCode extends Phase {
 				d += call.widths(arg);
 			}
 
+			System.out.println(call.label);
 			execute(getCodeFragment(call.label));
 			return ldMem(registers[sp], 8);
 		}

@@ -1,0 +1,8 @@
+(i = 2*j+1, printInt(i), printStr("\n"))
+where
+	var i:integer
+	var j:integer
+	
+	fun printStr(a: string) : void
+	fun printInt(a: integer) : void
+end

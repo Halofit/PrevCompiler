@@ -1,0 +1,11 @@
+f(1) 
+where
+	typ Pair : rec{x: integer, y: integer}
+	fun f(i:integer) : void = 
+		a.x = a.y + a.x
+		where 
+			var i : integer
+			var a : Pair
+		end
+end
+

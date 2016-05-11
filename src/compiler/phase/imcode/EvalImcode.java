@@ -468,6 +468,7 @@ public class EvalImcode extends FullVisitor {
 		condImc = new BINOP(BINOP.Oper.LTH, new MEM(forVar, varT.size()), hiBound);
 		CJUMP condJump = new CJUMP(condImc, loopLabel.label, exitLabel.label);
 		JUMP entryJump = new JUMP(condLabel.label);
+		IMCStmt incrementStatement = new (); //TODO
 
 		Vector<IMCStmt> forStmts = new Vector<>();
 		forStmts.add(initExpr);
@@ -475,6 +476,7 @@ public class EvalImcode extends FullVisitor {
 		forStmts.add(condJump);
 		forStmts.add(loopLabel);
 		forStmts.add((IMCStmt) forBody);
+		forStmts.add(incrementStatement);
 		forStmts.add(entryJump);
 		forStmts.add(exitLabel);
 		IMC code = new STMTS(forStmts);

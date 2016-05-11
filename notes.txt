@@ -166,3 +166,21 @@ Klcini zazpisi
 	a je lokalna/globalna ->
 		lokalne ->
 		globalne -> določi labele (kaj je to?)
+
+------------Linearisation------------------ (izpit break za implementirat) :)
+
+Linearisation:
+	CJUMP(L1,L2)  LABEL(L2) ... LABEL(L1)
+		spremeniš v
+	lahko v dva brancha + un branch na koncu bloka S1
+
+	Maybe do basic blocks? -> not that hard
+		kako najdt permutacijo? Požrešna metoda -> fiksiraš prvega, iščeš dorega naslednika
+		če nimaš naslednika (ker je že fiksiran) -> poiščeš recimo eno še ne fixirano iz prejšnjega skoka)
+			laho iščeš tudi če na kakšnega 2x skočiš ga ne boš porabu
+
+
+
+	if C then S1 else S2
+		CJUMP(L1, L2) LABEL(L1) ... S1 ... JUMP(L3) LABEL(L2) ...S2... LABEL(L3) ...
+

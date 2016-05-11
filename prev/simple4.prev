@@ -1,0 +1,9 @@
+f(1) 
+where
+	fun f(i:integer) : void = 
+		a[i] = a[2*i]
+		where #1
+			var i : integer
+			var a : arr[10] integer
+		end
+end
