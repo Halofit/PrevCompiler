@@ -1,11 +1,12 @@
 package compiler;
 
-import java.util.*;
+import compiler.common.report.CompilerError;
+import compiler.common.report.Report;
+import compiler.data.ast.Program;
+import compiler.data.ast.attr.Attributes;
+import compiler.data.frg.Fragment;
 
-import compiler.common.report.*;
-import compiler.data.ast.*;
-import compiler.data.ast.attr.*;
-import compiler.data.frg.*;
+import java.util.HashMap;
 
 /**
  * The parameters and internal data of the compilation process.

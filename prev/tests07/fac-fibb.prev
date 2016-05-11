@@ -1,7 +1,7 @@
 (
 
- printStr("10! ="),printInt(itrfac(10)),printChr('\n'),
- printStr("10! ="),printInt(recfac(10)),printChr('\n'),
+ printStr("10!="),printInt(itrfac(10)),printChr('\n'),
+ printStr("10!="),printInt(recfac(10)),printChr('\n'),
 
  printStr("fibb(10)="),printInt(itrfibb(10)),printChr('\n'),
  printStr("fibb(10)="),printInt(recfibb(10)),printChr('\n'),

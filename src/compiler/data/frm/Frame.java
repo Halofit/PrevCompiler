@@ -1,6 +1,7 @@
 package compiler.data.frm;
 
-import compiler.common.logger.*;
+import compiler.common.logger.Loggable;
+import compiler.common.logger.Logger;
 
 /**
  * A stack frame.

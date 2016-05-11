@@ -1,8 +1,9 @@
 package compiler.data.frg;
 
 import compiler.common.logger.Logger;
-import compiler.data.frm.*;
-import compiler.data.imc.*;
+import compiler.data.frm.Frame;
+import compiler.data.imc.IMCStmt;
+import compiler.data.imc.STMTS;
 
 /**
  * A code fragment.

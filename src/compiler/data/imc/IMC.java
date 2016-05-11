@@ -1,6 +1,6 @@
 package compiler.data.imc;
 
-import compiler.common.logger.*;
+import compiler.common.logger.Logger;
 
 /**
  * An instruction of an intermediate code.

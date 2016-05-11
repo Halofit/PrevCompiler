@@ -1,6 +1,6 @@
 package compiler.common.logger;
 
-import org.w3c.dom.*;
+import org.w3c.dom.Document;
 
 /**
  * Document transformer.

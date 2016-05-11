@@ -1,14 +1,16 @@
 package compiler.phase.lincode;
 
-import java.util.*;
-
-import com.sun.org.apache.xpath.internal.SourceTree;
-import compiler.*;
-import compiler.common.report.*;
-import compiler.phase.*;
-
-import compiler.data.frg.*;
+import compiler.Task;
+import compiler.common.report.InternalCompilerError;
+import compiler.data.frg.CodeFragment;
+import compiler.data.frg.ConstFragment;
+import compiler.data.frg.DataFragment;
+import compiler.data.frg.Fragment;
 import compiler.data.imc.*;
+import compiler.phase.Phase;
+
+import java.util.HashMap;
+import java.util.Vector;
 
 /**
  * Linearization of the intermediate code.
@@ -314,7 +316,7 @@ public class LinCode extends Phase {
 				d += call.widths(arg);
 			}
 
-			System.out.println(call.label);
+			//System.out.println(call.label);
 			execute(getCodeFragment(call.label));
 			return ldMem(registers[sp], 8);
 		}

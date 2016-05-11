@@ -1,8 +1,8 @@
 package compiler.data.imc;
 
-import java.util.*;
+import compiler.common.logger.Logger;
 
-import compiler.common.logger.*;
+import java.util.Vector;
 
 /**
  * SEXPR represents an expression prefixed by a statement.

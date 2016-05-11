@@ -243,11 +243,23 @@ public class EvalImcode extends FullVisitor {
 				}
 				break;
 			case CHAR:
-				if (atomExpr.value.charAt(1) == '\'') {
-					attrs.imcAttr.set(atomExpr, new CONST(atomExpr.value.charAt(2)));
+				char nested;
+				if (atomExpr.value.charAt(1) == '\\') {
+					char secondChar = atomExpr.value.charAt(2);
+					switch(secondChar){
+						case 't':
+							nested = '\t';
+							break;
+						case 'n':
+							nested = '\n';
+							break;
+						default:
+							nested = secondChar;
+					}
 				} else {
-					attrs.imcAttr.set(atomExpr, new CONST(atomExpr.value.charAt(1)));
+					nested = atomExpr.value.charAt(1);
 				}
+				attrs.imcAttr.set(atomExpr, new CONST(nested));
 				break;
 			case STRING:
 				String label = LABEL.newLabelName();
@@ -309,7 +321,6 @@ public class EvalImcode extends FullVisitor {
 		//caller_level - callee_level
 		int levelDiff = codeFragments.peek().frame.level - frame.level;
 
-		//System.out.println("Level diff(" + funCall.name() + "): " + levelDiff + " |" + codeFragments.peek().frame.level + ", " + frame.level);
 		if (levelDiff < -1) throw new InternalCompilerError();
 
 		IMCExpr staticLink = new TEMP(codeFragments.peek().FP);
@@ -387,6 +398,10 @@ public class EvalImcode extends FullVisitor {
 		IMC condImc = attrs.imcAttr.get(whileExpr.cond);
 		IMC bodyImc = attrs.imcAttr.get(whileExpr.body);
 
+		if (bodyImc instanceof IMCExpr) {
+			bodyImc = new ESTMT((IMCExpr) bodyImc);
+		}
+
 		LABEL entryLabel = new LABEL(LABEL.newLabelName());
 		LABEL exitLabel = new LABEL(LABEL.newLabelName());
 		LABEL loopLabel = new LABEL(LABEL.newLabelName());
@@ -461,14 +476,14 @@ public class EvalImcode extends FullVisitor {
 		LABEL loopLabel = new LABEL(LABEL.newLabelName());
 		LABEL exitLabel = new LABEL(LABEL.newLabelName());
 
-		Typ varT = attrs.typAttr.get(forExpr.var);
-		IMCStmt initExpr = new MOVE(new MEM(forVar, varT.size()), loBound);
+
+		IMCStmt initExpr = new MOVE(forVar, loBound);
 
 		IMCExpr condImc;
-		condImc = new BINOP(BINOP.Oper.LTH, new MEM(forVar, varT.size()), hiBound);
+		condImc = new BINOP(BINOP.Oper.LEQ, forVar, hiBound);
 		CJUMP condJump = new CJUMP(condImc, loopLabel.label, exitLabel.label);
 		JUMP entryJump = new JUMP(condLabel.label);
-		IMCStmt incrementStatement = new (); //TODO
+		IMCStmt incrementStatement = new MOVE(forVar, new BINOP(BINOP.Oper.ADD, forVar, new CONST(1)));
 
 		Vector<IMCStmt> forStmts = new Vector<>();
 		forStmts.add(initExpr);

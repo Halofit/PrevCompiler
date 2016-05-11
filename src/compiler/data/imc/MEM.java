@@ -1,8 +1,8 @@
 package compiler.data.imc;
 
-import java.util.*;
+import compiler.common.logger.Logger;
 
-import compiler.common.logger.*;
+import java.util.Vector;
 
 /**
  * MEM represents a memory access.

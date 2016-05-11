@@ -1,7 +1,7 @@
 package compiler.phase.imcode;
 
-import compiler.*;
-import compiler.phase.*;
+import compiler.Task;
+import compiler.phase.Phase;
 
 /**
  * Intermediate code generation.

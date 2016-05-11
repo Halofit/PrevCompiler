@@ -1,9 +1,9 @@
 package compiler.data.imc;
 
-import java.util.*;
+import compiler.common.logger.Logger;
+import compiler.common.report.InternalCompilerError;
 
-import compiler.common.logger.*;
-import compiler.common.report.*;
+import java.util.Vector;
 
 /**
  * CALL represents a function call.

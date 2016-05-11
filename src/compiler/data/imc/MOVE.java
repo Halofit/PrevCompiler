@@ -1,9 +1,9 @@
 package compiler.data.imc;
 
-import java.util.*;
+import compiler.common.logger.Logger;
+import compiler.common.report.InternalCompilerError;
 
-import compiler.common.report.*;
-import compiler.common.logger.*;
+import java.util.Vector;
 
 /**
  * MOVE represents a data move.

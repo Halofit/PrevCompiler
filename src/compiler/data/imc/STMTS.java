@@ -1,8 +1,8 @@
 package compiler.data.imc;
 
-import java.util.*;
+import compiler.common.logger.Logger;
 
-import compiler.common.logger.*;
+import java.util.Vector;
 
 /**
  * STSMS represents a sequence of statements.
@@ -12,7 +12,7 @@ import compiler.common.logger.*;
 public class STMTS extends IMCStmt {
 
 	/** A sequence of statements. */
-	private final Vector<IMCStmt> stmts;
+	public final Vector<IMCStmt> stmts;
 	
 	/**
 	 * Constructs a new sequence of statements.

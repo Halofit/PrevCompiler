@@ -10,6 +10,7 @@ import compiler.phase.imcode.EvalImcode;
 import compiler.phase.imcode.Imcode;
 import compiler.phase.lexan.LexAn;
 import compiler.phase.lexan.Symbol;
+import compiler.phase.lincode.BasicBlocks;
 import compiler.phase.lincode.LinCode;
 import compiler.phase.seman.*;
 import compiler.phase.synan.SynAn;
@@ -95,6 +96,8 @@ public class Main {
 				LinCode linCode = new LinCode(task);
 				//(new EvalLinCode(task.fragments)).visit(task.prgAST);
 				linCode.close();
+				BasicBlocks bblocs = new BasicBlocks(task);
+				bblocs.transform();
 				if (task.phase.equals("lincode"))
 					break;
 				

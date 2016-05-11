@@ -1,11 +1,11 @@
 package compiler.phase.imcode;
 
-import compiler.common.logger.*;
+import compiler.common.logger.Logger;
 import compiler.data.ast.*;
-import compiler.data.ast.attr.*;
-import compiler.data.imc.*;
-import compiler.data.frg.*;
-import compiler.phase.frames.*;
+import compiler.data.ast.attr.Attributes;
+import compiler.data.frg.Fragment;
+import compiler.data.imc.IMC;
+import compiler.phase.frames.FramesToXML;
 
 public class ImcodeToXML extends FramesToXML {
 
