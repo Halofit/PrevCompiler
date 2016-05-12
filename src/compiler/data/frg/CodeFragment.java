@@ -25,7 +25,7 @@ public class CodeFragment extends Fragment {
 	public final IMCStmt stmt;
 	
 	/** The linearized intermediate code. */
-	public /*final*/ STMTS linCode; //TODO this should be final
+	public /*final*/ STMTS linCode;
 
 	/**
 	 * Constucts a new code fragment.

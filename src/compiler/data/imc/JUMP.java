@@ -12,7 +12,7 @@ import java.util.Vector;
 public class JUMP extends IMCStmt {
 
 	/** The label. */
-	public final String label;
+	public /*final*/ String label;
 
 	/**
 	 * Constructs a new unconditional jump.
@@ -38,4 +38,8 @@ public class JUMP extends IMCStmt {
 		return new STMTS(lc);
 	}
 
+	@Override
+	public String toString() {
+		return "JUMP(" + label + ')';
+	}
 }

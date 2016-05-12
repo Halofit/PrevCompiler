@@ -1,0 +1,20 @@
+(
+	a[1] = 18,
+	p = @a[0],
+	p^ = 1,
+	for i=0,9 : (		
+		printInt(i),
+		printStr(": "),
+		printInt(a[i]),
+		printStr("\t")
+	) end,
+	printStr("\n")
+) where
+	var i : integer
+	var p : ptr integer
+	var a : arr[10] integer
+	
+	fun printInt(i:integer): void
+	fun printStr(i:string): void
+end
+

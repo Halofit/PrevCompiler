@@ -51,4 +51,10 @@ public class LABEL extends IMCStmt {
 		return new STMTS(lc);
 	}
 
+
+	@Override
+	public String toString() {
+		return "LABEL(" +  label + ")";
+	}
+
 }

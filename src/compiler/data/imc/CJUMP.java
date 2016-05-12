@@ -15,10 +15,10 @@ public class CJUMP extends IMCStmt {
 	public final IMCExpr cond;
 
 	/** The destination if the condition evaluates to nonzero. */
-	public final String posLabel;
+	public /*final*/ String posLabel;
 
 	/** The destination if the condition evaluates to zero. */
-	public final String negLabel;
+	public /*final*/ String negLabel;
 
 	/**
 	 * Constructs a new conditional jump.
@@ -53,4 +53,8 @@ public class CJUMP extends IMCStmt {
 		return new STMTS(lc);
 	}
 
+	@Override
+	public String toString() {
+		return "CJUMP(" +  posLabel + "," + negLabel + ")";
+	}
 }

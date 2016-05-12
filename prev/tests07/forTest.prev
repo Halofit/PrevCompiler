@@ -1,0 +1,8 @@
+for i=1,5:
+	(printInt(i), printStr("\n"))
+end
+where
+	var i:integer
+	fun printInt(a: integer) : void
+	fun printStr(a: string) : void
+end

@@ -462,7 +462,6 @@ public class EvalImcode extends FullVisitor {
 	public void visit(ForExpr forExpr) {
 		super.visit(forExpr);
 
-
 		IMCExpr forVar = (IMCExpr) attrs.imcAttr.get(forExpr.var);
 		IMCExpr loBound = (IMCExpr) attrs.imcAttr.get(forExpr.loBound);
 		IMCExpr hiBound = (IMCExpr) attrs.imcAttr.get(forExpr.hiBound);
