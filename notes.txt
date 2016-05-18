@@ -184,3 +184,62 @@ Linearisation:
 	if C then S1 else S2
 		CJUMP(L1, L2) LABEL(L1) ... S1 ... JUMP(L3) LABEL(L2) ...S2... LABEL(L3) ...
 
+------------Code generation------------------
+
+For fragment:
+	For everyCodeTree:
+		generate code
+
+
+MOVE -------------------|
+ |						|
+MEM						BINOP(+)--
+ |						 |		 |
+BINOP(+)				MEM		CONST(1024)
+ |   |					 |
+FP  CONST(4)			BINOP(+)
+						|	 |
+						FP	CONST(-4)
+
+Za vsako vozlišče : - kater register vrača rezultat
+
+VSI REGISTRI SO NOVI
+
+FP - register ne ne naredimo ukaza
+CONST(4) - SET T0, 4 | res =  T0
+BINOP(+) - ADD T1, FP, T0 | res =  T1
+
+MOVE - MEM spustimo zaenkrat
+
+FP - register ne ne naredimo ukaza
+CONST(-4) - SET T2,- 4 | res =  T2
+BINOP(+) - ADD T3, FP, T2 | res =  T3
+MEM	- LDO T4, T3, 0 | res =  T4
+CONST(1024) - SET T5, 1024 | res =  T5
+BINOP(+) - ADD T6, T4, T5 | res =  T5
+
+MOVE-MEM - STO T6, T1, 0 | res = \
+
+FINAL:
+ 1: SET T0, 4
+ 2: ADD T1, FP, T0
+ 3: SET T2,- 4
+ 4: ADD T3, FP, T2
+ 5: LDO T4, T3, 0
+ 6: SET T5, 1024
+ 7: ADD T6, T4, T5
+ 8: STO T6, T1, 0
+
+LIVENESS:
+ T0: 1-2
+ T1: 2-8
+ T2: 3-4
+ T3: 4-5
+ T4: 5-7
+ T5: 6-7
+ T6: 7-8
+
+
+Potrebno je nardit kodo + interference graph
+
+

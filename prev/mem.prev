@@ -14,7 +14,7 @@
 	var p : ptr integer
 	var a : arr[10] integer
 	
-	fun printInt(i:integer): void
 	fun printStr(i:string): void
+		fun printInt(i:integer): void
 end
 
