@@ -38,17 +38,7 @@ public class BasicBlocks {
 
 		LinkedList<Block> blocks = extractBlocks(fragment.linCode);
 
-		for (Block b : blocks) {
-			System.out.println(b.toString());
-		}
-		System.out.println();
-
 		blocks = removeTrivialBlocks(blocks);
-
-		for (Block b : blocks) {
-			System.out.println(b.toString());
-		}
-		System.out.println();
 
 		Block exitBlock = blocks.pollLast();
 
@@ -75,7 +65,7 @@ public class BasicBlocks {
 			if (nextBlock == null) {
 				while (it.hasNext()) {
 					Block b = (Block) it.next();
-					//if this block's entry label is the same as the last preffered exit
+					//if this block's entry label is in the last preffered exit
 
 					if (b.entryLabels.stream().anyMatch(prefExit::contains)) {
 						nextBlock = b;
@@ -93,10 +83,6 @@ public class BasicBlocks {
 		}
 
 		ordBlk.add(exitBlock);
-
-		for (Block b : ordBlk) {
-			System.out.println(b.toString());
-		}
 
 		fragment.linCode = reserialiseBlocks(ordBlk);
 	}
@@ -133,10 +119,11 @@ public class BasicBlocks {
 		for (Block b : blocks) {
 			if (retStmst.size() != 0) {
 				IMCStmt lastStmt = retStmst.lastElement();
-				LABEL l = (LABEL) b.stmts.get(0);
 
 				if (lastStmt instanceof CJUMP) {
-					if (l.label.equals(((CJUMP) lastStmt).negLabel)) {
+					CJUMP cjump = (CJUMP) lastStmt;
+
+					if (b.entryLabels.contains(cjump.negLabel)) {
 						//This is good
 					} else {
 						//Otherwise we need to insert a new LABEL and JUMP
@@ -148,8 +135,10 @@ public class BasicBlocks {
 					}
 
 				} else if (lastStmt instanceof JUMP) {
+					JUMP jump = (JUMP) lastStmt;
+
 					//remove the rednundant jump
-					if (l.label.equals(((JUMP) lastStmt).label)) {
+					if (b.entryLabels.contains(jump.label)) {
 						retStmst.setSize(retStmst.size() - 1);
 					}
 				} else {
@@ -256,7 +245,6 @@ public class BasicBlocks {
 			//if there are only a few labels and a JUMP/CJUMP
 			// the final block is size one, so it should get flagged by this
 			// 		-> since it doesn't have a JUMP instruction
-			if ((stmts.get(stmts.size() - 1) instanceof JUMP) && (stmts.size() == entryLabels.size() + 1)) System.out.println(this.toString() + " is trivial");
 			return (stmts.get(stmts.size() - 1) instanceof JUMP) && (stmts.size() == entryLabels.size() + 1);
 		}
 
@@ -325,12 +313,14 @@ public class BasicBlocks {
 
 		@Override
 		public String toString() {
+			if(stmts.size() == 1) return "[" + stmts.get(0) + "]";
+
 			String res = "[";
 			for (int i = 0; i < entryLabels.size(); i++) {
 				res += stmts.get(i).toString();
 				res += ",";
 			}
-			res += " ... , ";
+			res += " |" + (this.stmts.size()-entryLabels.size()-1) + "stmts|, ";
 			res += getLast().toString();
 			res += "]";
 			return res;
