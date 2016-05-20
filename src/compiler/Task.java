@@ -25,7 +25,7 @@ public class Task {
 	public final String xslDName;
 
 	/** A regular expression describing all phases of the compiler. */
-	private static final String allPhases = "(lexan|synan|abstr|seman|frames|imcode|lincode)";
+	private static final String allPhases = "(lexan|synan|abstr|seman|frames|imcode|lincode|codegen)";
 
 	/** A list of phases logging should be performed for. */
 	public final String loggedPhases;

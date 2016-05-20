@@ -3,6 +3,7 @@ package compiler;
 import compiler.common.report.CompilerError;
 import compiler.common.report.Report;
 import compiler.phase.abstr.Abstr;
+import compiler.phase.codegen.CodeGen;
 import compiler.phase.frames.EvalFrameOut;
 import compiler.phase.frames.EvalFrames;
 import compiler.phase.frames.Frames;
@@ -104,7 +105,13 @@ public class Main {
 				linCode.close();
 				if (task.phase.equals("lincode"))
 					break;
-				
+
+				CodeGen codeGen = new CodeGen(task);
+
+				if (task.phase.equals("codegen"))
+					break;
+
+
 				break;
 			}
 		} catch (CompilerError errorReport) {
