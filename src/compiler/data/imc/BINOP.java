@@ -1,6 +1,7 @@
 package compiler.data.imc;
 
 import compiler.common.logger.Logger;
+import compiler.phase.codegen.CodeGen;
 
 import java.util.Vector;
 
@@ -61,4 +62,8 @@ public class BINOP extends IMCExpr {
 		return new SEXPR(new STMTS(lc), new TEMP(result));
 	}
 
+	@Override
+	public void visit(CodeGen phase) {
+		phase.tile(this);
+	}
 }

@@ -1,6 +1,7 @@
 package compiler.data.imc;
 
 import compiler.common.logger.Logger;
+import compiler.phase.codegen.CodeGen;
 
 import java.util.Vector;
 
@@ -57,4 +58,10 @@ public class LABEL extends IMCStmt {
 		return "LABEL(" +  label + ")";
 	}
 
+
+
+	@Override
+	public void visit(CodeGen phase) {
+		phase.tile(this);
+	}
 }

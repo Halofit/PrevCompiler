@@ -1,6 +1,7 @@
 package compiler.data.imc;
 
 import compiler.common.logger.Logger;
+import compiler.phase.codegen.CodeGen;
 
 import java.util.Vector;
 
@@ -46,6 +47,12 @@ public class MEM extends IMCExpr {
 		lc.addAll(((STMTS)(addrLC.stmt)).stmts());
 		lc.add(new MOVE(new TEMP(result), new MEM(addrLC.expr, width)));
 		return new SEXPR(new STMTS(lc), new TEMP(result));
+	}
+
+
+	@Override
+	public void visit(CodeGen phase) {
+		phase.tile(this);
 	}
 
 }

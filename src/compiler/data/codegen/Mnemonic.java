@@ -8,7 +8,7 @@ public class Mnemonic extends Instruction {
 	String mnemonic;
 	Operand[] operands;
 
-	public Mnemonic(String mnemonic, Operand[] operands) {
+	public Mnemonic(String mnemonic, Operand... operands) {
 		this.mnemonic = mnemonic;
 		this.operands = operands;
 	}

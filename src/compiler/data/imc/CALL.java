@@ -2,6 +2,7 @@ package compiler.data.imc;
 
 import compiler.common.logger.Logger;
 import compiler.common.report.InternalCompilerError;
+import compiler.phase.codegen.CodeGen;
 
 import java.util.Vector;
 
@@ -16,7 +17,7 @@ public class CALL extends IMCExpr {
 	public final String label;
 
 	/** The function's arguments. */
-	private final IMCExpr[] args;
+	public final IMCExpr[] args;
 	
 	/** The width of the arguments (in bytes). */
 	private final long[] widths;
@@ -95,6 +96,12 @@ public class CALL extends IMCExpr {
 		}
 		lc.add(new MOVE(new TEMP(result), new CALL(label, newargs, newwidths)));
 		return new SEXPR(new STMTS(lc), new TEMP(result));
+	}
+
+
+	@Override
+	public void visit(CodeGen phase) {
+		phase.tile(this);
 	}
 
 }

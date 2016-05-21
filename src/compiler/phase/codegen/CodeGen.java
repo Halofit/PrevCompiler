@@ -2,11 +2,7 @@ package compiler.phase.codegen;
 
 import compiler.Task;
 import compiler.common.report.InternalCompilerError;
-import compiler.data.ast.attr.Attribute;
-import compiler.data.codegen.Instruction;
-import compiler.data.codegen.Label;
-import compiler.data.codegen.Mnemonic;
-import compiler.data.codegen.Operand;
+import compiler.data.codegen.*;
 import compiler.data.frg.CodeFragment;
 import compiler.data.frg.Fragment;
 import compiler.data.imc.*;
@@ -20,30 +16,39 @@ import java.util.LinkedList;
  */
 public class CodeGen extends Phase {
 
-	private LinkedList<Instruction> instrs;
-	private HashMap<IMC, Instruction[]> map;
+	private HashMap<IMC, InstructionSet> map;
 
 	public CodeGen(Task task) {
 		super(task, "codegen");
 
-		instrs = new LinkedList<>();
 		map = new HashMap<>();
 	}
 
-	public void generateCode(){
+	public void generateCode() {
 		for (Fragment frag : task.fragments.values()) {
-			if(frag instanceof CodeFragment) generateFragmentCode((CodeFragment) frag);
+			if (frag instanceof CodeFragment) generateFragmentCode((CodeFragment) frag);
 		}
 	}
 
-	public void generateFragmentCode(CodeFragment frag){
-		tile(frag.stmt);
+	public void generateFragmentCode(CodeFragment frag) {
+		frag.stmt.visit(this);
+	}
+
+	private InstructionSet getInstrs(IMC imcode){
+		InstructionSet instrs = map.get(imcode);
+		if(instrs == null) throw new InternalCompilerError();
+		return instrs;
+	}
+
+	private void setInstrs(IMC imcode, InstructionSet instrs){
+		map.put(imcode, instrs);
 	}
 
 
-	public static Instruction CreateInstruction(String mnemonic, Operand... ops){
-		switch(ops.length){
-			case 0: return new Label(mnemonic);
+	public static Instruction CreateInstruction(String mnemonic, Operand... ops) {
+		switch (ops.length) {
+			case 0:
+				return new Label(mnemonic);
 			case 1:
 			case 2:
 			case 3:
@@ -53,76 +58,97 @@ public class CodeGen extends Phase {
 		}
 	}
 
-	private void tile(BINOP binop){
+
+	public void tile(BINOP binop) {
+		binop.expr1.visit(this);
+		binop.expr2.visit(this);
+
+		InstructionSet is1 = getInstrs(binop.expr1);
+		InstructionSet is2 = getInstrs(binop.expr2);
+
+		InstructionSet ownis = new InstructionSet();
+		ownis.add(is1);
+		ownis.add(is2);
+
+		ownis.set(new VirtualRegister());
+		ownis.add(new Mnemonic("ADD", is1.returnRegister, is2.returnRegister));
+
+		setInstrs(binop, ownis);
+	}
+
+	public void tile(CALL call) {
+		for (IMCExpr arg : call.args) {
+			arg.visit(this);
+		}
 
 	}
 
-	private void tile(CALL call){
-
-	}
-
-	private void tile(CJUMP){
-
+	public void tile(CJUMP cjump) {
+		cjump.cond.visit(this);
 	}
 
 
-	private void tile(CONST){
-
-	}
-
-
-	private void tile(ESTMT){
-
-	}
-
-
-	private void tile(JUMP){
-
-	}
-
-
-	private void tile(LABEL){
-
-	}
-
-
-	private void tile(MEM){
+	public void tile(CONST constant) {
 
 	}
 
 
-	private void tile(MOVE){
+	public void tile(ESTMT estmt) {
+		estmt.expr.visit(this);
+	}
+
+
+	public void tile(JUMP jump) {
 
 	}
 
 
-	private void tile(NAME){
+	public void tile(LABEL label) {
 
 	}
 
 
-	private void tile(NOP){
+	public void tile(MEM mem) {
+		mem.addr.visit(this);
+	}
+
+
+	public void tile(MOVE move) {
+		move.src.visit(this);
+		move.dst.visit(this);
+	}
+
+
+	public void tile(NAME name) {
 
 	}
 
 
-	private void tile(SEXPR){
+	public void tile(NOP nop) {
 
 	}
 
 
-	private void tile(STMTS){
+	public void tile(SEXPR sexpr) {
+		sexpr.stmt.visit(this);
+		sexpr.expr.visit(this);
+	}
+
+
+	public void tile(STMTS stmts) {
+		for (IMCStmt stmt : stmts.stmts) {
+			stmt.visit(this);
+		}
+	}
+
+
+	public void tile(TEMP temp) {
 
 	}
 
 
-	private void tile(TEMP){
-
-	}
-
-
-	private void tile(UNOP){
-
+	public void tile(UNOP unop) {
+		unop.expr.visit(this);
 	}
 
 

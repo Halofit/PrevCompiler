@@ -1,6 +1,7 @@
 package compiler.data.imc;
 
 import compiler.common.logger.Logger;
+import compiler.phase.codegen.CodeGen;
 
 import java.util.Vector;
 
@@ -50,6 +51,12 @@ public class UNOP extends IMCExpr {
 		lc.addAll(((STMTS)(exprLC.stmt)).stmts());
 		lc.add(new MOVE(new TEMP(result), new UNOP( oper, exprLC.expr)));
 		return new SEXPR(new STMTS(lc), new TEMP(result));
+	}
+
+
+	@Override
+	public void visit(CodeGen phase) {
+		phase.tile(this);
 	}
 
 }

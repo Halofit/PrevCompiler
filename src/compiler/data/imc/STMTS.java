@@ -1,6 +1,7 @@
 package compiler.data.imc;
 
 import compiler.common.logger.Logger;
+import compiler.phase.codegen.CodeGen;
 
 import java.util.Vector;
 
@@ -54,6 +55,12 @@ public class STMTS extends IMCStmt {
 			lc.addAll(lcStmt.stmts());
 		}
 		return new STMTS(lc);
+	}
+
+
+	@Override
+	public void visit(CodeGen phase) {
+		phase.tile(this);
 	}
 
 }

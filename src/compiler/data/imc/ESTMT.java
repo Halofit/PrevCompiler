@@ -1,6 +1,7 @@
 package compiler.data.imc;
 
 import compiler.common.logger.Logger;
+import compiler.phase.codegen.CodeGen;
 
 import java.util.Vector;
 
@@ -39,6 +40,12 @@ public class ESTMT extends IMCStmt {
 		lc.addAll(((STMTS)(exprLC.stmt)).stmts());
 		// expression part of exprLC is thrown away
 		return new STMTS(lc);
+	}
+
+
+	@Override
+	public void visit(CodeGen phase) {
+		phase.tile(this);
 	}
 
 }

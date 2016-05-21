@@ -1,6 +1,7 @@
 package compiler.data.imc;
 
 import compiler.common.logger.Logger;
+import compiler.phase.codegen.CodeGen;
 
 import java.util.Vector;
 
@@ -41,5 +42,11 @@ public class JUMP extends IMCStmt {
 	@Override
 	public String toString() {
 		return "JUMP(" + label + ')';
+	}
+
+
+	@Override
+	public void visit(CodeGen phase) {
+		phase.tile(this);
 	}
 }

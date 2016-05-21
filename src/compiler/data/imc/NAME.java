@@ -1,6 +1,7 @@
 package compiler.data.imc;
 
 import compiler.common.logger.Logger;
+import compiler.phase.codegen.CodeGen;
 
 import java.util.Vector;
 
@@ -36,4 +37,9 @@ public class NAME extends IMCExpr {
 		return new SEXPR(new STMTS(new Vector<IMCStmt>()), new NAME(name));
 	}
 
+
+	@Override
+	public void visit(CodeGen phase) {
+		phase.tile(this);
+	}
 }
