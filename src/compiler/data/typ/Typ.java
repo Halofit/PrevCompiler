@@ -46,5 +46,8 @@ public abstract class Typ implements Loggable {
 	 * @return The size of this type in bytes.
 	 */
 	public abstract long size();
+	public long padding(){
+		return 8 - this.size();
+	}
 
 }

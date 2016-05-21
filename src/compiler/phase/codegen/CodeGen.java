@@ -2,7 +2,6 @@ package compiler.phase.codegen;
 
 import compiler.Task;
 import compiler.common.report.InternalCompilerError;
-import compiler.common.report.Report;
 import compiler.data.codegen.*;
 import compiler.data.frg.CodeFragment;
 import compiler.data.frg.Fragment;
@@ -18,6 +17,7 @@ import java.util.HashMap;
  * Created by gregor on 20.5.2016.
  */
 public class CodeGen extends Phase {
+	public static boolean commentAnnotations = true;
 
 	private FixedRegister sp = new FixedRegister("SP");
 	private FixedRegister fp = new FixedRegister("FP");
@@ -46,12 +46,26 @@ public class CodeGen extends Phase {
 		try {
 			writer = new PrintWriter(task.srcFName + ".mmix", "US-ASCII");
 
+			String indent = "\t";
+
 			for (CodeFragment codeFragment : fragInstrs.keySet()) {
 				writer.println("");
 				writer.println(codeFragment.frame.label + ":");
 				writer.println("... (prolog)");
 				InstructionSet instrs = fragInstrs.get(codeFragment);
 				for (Instruction instr : instrs.instrs) {
+					if (instr instanceof Comment) {
+						if (((Comment) instr).content.startsWith("BEG")) {
+							indent = indent + '\t';
+						} else if (((Comment) instr).content.startsWith("END")) {
+							writer.print('\t');
+							indent = indent.substring(0, indent.length() - 1);
+						}
+					}else{
+						writer.print('\t');
+					}
+
+					writer.print(indent);
 					writer.println(instr);
 				}
 				writer.println("... (epilog)");
@@ -98,7 +112,7 @@ public class CodeGen extends Phase {
 		InstructionSet is1 = getInstrs(binop.expr1);
 		InstructionSet is2 = getInstrs(binop.expr2);
 
-		InstructionSet ownis = new InstructionSet();
+		InstructionSet ownis = new InstructionSet("BINOP");
 		ownis.add(is1);
 		ownis.add(is2);
 
@@ -171,7 +185,7 @@ public class CodeGen extends Phase {
 			arg.visit(this);
 		}
 
-		InstructionSet ownis = new InstructionSet();
+		InstructionSet ownis = new InstructionSet("CALL");
 		ownis.set(VirtualRegister.create());
 
 		long argOffsetCnt = 0;
@@ -192,7 +206,7 @@ public class CodeGen extends Phase {
 	public void tile(CJUMP cjump) {
 		cjump.cond.visit(this);
 
-		InstructionSet ownis = new InstructionSet();
+		InstructionSet ownis = new InstructionSet("CJUMP");
 		ownis.add(getInstrs(cjump.cond));
 
 		//NOTE: CJUMP assumes the negative label ALWAYS follows the cjump instruction
@@ -210,7 +224,7 @@ public class CodeGen extends Phase {
 	public void tile(CONST constant) {
 		long val = constant.value;
 
-		InstructionSet ownis = new InstructionSet();
+		InstructionSet ownis = new InstructionSet("CONST");
 		ownis.set(VirtualRegister.create());
 		VirtualRegister ret = ownis.ret;
 
@@ -241,7 +255,7 @@ public class CodeGen extends Phase {
 
 
 	public void tile(JUMP jump) {
-		InstructionSet ownis = new InstructionSet();
+		InstructionSet ownis = new InstructionSet("JUMP");
 		ownis.add(new Mnemonic("JMP", new OperandLabel(jump.label)));
 
 		setInstrs(jump, ownis);
@@ -249,7 +263,7 @@ public class CodeGen extends Phase {
 
 
 	public void tile(LABEL label) {
-		InstructionSet ownis = new InstructionSet();
+		InstructionSet ownis = new InstructionSet("LABEL");
 		ownis.add(new Label(label.label));
 		setInstrs(label, ownis);
 	}
@@ -259,7 +273,7 @@ public class CodeGen extends Phase {
 		mem.addr.visit(this);
 
 		InstructionSet addris = getInstrs(mem.addr);
-		InstructionSet ownis = new InstructionSet();
+		InstructionSet ownis = new InstructionSet("MEM");
 		VirtualRegister locReg = addris.ret;
 
 		String mnemonic;
@@ -295,7 +309,7 @@ public class CodeGen extends Phase {
 
 		InstructionSet dstis = getInstrs(move.dst);
 		InstructionSet srcis = getInstrs(move.src);
-		InstructionSet ownis = new InstructionSet();
+		InstructionSet ownis = new InstructionSet("MOVE");
 
 		//This ordering needs to be this way so the fixing below can work
 		ownis.add(srcis);
@@ -341,7 +355,7 @@ public class CodeGen extends Phase {
 
 
 	public void tile(NAME name) {
-		InstructionSet ownis = new InstructionSet();
+		InstructionSet ownis = new InstructionSet("NAME");
 		ownis.set(VirtualRegister.create());
 		ownis.add(new Mnemonic("GETA", ownis.ret, new OperandLabel(name.name)));
 
@@ -350,7 +364,7 @@ public class CodeGen extends Phase {
 
 
 	public void tile(NOP nop) {
-		InstructionSet ownis = new InstructionSet();
+		InstructionSet ownis = new InstructionSet("NOP");
 		setInstrs(nop, ownis);
 	}
 
@@ -362,7 +376,7 @@ public class CodeGen extends Phase {
 		InstructionSet stmtis = getInstrs(sexpr.stmt);
 		InstructionSet expris = getInstrs(sexpr.expr);
 
-		InstructionSet ownis = new InstructionSet();
+		InstructionSet ownis = new InstructionSet("SEXPR");
 		ownis.add(stmtis);
 		ownis.add(expris);
 		ownis.set(expris.ret);
@@ -376,7 +390,7 @@ public class CodeGen extends Phase {
 			stmt.visit(this);
 		}
 
-		InstructionSet ownis = new InstructionSet();
+		InstructionSet ownis = new InstructionSet("STMTS");
 
 		for (IMCStmt stmt : stmts.stmts) {
 			ownis.add(getInstrs(stmt));
@@ -387,7 +401,7 @@ public class CodeGen extends Phase {
 
 
 	public void tile(TEMP temp) {
-		InstructionSet ownis = new InstructionSet();
+		InstructionSet ownis = new InstructionSet("TEMP");
 		ownis.set(VirtualRegister.create(temp.name));
 
 		setInstrs(temp, ownis);
@@ -397,7 +411,7 @@ public class CodeGen extends Phase {
 	public void tile(UNOP unop) {
 		unop.expr.visit(this);
 
-		InstructionSet ownis = new InstructionSet();
+		InstructionSet ownis = new InstructionSet("UNOP");
 		InstructionSet expris = getInstrs(unop.expr);
 
 		ownis.add(expris);

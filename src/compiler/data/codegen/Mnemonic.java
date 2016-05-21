@@ -21,7 +21,7 @@ public class Mnemonic extends Instruction {
 			sb.append(operand).append(',');
 		}
 
-		sb.setLength(sb.length() - 2);
+		sb.setLength(sb.length() - 1);
 		return sb.toString();
 	}
 }

@@ -140,6 +140,7 @@ public class EvalFrames extends FullVisitor {
 		super.visit(varDecl);
 		Typ t = attrs.typAttr.get(varDecl).actualTyp();
 		localVariablesSize += t.size();
+		localVariablesSize += t.padding();
 
 
 		Access acc;
@@ -174,6 +175,7 @@ public class EvalFrames extends FullVisitor {
 		attrs.accAttr.set(parDecl, acc);
 
 		parametersSize += t.size();
+		parametersSize += t.padding();
 
 	}
 
@@ -198,6 +200,7 @@ public class EvalFrames extends FullVisitor {
 
 		Access a = new OffsetAccess(-1, recordSize, t.size());
 		recordSize += t.size();
+		recordSize  += t.padding();
 
 
 		attrs.accAttr.set(compDecl, a);

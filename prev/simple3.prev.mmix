@@ -1,84 +1,158 @@
 
-_f1
+_f1:
 ... (prolog)
-STO R13, SP, 
-SETL R14, 
-ADD R15, R13, R1
-LDO R16, R15, 
-STO R16, SP, 
-PUSHJ colors, fun2___f
-LDO R17, SP, 
-STO R13, SP, 
-PUSHJ colors, _g
-LDO R18, SP, 
-ADD R12, null, 
+		%BEG: SEXPR
+			%BEG: STMTS
+				%BEG: CALL
+					%BEG: TEMP
+					%END: TEMP
+					STO R13, SP, 0
+					%BEG: MEM
+						%BEG: BINOP
+							%BEG: TEMP
+							%END: TEMP
+							%BEG: CONST
+								SETL R14, 8
+							%END: CONST
+							ADD R15, R13, R14
+						%END: BINOP
+						LDO R16, R15, 0
+					%END: MEM
+					STO R16, SP, 8
+					PUSHJ colors, fun2___f2
+					LDO R17, SP, 0
+				%END: CALL
+				%BEG: CALL
+					%BEG: TEMP
+					%END: TEMP
+					STO R13, SP, 0
+					PUSHJ colors, _g1
+					LDO R18, SP, 0
+				%END: CALL
+			%END: STMTS
+			%BEG: NOP
+			%END: NOP
+		%END: SEXPR
+		%BEG: TEMP
+		%END: TEMP
+		ADD R12, null, 0
 ... (epilog)
 
 
 
-fun3___g2
+fun3___g2:
 ... (prolog)
-SETL R26, 
-ADD R25, R26, 
+		%BEG: CONST
+			SETL R26, 4
+		%END: CONST
+		%BEG: TEMP
+		%END: TEMP
+		ADD R25, R26, 0
 ... (epilog)
 
 
 
-fun2___f2
+fun2___f2:
 ... (prolog)
-STO R20, SP, 
-SETL R21, 
-ADD R22, R20, R2
-LDO R23, R22, 
-STO R23, SP, 
-PUSHJ colors, fun0___f
-LDO R24, SP, 
-ADD R19, R24, 
+		%BEG: CALL
+			%BEG: TEMP
+			%END: TEMP
+			STO R20, SP, 0
+			%BEG: MEM
+				%BEG: BINOP
+					%BEG: TEMP
+					%END: TEMP
+					%BEG: CONST
+						SETL R21, 8
+					%END: CONST
+					ADD R22, R20, R21
+				%END: BINOP
+				LDO R23, R22, 0
+			%END: MEM
+			STO R23, SP, 8
+			PUSHJ colors, fun0___f3
+			LDO R24, SP, 0
+		%END: CALL
+		%BEG: TEMP
+		%END: TEMP
+		ADD R19, R24, 0
 ... (epilog)
 
 
 
-_g1
+_g1:
 ... (prolog)
-SETL R5, 
-ADD R4, R5, 
+		%BEG: CONST
+			SETL R5, 3
+		%END: CONST
+		%BEG: TEMP
+		%END: TEMP
+		ADD R4, R5, 0
 ... (epilog)
 
 
 
-fun1___g3
+fun1___g3:
 ... (prolog)
-STO R7, SP, 
-PUSHJ colors, _g
-LDO R8, SP, 
-LDO R9, R7, 
-LDO R10, R9, 
-STO R10, SP, 
-PUSHJ colors, fun3___g
-LDO R11, SP, 
-ADD R6, R11, 
+		%BEG: SEXPR
+			%BEG: CALL
+				%BEG: TEMP
+				%END: TEMP
+				STO R7, SP, 0
+				PUSHJ colors, _g1
+				LDO R8, SP, 0
+			%END: CALL
+			%BEG: CALL
+				%BEG: MEM
+					%BEG: MEM
+						%BEG: TEMP
+						%END: TEMP
+						LDO R9, R7, 0
+					%END: MEM
+					LDO R10, R9, 0
+				%END: MEM
+				STO R10, SP, 0
+				PUSHJ colors, fun3___g2
+				LDO R11, SP, 0
+			%END: CALL
+		%END: SEXPR
+		%BEG: TEMP
+		%END: TEMP
+		ADD R6, R11, 0
 ... (epilog)
 
 
 
-fun0___f3
+fun0___f3:
 ... (prolog)
-LDO R2, R1, 
-STO R2, SP, 
-PUSHJ colors, fun1___g
-LDO R3, SP, 
-ADD R0, R3, 
+		%BEG: CALL
+			%BEG: MEM
+				%BEG: TEMP
+				%END: TEMP
+				LDO R2, R1, 0
+			%END: MEM
+			STO R2, SP, 0
+			PUSHJ colors, fun1___g3
+			LDO R3, SP, 0
+		%END: CALL
+		%BEG: TEMP
+		%END: TEMP
+		ADD R0, R3, 0
 ... (epilog)
 
 
 
-_
+_:
 ... (prolog)
-STO R27, SP, 
-SETL R28, 
-STO R28, SP, 
-PUSHJ colors, _f
-LDO R29, SP, 
+		%BEG: TEMP
+		%END: TEMP
+		STO R27, SP, 0
+		%BEG: CONST
+			SETL R28, 1
+		%END: CONST
+		STO R28, SP, 8
+		PUSHJ colors, _f1
+		LDO R29, SP, 0
 ... (epilog)
 
 
