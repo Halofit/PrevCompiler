@@ -1,0 +1,86 @@
+
+_f1
+... (prolog)
+STO R13, SP, 
+SETL R14, 
+ADD R15, R13, R1
+LDO R16, R15, 
+STO R16, SP, 
+PUSHJ colors, fun2___f
+LDO R17, SP, 
+STO R13, SP, 
+PUSHJ colors, _g
+LDO R18, SP, 
+ADD R12, null, 
+... (epilog)
+
+
+
+fun3___g2
+... (prolog)
+SETL R26, 
+ADD R25, R26, 
+... (epilog)
+
+
+
+fun2___f2
+... (prolog)
+STO R20, SP, 
+SETL R21, 
+ADD R22, R20, R2
+LDO R23, R22, 
+STO R23, SP, 
+PUSHJ colors, fun0___f
+LDO R24, SP, 
+ADD R19, R24, 
+... (epilog)
+
+
+
+_g1
+... (prolog)
+SETL R5, 
+ADD R4, R5, 
+... (epilog)
+
+
+
+fun1___g3
+... (prolog)
+STO R7, SP, 
+PUSHJ colors, _g
+LDO R8, SP, 
+LDO R9, R7, 
+LDO R10, R9, 
+STO R10, SP, 
+PUSHJ colors, fun3___g
+LDO R11, SP, 
+ADD R6, R11, 
+... (epilog)
+
+
+
+fun0___f3
+... (prolog)
+LDO R2, R1, 
+STO R2, SP, 
+PUSHJ colors, fun1___g
+LDO R3, SP, 
+ADD R0, R3, 
+... (epilog)
+
+
+
+_
+... (prolog)
+STO R27, SP, 
+SETL R28, 
+STO R28, SP, 
+PUSHJ colors, _f
+LDO R29, SP, 
+... (epilog)
+
+
+
+

@@ -5,8 +5,8 @@ package compiler.data.codegen;
  */
 public class Mnemonic extends Instruction {
 
-	String mnemonic;
-	Operand[] operands;
+	public String mnemonic;
+	public Operand[] operands;
 
 	public Mnemonic(String mnemonic, Operand... operands) {
 		this.mnemonic = mnemonic;
@@ -17,10 +17,11 @@ public class Mnemonic extends Instruction {
 	public String toString() {
 		StringBuilder sb = new StringBuilder(mnemonic);
 		for (Operand operand : operands) {
+			sb.append(' ');
 			sb.append(operand).append(',');
 		}
 
-		sb.setLength(sb.length() - 1);
+		sb.setLength(sb.length() - 2);
 		return sb.toString();
 	}
 }

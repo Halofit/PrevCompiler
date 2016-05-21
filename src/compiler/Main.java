@@ -107,6 +107,8 @@ public class Main {
 					break;
 
 				CodeGen codeGen = new CodeGen(task);
+				codeGen.generateCode();
+				codeGen.close();
 
 				if (task.phase.equals("codegen"))
 					break;

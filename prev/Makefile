@@ -6,6 +6,9 @@ bindir = ../out/production/Compiler
 xsldir = ./xsl
 
 
+%.codegen.xml	: %.prev
+	java -classpath $(bindir) compiler.Main --xsldir=$(xsldir) --phase=codegen --loggedphases=codegen $<
+
 %.lincode.xml	: %.prev
 	java -classpath $(bindir) compiler.Main --xsldir=$(xsldir) --phase=lincode --loggedphases=lincode,imcode $<
 
@@ -30,3 +33,4 @@ xsldir = ./xsl
 	
 clean:
 	del *.xml
+	del *.mmix

@@ -4,6 +4,8 @@ import compiler.common.report.CompilerError;
 import compiler.common.report.Report;
 import compiler.data.ast.Program;
 import compiler.data.ast.attr.Attributes;
+import compiler.data.codegen.InstructionSet;
+import compiler.data.frg.CodeFragment;
 import compiler.data.frg.Fragment;
 
 import java.util.HashMap;
@@ -122,6 +124,8 @@ public class Task {
 	/**
 	 * Fragments of the program (indexed by entry labels).
 	 */
-    public HashMap<String, Fragment> fragments = new HashMap<String, Fragment>();
+    public HashMap<String, Fragment> fragments = new HashMap<>();
+
+	public HashMap<CodeFragment, InstructionSet> fragInstrs = new HashMap<>();
     
 }

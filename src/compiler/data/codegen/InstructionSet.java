@@ -7,7 +7,7 @@ import java.util.LinkedList;
  */
 public class InstructionSet {
 	public LinkedList<Instruction> instrs;
-	public VirtualRegister returnRegister;
+	public VirtualRegister ret;
 
 	public InstructionSet() {
 		this.instrs = new LinkedList<>();
@@ -26,6 +26,6 @@ public class InstructionSet {
 	}
 
 	public void set(VirtualRegister ret){
-		returnRegister = ret;
+		this.ret = ret;
 	}
 }
