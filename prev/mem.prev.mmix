@@ -1,0 +1,163 @@
+
+_:
+... (prolog)
+%Label
+    L7: 
+
+%Move (5)
+	SETL r0, 1
+	SETL r1, 8
+	MUL r2, r0, r1
+	ADD r3, r2, 0
+
+%Move (6)
+	GETA r4, _a
+	ADD r5, r4, r3
+	ADD r6, r5, 0
+
+%Move (7)
+	SETL r7, 21
+	STO r7, r6, 0
+
+%Move (8)
+	SETL r9, 0
+	SETL r10, 8
+	MUL r11, r9, r10
+	ADD r12, r11, 0
+
+%Move (9)
+	GETA r13, _a
+	ADD r14, r13, r12
+	ADD r15, r14, 0
+
+%Move (10)
+	GETA r16, _p
+	STO r15, r16, 0
+
+%Move (11)
+	GETA r18, _p
+	LDO r19, r18, 0
+	ADD r20, r19, 0
+
+%Move (12)
+	SETL r21, 1
+	STO r21, r20, 0
+
+%Move (13)
+	SETL r23, 0
+	GETA r24, _i
+	STO r23, r24, 0
+
+%Label
+    L3: 
+
+%Move (14)
+	GETA r26, _i
+	LDO r27, r26, 0
+	ADD r28, r27, 0
+
+%Move (15)
+	SETL r29, 9
+	CMP r30, r28, r29
+	SUB r30, r30, 1
+	ADD r31, r30, 0
+
+%Cjump
+	PBNZ r31, L4
+
+%Label
+    L5: 
+
+%Move (28)
+	STO FP, SP, 0
+	GETA r32, L6
+	STO r32, SP, 8
+	PUSHJ colors, _printStr
+	LDO r33, SP, 0
+	ADD r34, r33, 0
+
+%Jump
+	JMP L8
+
+%Label
+    L4: 
+
+%Move (16)
+	GETA r35, _i
+	LDO r36, r35, 0
+	ADD r37, r36, 0
+
+%Move (17)
+	STO FP, SP, 0
+	STO r37, SP, 8
+	PUSHJ colors, _printInt
+	LDO r38, SP, 0
+	ADD r39, r38, 0
+
+%Move (18)
+	STO FP, SP, 0
+	GETA r40, L1
+	STO r40, SP, 8
+	PUSHJ colors, _printStr
+	LDO r41, SP, 0
+	ADD r42, r41, 0
+
+%Move (19)
+	GETA r43, _i
+	LDO r44, r43, 0
+	ADD r45, r44, 0
+
+%Move (20)
+	SETL r46, 8
+	MUL r47, r45, r46
+	ADD r48, r47, 0
+
+%Move (21)
+	GETA r49, _a
+	ADD r50, r49, r48
+	ADD r51, r50, 0
+
+%Move (22)
+	LDO r52, r51, 0
+	ADD r53, r52, 0
+
+%Move (23)
+	STO FP, SP, 0
+	STO r53, SP, 8
+	PUSHJ colors, _printInt
+	LDO r54, SP, 0
+	ADD r55, r54, 0
+
+%Move (24)
+	STO FP, SP, 0
+	GETA r56, L2
+	STO r56, SP, 8
+	PUSHJ colors, _printStr
+	LDO r57, SP, 0
+	ADD r58, r57, 0
+
+%Move (25)
+	GETA r59, _i
+	LDO r60, r59, 0
+	ADD r61, r60, 0
+
+%Move (26)
+	SETL r62, 1
+	ADD r63, r61, r62
+	ADD r64, r63, 0
+
+%Move (27)
+	GETA r65, _i
+	STO r64, r65, 0
+
+%Jump
+	JMP L3
+
+%Label
+    L8: 
+
+... (epilog)
+
+
+
+

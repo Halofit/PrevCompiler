@@ -7,6 +7,7 @@ import compiler.data.ast.attr.Attributes;
 import compiler.data.codegen.InstructionSet;
 import compiler.data.frg.CodeFragment;
 import compiler.data.frg.Fragment;
+import compiler.data.liveness.InterferenceGraph;
 
 import java.util.HashMap;
 
@@ -27,7 +28,7 @@ public class Task {
 	public final String xslDName;
 
 	/** A regular expression describing all phases of the compiler. */
-	private static final String allPhases = "(lexan|synan|abstr|seman|frames|imcode|lincode|codegen)";
+	private static final String allPhases = "(lexan|synan|abstr|seman|frames|imcode|lincode|codegen|liveness)";
 
 	/** A list of phases logging should be performed for. */
 	public final String loggedPhases;
@@ -127,5 +128,6 @@ public class Task {
     public HashMap<String, Fragment> fragments = new HashMap<>();
 
 	public HashMap<CodeFragment, InstructionSet> fragInstrs = new HashMap<>();
+	public HashMap<CodeFragment, InterferenceGraph> intfGraph = new HashMap<>();
     
 }

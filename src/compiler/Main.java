@@ -13,6 +13,7 @@ import compiler.phase.lexan.LexAn;
 import compiler.phase.lexan.Symbol;
 import compiler.phase.lincode.BasicBlocks;
 import compiler.phase.lincode.LinCode;
+import compiler.phase.liveness.Liveness;
 import compiler.phase.seman.*;
 import compiler.phase.synan.SynAn;
 
@@ -101,7 +102,6 @@ public class Main {
 
 				// Linearization of the intermediate code.
 				LinCode linCode = new LinCode(task);
-				//(new EvalLinCode(task.fragments)).visit(task.prgAST);
 				linCode.close();
 				if (task.phase.equals("lincode"))
 					break;
@@ -109,6 +109,10 @@ public class Main {
 				CodeGen codeGen = new CodeGen(task);
 				codeGen.generateCode();
 				codeGen.close();
+
+				Liveness liveness = new Liveness(task);
+				liveness.analyse();
+				//Don't close liveness, you're going to need it again later on
 
 				if (task.phase.equals("codegen"))
 					break;

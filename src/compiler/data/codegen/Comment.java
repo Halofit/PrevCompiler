@@ -11,8 +11,16 @@ public class Comment extends Instruction {
 		this.content = content;
 	}
 
+	public boolean startsWith(String prefix){
+		return (content != null && content.startsWith(prefix));
+	}
+
 	@Override
 	public String toString() {
-		return "%" + content;
+		if(content == null){
+			return "";
+		}else{
+			return "%" + content;
+		}
 	}
 }

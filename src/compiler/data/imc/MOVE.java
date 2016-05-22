@@ -13,6 +13,10 @@ import java.util.Vector;
  */
 public class MOVE extends IMCStmt {
 
+	public static long idGen = 0;
+
+	public final long id;
+
 	/** The destination. */
 	public final IMCExpr dst;
 
@@ -28,6 +32,7 @@ public class MOVE extends IMCStmt {
 	 *            The source.
 	 */
 	public MOVE(IMCExpr dst, IMCExpr src) {
+		this.id = idGen++;
 		this.dst = dst;
 		this.src = src;
 	}
@@ -35,7 +40,7 @@ public class MOVE extends IMCStmt {
 	@Override
 	public void toXML(Logger logger) {
 		logger.begElement("imc");
-		logger.addAttribute("kind", "MOVE");
+		logger.addAttribute("kind", "MOVE(" + id+")");
 		if (dst != null) dst.toXML(logger);
 		if (src != null) src.toXML(logger);
 		logger.endElement();

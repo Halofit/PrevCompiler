@@ -17,14 +17,14 @@ import java.util.HashMap;
  * Created by gregor on 20.5.2016.
  */
 public class CodeGen extends Phase {
-	public static boolean commentAnnotations = true;
+	public static boolean commentAnnotations = false;
+	public static boolean spacingComments = true;
 
 	private FixedRegister sp = new FixedRegister("SP");
 	private FixedRegister fp = new FixedRegister("FP");
-	private FixedRegister numberOfColors = new FixedRegister("colors");
 	private FixedRegister reminderReg = new FixedRegister("rR");
 
-
+	private FutureConstant numberOfColors = new FutureConstant("colors");
 	private ConstantOperand const0 = new ConstantOperand(0);
 	private ConstantOperand const1 = new ConstantOperand(1);
 
@@ -46,7 +46,7 @@ public class CodeGen extends Phase {
 		try {
 			writer = new PrintWriter(task.srcFName + ".mmix", "US-ASCII");
 
-			String indent = "\t";
+			String indent = "";
 
 			for (CodeFragment codeFragment : fragInstrs.keySet()) {
 				writer.println("");
@@ -55,13 +55,13 @@ public class CodeGen extends Phase {
 				InstructionSet instrs = fragInstrs.get(codeFragment);
 				for (Instruction instr : instrs.instrs) {
 					if (instr instanceof Comment) {
-						if (((Comment) instr).content.startsWith("BEG")) {
+						if (((Comment) instr).startsWith("BEG")) {
 							indent = indent + '\t';
-						} else if (((Comment) instr).content.startsWith("END")) {
+						} else if (((Comment) instr).startsWith("END")) {
 							writer.print('\t');
 							indent = indent.substring(0, indent.length() - 1);
 						}
-					}else{
+					} else if(!(instr instanceof Label)){
 						writer.print('\t');
 					}
 
@@ -91,8 +91,8 @@ public class CodeGen extends Phase {
 	}
 
 	public InstructionSet generateFragmentCode(CodeFragment frag) {
-		frag.stmt.visit(this);
-		return getInstrs(frag.stmt);
+		frag.linCode.visit(this);
+		return getInstrs(frag.linCode);
 	}
 
 	private InstructionSet getInstrs(IMC imcode) {
@@ -102,6 +102,7 @@ public class CodeGen extends Phase {
 	}
 
 	private void setInstrs(IMC imcode, InstructionSet instrs) {
+		if(instrs == null) throw new InternalCompilerError();
 		map.put(imcode, instrs);
 	}
 
@@ -112,16 +113,16 @@ public class CodeGen extends Phase {
 		InstructionSet is1 = getInstrs(binop.expr1);
 		InstructionSet is2 = getInstrs(binop.expr2);
 
-		InstructionSet ownis = new InstructionSet("BINOP");
+		InstructionSet ownis = new InstructionSet("BINOP | " + binop.oper.toString());
 		ownis.add(is1);
 		ownis.add(is2);
 
 		ownis.set(VirtualRegister.create());
 
 		{
-			VirtualRegister ret = ownis.ret;
-			VirtualRegister op1 = is1.ret;
-			VirtualRegister op2 = is2.ret;
+			Register ret = ownis.ret;
+			Register op1 = is1.ret;
+			Register op2 = is2.ret;
 
 			switch (binop.oper) {
 				case OR:
@@ -197,7 +198,9 @@ public class CodeGen extends Phase {
 			argOffsetCnt += 8;
 		}
 
-		ownis.add(new Mnemonic("PUSHJ", numberOfColors, new OperandLabel(call.label)));
+		VirtualRegister colorRegister = VirtualRegister.create();
+		ownis.add(new Mnemonic("SETL", colorRegister, numberOfColors));
+		ownis.add(new Mnemonic("PUSHJ", colorRegister, new OperandLabel(call.label)));
 		ownis.add(new Mnemonic("LDO", ownis.ret, sp, const0));
 
 		setInstrs(call, ownis);
@@ -206,13 +209,14 @@ public class CodeGen extends Phase {
 	public void tile(CJUMP cjump) {
 		cjump.cond.visit(this);
 
+		InstructionSet condis = getInstrs(cjump.cond);
 		InstructionSet ownis = new InstructionSet("CJUMP");
-		ownis.add(getInstrs(cjump.cond));
+		ownis.add(condis);
 
 		//NOTE: CJUMP assumes the negative label ALWAYS follows the cjump instruction
 		// 			this is guaranteed by the basic blocks section
 		//This means we jump on a non-negative value (true)
-		ownis.add(new Mnemonic("BNZ", new OperandLabel(cjump.posLabel)));
+		ownis.add(new Mnemonic("PBNZ", condis.ret, new OperandLabel(cjump.posLabel)));
 
 		// If the previous assert doesn't hold, uncomment this line:
 		//ownis.add(new Mnemonic("JMP", new OperandLabel(cjump.negLabel)));
@@ -226,7 +230,7 @@ public class CodeGen extends Phase {
 
 		InstructionSet ownis = new InstructionSet("CONST");
 		ownis.set(VirtualRegister.create());
-		VirtualRegister ret = ownis.ret;
+		Register ret = ownis.ret;
 
 		ownis.add(new Mnemonic("SETL", ret, new ConstantOperand(val & 0xFFFFL)));
 		val = val >> 16;
@@ -250,7 +254,13 @@ public class CodeGen extends Phase {
 
 	public void tile(ESTMT estmt) {
 		estmt.expr.visit(this);
-		setInstrs(estmt, getInstrs(estmt.expr));
+		InstructionSet ownis = new InstructionSet("ESTMT");
+		InstructionSet nis = getInstrs(estmt.expr);
+
+		ownis.add(nis);
+		ownis.set(nis.ret);
+
+		setInstrs(estmt, ownis);
 	}
 
 
@@ -264,7 +274,7 @@ public class CodeGen extends Phase {
 
 	public void tile(LABEL label) {
 		InstructionSet ownis = new InstructionSet("LABEL");
-		ownis.add(new Label(label.label));
+		ownis.add(Label.get(label.label));
 		setInstrs(label, ownis);
 	}
 
@@ -274,7 +284,7 @@ public class CodeGen extends Phase {
 
 		InstructionSet addris = getInstrs(mem.addr);
 		InstructionSet ownis = new InstructionSet("MEM");
-		VirtualRegister locReg = addris.ret;
+		Register locReg = addris.ret;
 
 		String mnemonic;
 
@@ -304,26 +314,30 @@ public class CodeGen extends Phase {
 
 	// BTW -> I hate this ImCode, who thought that MEM being used for 2 different things is a good idea?
 	public void tile(MOVE move) {
-		move.dst.visit(this);
 		move.src.visit(this);
+		move.dst.visit(this);
 
-		InstructionSet dstis = getInstrs(move.dst);
 		InstructionSet srcis = getInstrs(move.src);
+		InstructionSet dstis = getInstrs(move.dst);
 		InstructionSet ownis = new InstructionSet("MOVE");
 
 		//This ordering needs to be this way so the fixing below can work
 		ownis.add(srcis);
 		ownis.add(dstis);
 
-		VirtualRegister dstret = dstis.ret;
-		VirtualRegister srcret = srcis.ret;
+		Register dstret = dstis.ret;
+		Register srcret = srcis.ret;
+
 
 		if (move.dst instanceof MEM) {
 			//If the left side is MEM then we have to remove the last instruction
 			// which should be LDB/LDW/LDT/LDO and replace with SDB/SDW/SDT/SDO
 
-			Instruction lasttmp = ownis.instrs.pop();
-			if (!(lasttmp instanceof Mnemonic)) throw new InternalCompilerError();
+			Instruction lasttmp = ownis.popLast();
+			if (!(lasttmp instanceof Mnemonic)) {
+				System.out.println(lasttmp);
+				throw new InternalCompilerError();
+			}
 			Mnemonic last = (Mnemonic) lasttmp;
 			String mnemonic;
 			switch (last.mnemonic) {
@@ -331,13 +345,13 @@ public class CodeGen extends Phase {
 					mnemonic = "STB";
 					break;
 				case "LDW":
-					mnemonic = "STB";
+					mnemonic = "STW";
 					break;
 				case "LDT":
-					mnemonic = "STB";
+					mnemonic = "STT";
 					break;
 				case "LDO":
-					mnemonic = "STB";
+					mnemonic = "STO";
 					break;
 				default:
 					throw new InternalCompilerError();
@@ -355,7 +369,7 @@ public class CodeGen extends Phase {
 
 
 	public void tile(NAME name) {
-		InstructionSet ownis = new InstructionSet("NAME");
+		InstructionSet ownis = new InstructionSet("NAME | " + name.name);
 		ownis.set(VirtualRegister.create());
 		ownis.add(new Mnemonic("GETA", ownis.ret, new OperandLabel(name.name)));
 
@@ -393,7 +407,16 @@ public class CodeGen extends Phase {
 		InstructionSet ownis = new InstructionSet("STMTS");
 
 		for (IMCStmt stmt : stmts.stmts) {
+
+			if(spacingComments){
+				if(stmt instanceof MOVE) ownis.add(new Comment("Move (" + ((MOVE) stmt).id + ")"));
+				else if(stmt instanceof CJUMP) ownis.add(new Comment("Cjump"));
+				else if(stmt instanceof JUMP) ownis.add(new Comment("Jump"));
+				else if(stmt instanceof LABEL) ownis.add(new Comment("Label"));
+			}
+
 			ownis.add(getInstrs(stmt));
+			if(spacingComments) ownis.add(new Comment(null));
 		}
 
 		setInstrs(stmts, ownis);
@@ -401,9 +424,12 @@ public class CodeGen extends Phase {
 
 
 	public void tile(TEMP temp) {
-		InstructionSet ownis = new InstructionSet("TEMP");
-		ownis.set(VirtualRegister.create(temp.name));
-
+		InstructionSet ownis = new InstructionSet("TEMP |" + temp.name);
+		if (temp.name == 0) {
+			ownis.set(fp);
+		} else {
+			ownis.set(VirtualRegister.create(temp.name));
+		}
 		setInstrs(temp, ownis);
 	}
 
@@ -415,7 +441,7 @@ public class CodeGen extends Phase {
 		InstructionSet expris = getInstrs(unop.expr);
 
 		ownis.add(expris);
-		VirtualRegister ret = ownis.ret;
+		Register ret = ownis.ret;
 		ownis.set(ret);
 
 		switch (unop.oper) {

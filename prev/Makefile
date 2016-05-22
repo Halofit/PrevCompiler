@@ -1,13 +1,13 @@
 #
 # START GOOGLE CHROME WITH --allow-file-access-from-files
 # or just use Firefox ;)
+#
 
 bindir = ../out/production/Compiler
 xsldir = ./xsl
 
-
 %.codegen.xml	: %.prev
-	java -classpath $(bindir) compiler.Main --xsldir=$(xsldir) --phase=codegen --loggedphases=codegen $<
+	java -classpath $(bindir) compiler.Main --xsldir=$(xsldir) --phase=codegen --loggedphases=imcode $<
 
 %.lincode.xml	: %.prev
 	java -classpath $(bindir) compiler.Main --xsldir=$(xsldir) --phase=lincode --loggedphases=lincode,imcode $<
