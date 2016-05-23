@@ -20,6 +20,8 @@ public class CodeGen extends Phase {
 	public static boolean commentAnnotations = false;
 	public static boolean spacingComments = true;
 
+	private int fpTemp;
+
 	private FixedRegister sp = new FixedRegister("SP");
 	private FixedRegister fp = new FixedRegister("FP");
 	private FixedRegister reminderReg = new FixedRegister("rR");
@@ -81,6 +83,7 @@ public class CodeGen extends Phase {
 	public void generateCode() {
 		for (Fragment frag : task.fragments.values()) {
 			if (frag instanceof CodeFragment) {
+				fpTemp = ((CodeFragment) frag).FP;
 				InstructionSet fragis = generateFragmentCode((CodeFragment) frag);
 				fragInstrs.put((CodeFragment) frag, fragis);
 			}
@@ -99,80 +102,113 @@ public class CodeGen extends Phase {
 	}
 
 	private void setInstrs(IMC imcode, InstructionSet instrs) {
-		if(instrs == null) throw new InternalCompilerError();
+		if (instrs == null) throw new InternalCompilerError();
 		map.put(imcode, instrs);
 	}
 
 	public void tile(BINOP binop) {
-		binop.expr1.visit(this);
-		binop.expr2.visit(this);
+		boolean canFold2 = false;
+		if (binop.expr2 instanceof CONST) {
+			CONST c = (CONST) binop.expr2;
+			if (c.value <= 0xFF && c.value >= 0) {
+				canFold2 = true;
+			}
+		}
 
-		InstructionSet is1 = getInstrs(binop.expr1);
-		InstructionSet is2 = getInstrs(binop.expr2);
+		boolean canFold1 = false;
+		if (binop.expr1 instanceof CONST) {
+			CONST c = (CONST) binop.expr1;
+			if (c.value <= 0xFF && c.value >= 0) {
+				canFold1 = true;
+			}
+		}
 
 		InstructionSet ownis = new InstructionSet("BINOP | " + binop.oper.toString());
-		ownis.add(is1);
-		ownis.add(is2);
+		Operand op1;
+		Operand op2;
 
+		if (canFold2) {
+			binop.expr1.visit(this);
+			InstructionSet is1 = getInstrs(binop.expr1);
+			ownis.add(is1);
+
+			op1 = is1.ret;
+			op2 = new ConstantOperand(((CONST)binop.expr2).value);
+		} else if (canFold1) {
+			binop.expr2.visit(this);
+			InstructionSet is2 = getInstrs(binop.expr2);
+			ownis.add(is2);
+
+			//In this case we need to rotate the operands
+			op2 = new ConstantOperand(((CONST)binop.expr1).value);
+			op1 = is2.ret;
+		} else {
+			binop.expr1.visit(this);
+			binop.expr2.visit(this);
+			InstructionSet is1 = getInstrs(binop.expr1);
+			InstructionSet is2 = getInstrs(binop.expr2);
+			ownis.add(is1);
+			ownis.add(is2);
+			op1 = is1.ret;
+			op2 = is2.ret;
+		}
+
+		//For consistency create register AFTER visiting nested statements
 		ownis.set(VirtualRegister.create());
+		Operand ret = ownis.ret;
 
-		{
-			Register ret = ownis.ret;
-			Register op1 = is1.ret;
-			Register op2 = is2.ret;
 
-			switch (binop.oper) {
-				case OR:
-					ownis.add(new Mnemonic("OR", ret, op1, op2));
-					break;
-				case AND:
-					ownis.add(new Mnemonic("AND", ret, op1, op2));
-					break;
-				case EQU:
-					ownis.add(new Mnemonic("CMP", ret, op1, op2));
-					ownis.add(new Mnemonic("OR", ret, ret, const1));
-					ownis.add(new Mnemonic("CMP", ret, ret, const1));
-					break;
-				case NEQ:
-					ownis.add(new Mnemonic("CMP", ret, op1, op2));
-					break;
-				case LTH:
-					ownis.add(new Mnemonic("CMP", ret, op1, op2));
-					ownis.add(new Mnemonic("ADD", ret, ret, const1));
-					ownis.add(new Mnemonic("CMP", ret, ret, const0));
-					ownis.add(new Mnemonic("SUB", ret, ret, const1));
-					break;
-				case GTH:
-					ownis.add(new Mnemonic("CMP", ret, op1, op2));
-					ownis.add(new Mnemonic("SUB", ret, ret, const1));
-					ownis.add(new Mnemonic("CMP", ret, ret, const0));
-					ownis.add(new Mnemonic("ADD", ret, ret, const1));
-					break;
-				case LEQ:
-					ownis.add(new Mnemonic("CMP", ret, op1, op2));
-					ownis.add(new Mnemonic("SUB", ret, ret, const1));
-					break;
-				case GEQ:
-					ownis.add(new Mnemonic("CMP", ret, op1, op2));
-					ownis.add(new Mnemonic("ADD", ret, ret, const1));
-					break;
-				case ADD:
-					ownis.add(new Mnemonic("ADD", ret, op1, op2));
-					break;
-				case SUB:
-					ownis.add(new Mnemonic("SUB", ret, op1, op2));
-					break;
-				case MUL:
-					ownis.add(new Mnemonic("MUL", ret, op1, op2));
-					break;
-				case DIV:
-					ownis.add(new Mnemonic("DIV", ret, op1, op2));
-					break;
-				case MOD:
-					ownis.add(new Mnemonic("DIV", ret, op1, op2));
-					ownis.add(new Mnemonic("GET", ret, reminderReg));
-					break;
-			}
+		switch (binop.oper) {
+			case OR:
+				ownis.add(new Mnemonic("OR", ret, op1, op2));
+				break;
+			case AND:
+				ownis.add(new Mnemonic("AND", ret, op1, op2));
+				break;
+			case EQU:
+				ownis.add(new Mnemonic("CMP", ret, op1, op2));
+				ownis.add(new Mnemonic("OR", ret, ret, const1));
+				ownis.add(new Mnemonic("CMP", ret, ret, const1));
+				break;
+			case NEQ:
+				ownis.add(new Mnemonic("CMP", ret, op1, op2));
+				break;
+			case LTH:
+				ownis.add(new Mnemonic("CMP", ret, op1, op2));
+				ownis.add(new Mnemonic("ADD", ret, ret, const1));
+				ownis.add(new Mnemonic("CMP", ret, ret, const0));
+				ownis.add(new Mnemonic("SUB", ret, ret, const1));
+				break;
+			case GTH:
+				ownis.add(new Mnemonic("CMP", ret, op1, op2));
+				ownis.add(new Mnemonic("SUB", ret, ret, const1));
+				ownis.add(new Mnemonic("CMP", ret, ret, const0));
+				ownis.add(new Mnemonic("ADD", ret, ret, const1));
+				break;
+			case LEQ:
+				ownis.add(new Mnemonic("CMP", ret, op1, op2));
+				ownis.add(new Mnemonic("SUB", ret, ret, const1));
+				break;
+			case GEQ:
+				ownis.add(new Mnemonic("CMP", ret, op1, op2));
+				ownis.add(new Mnemonic("ADD", ret, ret, const1));
+				break;
+			case ADD:
+				ownis.add(new Mnemonic("ADD", ret, op1, op2));
+				break;
+			case SUB:
+				ownis.add(new Mnemonic("SUB", ret, op1, op2));
+				break;
+			case MUL:
+				ownis.add(new Mnemonic("MUL", ret, op1, op2));
+				break;
+			case DIV:
+				ownis.add(new Mnemonic("DIV", ret, op1, op2));
+				break;
+			case MOD:
+				ownis.add(new Mnemonic("DIV", ret, op1, op2));
+				ownis.add(new Mnemonic("GET", ret, reminderReg));
+				break;
 		}
 
 		setInstrs(binop, ownis);
@@ -318,50 +354,51 @@ public class CodeGen extends Phase {
 		InstructionSet dstis = getInstrs(move.dst);
 		InstructionSet ownis = new InstructionSet("MOVE");
 
-		//This ordering needs to be this way so the fixing below can work
-		ownis.add(srcis);
-		ownis.add(dstis);
+		if(srcis.ret != null){
 
-		Register dstret = dstis.ret;
-		Register srcret = srcis.ret;
+			//This ordering needs to be this way so the fixing below can work
+			ownis.add(srcis);
+			ownis.add(dstis);
+
+			Register dstret = dstis.ret;
+			Register srcret = srcis.ret;
 
 
-		if (move.dst instanceof MEM) {
-			//If the left side is MEM then we have to remove the last instruction
-			// which should be LDB/LDW/LDT/LDO and replace with SDB/SDW/SDT/SDO
+			if (move.dst instanceof MEM) {
+				//If the left side is MEM then we have to remove the last instruction
+				// which should be LDB/LDW/LDT/LDO and replace with SDB/SDW/SDT/SDO
 
-			Instruction lasttmp = ownis.popLast();
-			if (!(lasttmp instanceof Mnemonic)) {
-				System.out.println(lasttmp);
-				throw new InternalCompilerError();
-			}
-			Mnemonic last = (Mnemonic) lasttmp;
-			String mnemonic;
-			switch (last.mnemonic) {
-				case "LDB":
-					mnemonic = "STB";
-					break;
-				case "LDW":
-					mnemonic = "STW";
-					break;
-				case "LDT":
-					mnemonic = "STT";
-					break;
-				case "LDO":
-					mnemonic = "STO";
-					break;
-				default:
+				Instruction lasttmp = ownis.popLast();
+				if (!(lasttmp instanceof Mnemonic)) {
+					System.out.println(lasttmp);
 					throw new InternalCompilerError();
-			}
+				}
+				Mnemonic last = (Mnemonic) lasttmp;
+				String mnemonic;
+				switch (last.mnemonic) {
+					case "LDB":
+						mnemonic = "STB";
+						break;
+					case "LDW":
+						mnemonic = "STW";
+						break;
+					case "LDT":
+						mnemonic = "STT";
+						break;
+					case "LDO":
+						mnemonic = "STO";
+						break;
+					default:
+						throw new InternalCompilerError();
+				}
 
-			ownis.add(new Mnemonic(mnemonic, srcret, last.operands[1], last.operands[2]));
-		} else {
-			ownis.add(new Mnemonic("ADD", dstret, srcret, const0));
+				ownis.add(new Mnemonic(mnemonic, srcret, last.operands[1], last.operands[2]));
+			} else {
+				ownis.add(new Mnemonic("ADD", dstret, srcret, const0));
+			}
 		}
 
-
 		setInstrs(move, ownis);
-
 	}
 
 
@@ -405,15 +442,18 @@ public class CodeGen extends Phase {
 
 		for (IMCStmt stmt : stmts.stmts) {
 
-			if(spacingComments){
-				if(stmt instanceof MOVE) ownis.add(new Comment("Move (" + ((MOVE) stmt).id + ")"));
-				else if(stmt instanceof CJUMP) ownis.add(new Comment("Cjump"));
-				else if(stmt instanceof JUMP) ownis.add(new Comment("Jump"));
-				else if(stmt instanceof LABEL) ownis.add(new Comment("Label"));
+			if (spacingComments) {
+				if (stmt instanceof MOVE) {
+					ownis.add(new Comment("Move (" + ((MOVE) stmt).id + ")"));
+				} else if (stmt instanceof CJUMP) {
+					ownis.add(new Comment("Cjump"));
+				} else if (stmt instanceof JUMP) {
+					ownis.add(new Comment("Jump"));
+				} else if (stmt instanceof LABEL) ownis.add(new Comment("Label"));
 			}
 
 			ownis.add(getInstrs(stmt));
-			if(spacingComments) ownis.add(new Comment(null));
+			if (spacingComments) ownis.add(new Comment(null));
 		}
 
 		setInstrs(stmts, ownis);
@@ -422,7 +462,7 @@ public class CodeGen extends Phase {
 
 	public void tile(TEMP temp) {
 		InstructionSet ownis = new InstructionSet("TEMP |" + temp.name);
-		if (temp.name == 0) {
+		if (temp.name == fpTemp) {
 			ownis.set(fp);
 		} else {
 			ownis.set(VirtualRegister.create(temp.name));

@@ -71,7 +71,6 @@ public class InterferenceGraph {
 
 	private void propagateUsage() {
 		int changes = 1;
-		int iterations = 0;
 		while (changes != 0) {
 			changes = 0;
 
@@ -95,12 +94,7 @@ public class InterferenceGraph {
 					changes += annot.addIn();
 				}
 			}
-
-			System.out.println("[" + iterations + "]:" + changes);
-			iterations++;
-
 		}
-		System.out.println("Iterations: " + iterations);
 	}
 
 

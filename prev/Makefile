@@ -34,3 +34,4 @@ xsldir = ./xsl
 clean:
 	del *.xml
 	del *.mmix
+	del *.graph

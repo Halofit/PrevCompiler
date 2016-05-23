@@ -242,4 +242,16 @@ LIVENESS:
 
 Potrebno je nardit kodo + interference graph
 
+Reg uses:
+_solve uses 344 registers.
+_solve uses 511 instructions.
+
+after basic adding constants to BINOP:
+_solve uses 316 registers.
+_solve uses 483 instructions.
+
+after fix of null:
+_solve uses 315 registers.
+_solve uses 482 instructions.
+
 

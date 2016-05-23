@@ -19,9 +19,12 @@ public class InstructionSet {
 	public HashSet<VirtualRegister> registers;
 	public HashMap<Label, Integer> labelLocations;
 
+	public long mnemonicCount;
+
 	public InstructionSet(String imcode) {
 		this.imcode = imcode;
 		this.instrs = new LinkedList<>();
+		mnemonicCount = 0;
 	}
 
 	public void add(Instruction i){
@@ -79,6 +82,7 @@ public class InstructionSet {
 				for (Operand op : ((Mnemonic) i).operands) {
 					if(op instanceof VirtualRegister) registers.add((VirtualRegister) op);
 				}
+				mnemonicCount++;
 			}
 		}
 	}

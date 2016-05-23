@@ -14,7 +14,10 @@ public class ConstantOperand extends Operand {
 	}
 
 	public ConstantOperand(long value) {
-		if(value > 0xFFFF || value < 0) throw new InternalCompilerError();
+		if(value > 0xFFFF || value < 0) {
+			System.out.println("Invalid operand value: " + value);
+			throw new InternalCompilerError();
+		}
 
 		this.value = (short) value;
 	}
