@@ -8,14 +8,15 @@ import java.util.HashMap;
 public class Label extends Instruction {
 	public String label;
 
-	private Label(String label){
+	private Label(String label) {
 		this.label = label;
 	}
 
-	private static HashMap<String, Label> labels;
-	public static Label get(String label){
+	private static HashMap<String, Label> labels = new HashMap<>();
+
+	public static Label get(String label) {
 		Label laObj = labels.get(label);
-		if(laObj == null){
+		if (laObj == null) {
 			laObj = new Label(label);
 			labels.put(label, laObj);
 		}
@@ -24,6 +25,16 @@ public class Label extends Instruction {
 
 	@Override
 	public String toString() {
-		return "    " + label + ": ";
+		return label + ": ";
+	}
+
+	@Override
+	public int hashCode() {
+		return label.hashCode();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		return label.equals(obj);
 	}
 }

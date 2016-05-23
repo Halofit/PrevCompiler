@@ -6,6 +6,9 @@ import compiler.data.frg.CodeFragment;
 import compiler.data.liveness.InterferenceGraph;
 import compiler.phase.Phase;
 
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 
 /**
@@ -28,7 +31,25 @@ public class Liveness extends Phase {
 		for (CodeFragment frag : fragInstrs.keySet()) {
 			InstructionSet instr = fragInstrs.get(frag);
 
-			intfGraph.put(frag, new InterferenceGraph(instr));
+			intfGraph.put(frag, new InterferenceGraph(instr, frag.label));
+		}
+	}
+
+	@Override
+	public void close() {
+		super.close();
+
+		PrintWriter writer;
+		try {
+			writer = new PrintWriter(task.srcFName + ".graph", "US-ASCII");
+
+			for (InterferenceGraph g : intfGraph.values()) {
+				writer.println(g);
+			}
+
+			writer.close();
+		} catch (FileNotFoundException | UnsupportedEncodingException e) {
+			e.printStackTrace();
 		}
 	}
 }

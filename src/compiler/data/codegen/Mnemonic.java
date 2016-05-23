@@ -2,6 +2,8 @@ package compiler.data.codegen;
 
 import compiler.common.report.InternalCompilerError;
 
+import java.util.Arrays;
+
 /**
  * Created by gregor on 20.5.2016.
  */
@@ -88,17 +90,13 @@ public class Mnemonic extends Instruction {
 			case "INCML":
 			case "INCMH":
 			case "INCH":
-				return new VirtualRegister[]{(VirtualRegister) operands[0]};
+				return filterNonVirtual(operands[0]);
 
 			case "LDB":
 			case "LDW":
 			case "LDT":
 			case "LDO":
-				if(operands[2] instanceof VirtualRegister){
-					return new VirtualRegister[]{(VirtualRegister) operands[1], (VirtualRegister) operands[2]};
-				}else{
-					return new VirtualRegister[]{(VirtualRegister) operands[1]};
-				}
+				return filterNonVirtual(operands[1], operands[2]);
 
 			case "STB":
 			case "STW":
@@ -112,23 +110,19 @@ public class Mnemonic extends Instruction {
 			case "CMP":
 			case "OR":
 			case "AND":
-				if(operands[2] instanceof VirtualRegister){
-					return new VirtualRegister[]{(VirtualRegister) operands[0],(VirtualRegister) operands[1], (VirtualRegister) operands[2]};
-				}else{
-					return new VirtualRegister[]{(VirtualRegister) operands[0],(VirtualRegister) operands[1]};
-				}
+				return filterNonVirtual(operands[0], operands[1], operands[2]);
 
 			case "NEG":
-				if(operands[2] instanceof VirtualRegister){
-					return new VirtualRegister[]{(VirtualRegister) operands[2]};
-				}else{
-					return new VirtualRegister[]{};
-				}
+				return filterNonVirtual(operands[2]);
 
 
 			default:
 				System.out.println("Unrecognised mnemonic: " + mnemonic);
 				throw new InternalCompilerError();
 		}
+	}
+
+	private static VirtualRegister[] filterNonVirtual(Operand... ops){
+		return Arrays.stream(ops).filter(op -> op instanceof VirtualRegister).map(op -> (VirtualRegister)op).toArray(VirtualRegister[]::new);
 	}
 }

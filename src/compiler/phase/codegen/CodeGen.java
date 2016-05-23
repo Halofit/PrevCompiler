@@ -41,12 +41,11 @@ public class CodeGen extends Phase {
 	public void close() {
 		super.close();
 
-		// Close the source file.
 		PrintWriter writer;
 		try {
 			writer = new PrintWriter(task.srcFName + ".mmix", "US-ASCII");
 
-			String indent = "";
+			String indent = "\t";
 
 			for (CodeFragment codeFragment : fragInstrs.keySet()) {
 				writer.println("");
@@ -61,8 +60,6 @@ public class CodeGen extends Phase {
 							writer.print('\t');
 							indent = indent.substring(0, indent.length() - 1);
 						}
-					} else if(!(instr instanceof Label)){
-						writer.print('\t');
 					}
 
 					writer.print(indent);

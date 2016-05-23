@@ -1,6 +1,6 @@
 package compiler.data.liveness;
 
-import compiler.data.codegen.Instruction;
+import compiler.common.report.InternalCompilerError;
 import compiler.data.codegen.Mnemonic;
 import compiler.data.codegen.VirtualRegister;
 
@@ -19,8 +19,6 @@ public class InstrAnnotations {
 	HashSet<VirtualRegister> in;
 	HashSet<VirtualRegister> out;
 
-	public Instruction[] followers;
-
 	public InstrAnnotations(Mnemonic instr) {
 		this.instr = instr;
 		def = instr.def();
@@ -32,17 +30,37 @@ public class InstrAnnotations {
 		in.addAll(Arrays.asList(use));
 	}
 
-	public boolean addIn(){
+	public int addIn() {
+		//System.out.println("In: " + " D:" + def + " U:" + Arrays.toString(use) + " in():" + in);
 		int start = in.size();
 		in.addAll(out);
 		in.remove(def);
+		in.addAll(Arrays.asList(use));
 
-		return start == in.size();
+		//System.out.println("Add in: " + (in.size() - start));
+		if (in.size() - start < 0) {
+			System.out.println("error in IN()");
+			System.out.println(this);
+			throw new InternalCompilerError();
+		}
+		return in.size() - start;
 	}
 
-	public boolean addOut(HashSet<VirtualRegister> succSet){
+	public int addOut(HashSet<VirtualRegister> succSet) {
+		//System.out.println("Out: " + " D:" + def + " U:" + Arrays.toString(use) + " out():" + out);
 		int start = out.size();
 		out.addAll(succSet);
-		return start == out.size();
+		//System.out.println("Add out: " + (out.size() - start));
+		if (out.size() - start < 0) {
+			System.out.println("error in OUT()");
+			System.out.println(this);
+			throw new InternalCompilerError();
+		}
+		return out.size() - start;
+	}
+
+	@Override
+	public String toString() {
+		return "[" + instr + "] Def:" + def + " Use:" + Arrays.toString(use) + " in:" + in + " out:" + out;
 	}
 }

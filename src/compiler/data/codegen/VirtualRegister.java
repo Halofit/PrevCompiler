@@ -38,4 +38,15 @@ public class VirtualRegister extends Register {
 	public String toString() {
 		return "r"+name;
 	}
+
+	@Override
+	public boolean equals(Object o) {
+		System.out.println(o);
+		return (o instanceof VirtualRegister) && (this.name == ((VirtualRegister)o).name);
+	}
+
+	@Override
+	public int hashCode() {
+		return Long.hashCode(name);
+	}
 }

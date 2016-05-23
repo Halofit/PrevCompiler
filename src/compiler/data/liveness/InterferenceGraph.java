@@ -9,38 +9,52 @@ import java.util.*;
  */
 public class InterferenceGraph {
 
-	private Node[] nodes;
+	private String functionLabel;
 	private HashMap<VirtualRegister, Node> nodeMap;
 	private HashMap<Mnemonic, InstrAnnotations> annotations;
+	private InstrFlowGraph flow;
 
-	public InterferenceGraph(InstructionSet instrs) {
+	public InterferenceGraph(InstructionSet instrs, String functionLabel) {
+		this.functionLabel = functionLabel;
 		annotations = new HashMap<>();
+		nodeMap = new HashMap<>();
 
-		nodes = new Node[instrs.registers.size()];
-		Iterator<VirtualRegister> it = instrs.registers.iterator();
-		for (int i = 0; i < nodes.length; i++) {
-			nodes[i] = new Node(it.next());
-			nodeMap.put(nodes[i].reg, nodes[i]);
-		}
-
+		//Create flow graph
+		flow = new InstrFlowGraph(instrs);
 
 		annotateInstructions(instrs);
-		propagateUsage(instrs);
+		//instrs.indexLabels();
+		instrs.countRegisters();
+
+
+		propagateUsage();
+		createInterferanceGraph(instrs);
 		checkInterferance();
 	}
 
-	private void checkInterferance() {
-		for (InstrAnnotations a : annotations.values()) {
-			HashSet<VirtualRegister> intersection = new HashSet<>(a.in); // use the copy constructor
-			intersection.retainAll(a.out);
-			connect(intersection);
+
+	private void createInterferanceGraph(InstructionSet instrs) {
+		int size = instrs.registers.size();
+		Iterator<VirtualRegister> it = instrs.registers.iterator();
+		for (int i = 0; i < size; i++) {
+			Node n = new Node(it.next());
+			nodeMap.put(n.reg, n);
 		}
 	}
 
-	private void connect(HashSet<VirtualRegister> regs) {
-		for (VirtualRegister r : regs) {
-			Node n = nodeMap.get(r);
-			n.addEdges(regs);
+	private void checkInterferance() {
+		for (InstrAnnotations ann : annotations.values()) {
+			//For every register in in[] add all other registers contained in in[]
+			for (VirtualRegister r : ann.in) {
+				Node n = nodeMap.get(r);
+				n.addEdges(ann.in);
+			}
+
+			//repeat for out[]
+			for (VirtualRegister r : ann.out) {
+				Node n = nodeMap.get(r);
+				n.addEdges(ann.out);
+			}
 		}
 	}
 
@@ -55,114 +69,71 @@ public class InterferenceGraph {
 	}
 
 
-	private void propagateUsage(InstructionSet instrs) {
-		boolean change = true;
+	private void propagateUsage() {
+		int changes = 1;
 		int iterations = 0;
-		while (change) {
-			change = false;
+		while (changes != 0) {
+			changes = 0;
 
-			LinkedList<Instruction> instrLst = instrs.instrs;
-			ListIterator<Instruction> it = instrLst.listIterator(instrLst.size() - 1);
-
+			InstrFlowGraph.FlowIterator it = flow.iterator();
 			while (it.hasNext()) {
-				Instruction i = it.next();
-				if (i instanceof Mnemonic) {
-					Mnemonic mne = (Mnemonic) i;
-					switch (mne.mnemonic) {
-						case "BZ":
-						case "PBZ":
-						case "BNZ":
-						case "PBNZ":
-						case "BN":
-						case "PBN":
-						case "BNN":
-						case "PBNN":
-						case "BP":
-						case "PBP":
-						case "BNP":
-						case "PBNP": {
-							InstrAnnotations annot = annotations.get(mne);
+				FlowNode n = it.next();
 
-							//FOLLOW the jump
-							Label l = ((OperandLabel) mne.operands[1]).label;
-							int loc = instrs.labelLocations.get(l);
-							ListIterator<Instruction> searchIt = instrLst.listIterator(loc);
+				InstrAnnotations annot = annotations.get(n.m);
+				InstrAnnotations followAnnot;
 
-							Instruction follow;
-							while (!((follow = searchIt.next()) instanceof Mnemonic)) ;
-
-							InstrAnnotations followAnnot = annotations.get((Mnemonic) follow);
-							change |= annot.addOut(followAnnot.in);
-							change |= annot.addIn();
-
-							//FOLLOW through
-							while (!((follow = it.next()) instanceof Mnemonic)) ;
-
-							followAnnot = annotations.get((Mnemonic) follow);
-							change |= annot.addOut(followAnnot.in);
-							change |= annot.addIn();
-
-							it.previous();
-						}
-						break;
-
-						case "JMP": {
-							//FOLLOW the jump
-							InstrAnnotations annot = annotations.get(mne);
-
-							Label l = ((OperandLabel) mne.operands[0]).label;
-							int loc = instrs.labelLocations.get(l);
-							ListIterator<Instruction> searchIt = instrLst.listIterator(loc);
-
-							Instruction follow;
-							while (!((follow = searchIt.next()) instanceof Mnemonic)) ;
-
-							InstrAnnotations followAnnot = annotations.get((Mnemonic) follow);
-							change |= annot.addOut(followAnnot.in);
-							change |= annot.addIn();
-						}
-
-						break;
-						default: {
-							//FOLLOW through
-							InstrAnnotations annot = annotations.get(mne);
-							Instruction follow;
-							while (!((follow = it.next()) instanceof Mnemonic)) ;
-
-							InstrAnnotations followAnnot = annotations.get((Mnemonic) follow);
-							change |= annot.addOut(followAnnot.in);
-							change |= annot.addIn();
-
-							it.previous();
-						}
-						break;
-					}
-
-				} else if (i instanceof Label) {
-
-				} else {
+				if (n.follow != null) {
+					followAnnot = annotations.get(n.follow.m);
+					changes += annot.addOut(followAnnot.in);
+					changes += annot.addIn();
 
 				}
+
+				if (n.isCjump && n.follow2 != null) {
+					followAnnot = annotations.get(n.follow2.m);
+					changes += annot.addOut(followAnnot.in);
+					changes += annot.addIn();
+				}
 			}
+
+			System.out.println("[" + iterations + "]:" + changes);
 			iterations++;
+
 		}
 		System.out.println("Iterations: " + iterations);
 	}
 
 
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append(this.functionLabel).append('\n');
+
+		for (Node n : this.nodeMap.values()) {
+			sb.append('\t').append(n).append('\n');
+		}
+
+		return sb.toString();
+	}
+
 	class Node {
 		VirtualRegister reg;
-		LinkedList<Node> edges;
+		HashSet<Node> edges;
 
 		public Node(VirtualRegister reg) {
 			this.reg = reg;
-			this.edges = new LinkedList<>();
+			this.edges = new HashSet<>();
 		}
 
-		public void addEdges(HashSet<VirtualRegister> regs){
+		public void addEdges(HashSet<VirtualRegister> regs) {
 			for (VirtualRegister r : regs) {
-				if(r != reg) edges.add(nodeMap.get(r));
+				if (r != reg) edges.add(nodeMap.get(r));
 			}
+		}
+
+		@Override
+		public String toString() {
+			return reg + " interferes with: " + Arrays.toString(edges.stream().map(node -> node.reg.toString()).toArray(String[]::new));
 		}
 	}
 }

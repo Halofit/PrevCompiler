@@ -22,20 +22,10 @@ public class InstructionSet {
 	public InstructionSet(String imcode) {
 		this.imcode = imcode;
 		this.instrs = new LinkedList<>();
-		this.registers = new HashSet<>();
-		this.labelLocations = new HashMap<>();
 	}
 
 	public void add(Instruction i){
 		instrs.add(i);
-		if(i instanceof Mnemonic){
-			for (Operand op : ((Mnemonic) i).operands) {
-				if(op instanceof VirtualRegister) registers.add((VirtualRegister) op);
-			}
-		}else if(i instanceof Label){
-			labelLocations.put((Label) i, instrs.size() - 1);
-		}
-
 	}
 
 	public void add(InstructionSet i){
@@ -46,8 +36,6 @@ public class InstructionSet {
 		if(CodeGen.commentAnnotations){
 			this.instrs.add(new Comment("END: " + i.imcode));
 		}
-
-		this.registers.addAll(i.registers);
 	}
 
 	public void set(Register ret){
@@ -69,11 +57,36 @@ public class InstructionSet {
 		return last;
 	}
 
+	public void indexLabels(){
+		this.labelLocations = new HashMap<>();
+
+		int loc = 0;
+		Iterator<Instruction> it = this.instrs.descendingIterator();
+		while(it.hasNext()){
+			Instruction next = it.next();
+			if(next instanceof Label){
+				labelLocations.put((Label) next, loc);
+			}
+			loc++;
+		}
+	}
+
+	public void countRegisters(){
+		this.registers = new HashSet<>();
+
+		for (Instruction i : instrs) {
+			if(i instanceof Mnemonic){
+				for (Operand op : ((Mnemonic) i).operands) {
+					if(op instanceof VirtualRegister) registers.add((VirtualRegister) op);
+				}
+			}
+		}
+	}
 
 	public String toString(){
 		StringBuilder sb = new StringBuilder();
 
-		sb.append("---").append(imcode).append("---").append('\n');
+		sb.append("---").append(imcode).append("---\n");
 		for (Instruction i : instrs) {
 			sb.append(i).append('\n');
 		}

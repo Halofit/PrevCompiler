@@ -112,7 +112,7 @@ public class Main {
 
 				Liveness liveness = new Liveness(task);
 				liveness.analyse();
-				//Don't close liveness, you're going to need it again later on
+				liveness.close();
 
 				if (task.phase.equals("codegen"))
 					break;
