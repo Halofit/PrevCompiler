@@ -20,6 +20,8 @@ public class CodeGen extends Phase {
 	public static boolean commentAnnotations = false;
 	public static boolean spacingComments = true;
 
+	private int fpTemp;
+
 	private FixedRegister sp = new FixedRegister("SP");
 	private FixedRegister fp = new FixedRegister("FP");
 	private FixedRegister reminderReg = new FixedRegister("rR");
@@ -81,6 +83,7 @@ public class CodeGen extends Phase {
 	public void generateCode() {
 		for (Fragment frag : task.fragments.values()) {
 			if (frag instanceof CodeFragment) {
+				fpTemp = ((CodeFragment) frag).FP;
 				InstructionSet fragis = generateFragmentCode((CodeFragment) frag);
 				fragInstrs.put((CodeFragment) frag, fragis);
 			}
@@ -422,7 +425,7 @@ public class CodeGen extends Phase {
 
 	public void tile(TEMP temp) {
 		InstructionSet ownis = new InstructionSet("TEMP |" + temp.name);
-		if (temp.name == 0) {
+		if (temp.name == fpTemp) {
 			ownis.set(fp);
 		} else {
 			ownis.set(VirtualRegister.create(temp.name));
