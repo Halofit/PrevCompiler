@@ -32,13 +32,7 @@ public class InstructionSet {
 	}
 
 	public void add(InstructionSet i){
-		if(CodeGen.commentAnnotations){
-			this.instrs.add(new Comment("BEG: " + i.imcode));
-		}
 		instrs.addAll(i.instrs);
-		if(CodeGen.commentAnnotations){
-			this.instrs.add(new Comment("END: " + i.imcode));
-		}
 	}
 
 	public void set(Register ret){

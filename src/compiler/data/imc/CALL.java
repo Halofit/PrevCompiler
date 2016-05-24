@@ -71,12 +71,13 @@ public class CALL extends IMCExpr {
 	@Override
 	public void toXML(Logger logger) {
 		logger.begElement("imc");
-		StringBuffer ws = new StringBuffer();
+		StringBuilder ws = new StringBuilder();
 		for (int arg = 0; arg < args.length; arg++)
-			ws.append((arg > 0 ? "," : "") + widths[arg]);
+			ws.append(arg > 0 ? "," : "").append(widths[arg]);
 		logger.addAttribute("kind", "CALL " + label + " (" + ws + ")");
-		for (int arg = 0; arg < args.length; arg++)
-			this.args[arg].toXML(logger);
+		for (IMCExpr arg1 : args) {
+			arg1.toXML(logger);
+		}
 		logger.endElement();
 	}
 	

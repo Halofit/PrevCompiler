@@ -48,7 +48,7 @@ public class CJUMP extends IMCStmt {
 	@Override
 	public STMTS linCode() {
 		SEXPR condLC = cond.linCode();
-		Vector<IMCStmt> lc = new Vector<IMCStmt>();
+		Vector<IMCStmt> lc = new Vector<>();
 		lc.addAll(((STMTS)(condLC.stmt)).stmts());
 		lc.add(new CJUMP(condLC.expr, posLabel, negLabel));
 		return new STMTS(lc);

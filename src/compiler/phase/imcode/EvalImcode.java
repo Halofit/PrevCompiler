@@ -115,6 +115,7 @@ public class EvalImcode extends FullVisitor {
 		IMCExpr right = (IMCExpr) attrs.imcAttr.get(binExpr.sndExpr);
 		Typ t = attrs.typAttr.get(binExpr);
 
+
 		switch (binExpr.oper) {
 			case ASSIGN:
 				code = new MOVE(left, right);

@@ -29,7 +29,6 @@ public class LinCode extends Phase {
 	 */
 	public LinCode(Task task) {
 		super(task, "lincode");
-
 		this.task = task;
 
 		if(task.loggedPhases.contains("lincode"))interpreter();

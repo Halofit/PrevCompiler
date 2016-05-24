@@ -254,4 +254,7 @@ after fix of null:
 _solve uses 315 registers.
 _solve uses 482 instructions.
 
+after folding both negative and positive CONST into BINOP:
+_solve uses 280 registers.
+_solve uses 342 instructions.
 

@@ -25,8 +25,8 @@ public class CodeGen extends Phase {
 	private FixedRegister sp = new FixedRegister("SP");
 	private FixedRegister fp = new FixedRegister("FP");
 	private FixedRegister reminderReg = new FixedRegister("rR");
+	private FixedRegister colorRegister = new FixedRegister("COLORS"); //Color register is the highest used register
 
-	private FutureConstant numberOfColors = new FutureConstant("colors");
 	private ConstantOperand const0 = new ConstantOperand(0);
 	private ConstantOperand const1 = new ConstantOperand(1);
 
@@ -55,15 +55,6 @@ public class CodeGen extends Phase {
 				writer.println("... (prolog)");
 				InstructionSet instrs = fragInstrs.get(codeFragment);
 				for (Instruction instr : instrs.instrs) {
-					if (instr instanceof Comment) {
-						if (((Comment) instr).startsWith("BEG")) {
-							indent = indent + '\t';
-						} else if (((Comment) instr).startsWith("END")) {
-							writer.print('\t');
-							indent = indent.substring(0, indent.length() - 1);
-						}
-					}
-
 					writer.print(indent);
 					writer.println(instr);
 				}
@@ -231,8 +222,6 @@ public class CodeGen extends Phase {
 			argOffsetCnt += 8;
 		}
 
-		VirtualRegister colorRegister = VirtualRegister.create();
-		ownis.add(new Mnemonic("SETL", colorRegister, numberOfColors));
 		ownis.add(new Mnemonic("PUSHJ", colorRegister, new OperandLabel(call.label)));
 		ownis.add(new Mnemonic("LDO", ownis.ret, sp, const0));
 
@@ -442,7 +431,7 @@ public class CodeGen extends Phase {
 
 		for (IMCStmt stmt : stmts.stmts) {
 
-			if (spacingComments) {
+			if (commentAnnotations) {
 				if (stmt instanceof MOVE) {
 					ownis.add(new Comment("Move (" + ((MOVE) stmt).id + ")"));
 				} else if (stmt instanceof CJUMP) {

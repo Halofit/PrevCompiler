@@ -1,0 +1,18 @@
+(
+	if (a() | b()) then
+		printStr("yay\n")
+	else
+		printStr("nay\n")
+	end
+) where
+	fun a(): boolean = (
+		(printStr("a\n"), true)
+	)
+	
+	fun b(): boolean = (
+		(printStr("b\n"), true)
+	)
+	
+	fun printStr(s:string): void
+end
+
