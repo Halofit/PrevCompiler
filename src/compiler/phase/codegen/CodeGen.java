@@ -18,7 +18,7 @@ import java.util.HashMap;
  */
 public class CodeGen extends Phase {
 	public static boolean commentAnnotations = false;
-	public static boolean spacingComments = true;
+	public static boolean spacingComments = false;
 
 	private int fpTemp;
 

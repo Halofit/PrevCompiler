@@ -15,6 +15,7 @@ import java.util.HashMap;
  * Created by gregor on 22. 05. 2016.
  */
 public class Liveness extends Phase {
+	public static boolean report = false;
 
 	public HashMap<CodeFragment, InstructionSet> fragInstrs;
 	public HashMap<CodeFragment, InterferenceGraph> intfGraph;
@@ -32,8 +33,11 @@ public class Liveness extends Phase {
 			InstructionSet instr = fragInstrs.get(frag);
 
 			intfGraph.put(frag, new InterferenceGraph(instr, frag.label));
-			System.out.println(frag.label + " uses " + instr.registers.size() + " registers.");
-			System.out.println(frag.label + " uses " + instr.mnemonicCount + " instructions.");
+
+			if(report){
+				System.out.println(frag.label + " uses " + instr.registers.size() + " registers.");
+				System.out.println(frag.label + " uses " + instr.mnemonicCount + " instructions.");
+			}
 		}
 	}
 
