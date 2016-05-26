@@ -18,12 +18,14 @@ import java.util.HashMap;
  */
 public class CodeGen extends Phase {
 	public static boolean commentAnnotations = false;
-	public static boolean spacingComments = false;
+	public static boolean spacingComments = true;
 
 	private int fpTemp;
+	private int rvTemp;
 
 	private FixedRegister sp = new FixedRegister("SP");
 	private FixedRegister fp = new FixedRegister("FP");
+	private FixedRegister rv = new FixedRegister("RV");
 	private FixedRegister reminderReg = new FixedRegister("rR");
 	private FixedRegister colorRegister = new FixedRegister("COLORS"); //Color register is the highest used register
 
@@ -75,6 +77,7 @@ public class CodeGen extends Phase {
 		for (Fragment frag : task.fragments.values()) {
 			if (frag instanceof CodeFragment) {
 				fpTemp = ((CodeFragment) frag).FP;
+				rvTemp = ((CodeFragment) frag).RV;
 				InstructionSet fragis = generateFragmentCode((CodeFragment) frag);
 				fragInstrs.put((CodeFragment) frag, fragis);
 			}
@@ -158,31 +161,27 @@ public class CodeGen extends Phase {
 				break;
 			case EQU:
 				ownis.add(new Mnemonic("CMP", ret, op1, op2));
-				ownis.add(new Mnemonic("OR", ret, ret, const1));
-				ownis.add(new Mnemonic("CMP", ret, ret, const1));
+				ownis.add(new Mnemonic("ZSZ", ret, ret, const1));
 				break;
 			case NEQ:
 				ownis.add(new Mnemonic("CMP", ret, op1, op2));
+				ownis.add(new Mnemonic("ZSNZ", ret, ret, const1));
 				break;
 			case LTH:
 				ownis.add(new Mnemonic("CMP", ret, op1, op2));
-				ownis.add(new Mnemonic("ADD", ret, ret, const1));
-				ownis.add(new Mnemonic("CMP", ret, ret, const0));
-				ownis.add(new Mnemonic("SUB", ret, ret, const1));
+				ownis.add(new Mnemonic("ZSN", ret, ret, const1));
 				break;
 			case GTH:
 				ownis.add(new Mnemonic("CMP", ret, op1, op2));
-				ownis.add(new Mnemonic("SUB", ret, ret, const1));
-				ownis.add(new Mnemonic("CMP", ret, ret, const0));
-				ownis.add(new Mnemonic("ADD", ret, ret, const1));
+				ownis.add(new Mnemonic("ZSP", ret, ret, const1));
 				break;
 			case LEQ:
 				ownis.add(new Mnemonic("CMP", ret, op1, op2));
-				ownis.add(new Mnemonic("SUB", ret, ret, const1));
+				ownis.add(new Mnemonic("ZSNP", ret, ret, const1));
 				break;
 			case GEQ:
 				ownis.add(new Mnemonic("CMP", ret, op1, op2));
-				ownis.add(new Mnemonic("ADD", ret, ret, const1));
+				ownis.add(new Mnemonic("ZSNN", ret, ret, const1));
 				break;
 			case ADD:
 				ownis.add(new Mnemonic("ADD", ret, op1, op2));
@@ -453,6 +452,8 @@ public class CodeGen extends Phase {
 		InstructionSet ownis = new InstructionSet("TEMP |" + temp.name);
 		if (temp.name == fpTemp) {
 			ownis.set(fp);
+		} else if(temp.name == rvTemp){
+			ownis.set(rv);
 		} else {
 			ownis.set(VirtualRegister.create(temp.name));
 		}

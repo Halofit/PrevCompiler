@@ -49,7 +49,10 @@ public class EvalImcode extends FullVisitor {
 		final String label = "_";
 
 		Frame frame = new Frame(0, label, 0, 0, 0, 0, EvalFrameOut.globalProgramOutSize);
-		CodeFragment tempFrag = new CodeFragment(frame, 0, 0, null);
+
+		int FP = TEMP.newTempName();
+		int RV = TEMP.newTempName();
+		CodeFragment tempFrag = new CodeFragment(frame, FP, RV, null);
 		codeFragments.push(tempFrag);
 		super.visit(program);
 		codeFragments.pop();
@@ -59,10 +62,11 @@ public class EvalImcode extends FullVisitor {
 			throw new InternalCompilerError();
 		}
 		if (globalProg instanceof IMCExpr) {
-			globalProg = new ESTMT((IMCExpr) globalProg);
+			globalProg = new MOVE(new TEMP(RV), (IMCExpr) globalProg);
 		}
 
-		CodeFragment frag = new CodeFragment(frame, 0, 0, (IMCStmt) globalProg);
+
+		CodeFragment frag = new CodeFragment(frame, FP, RV, (IMCStmt) globalProg);
 		attrs.frgAttr.set(program, frag);
 		attrs.imcAttr.set(program, globalProg);
 		fragments.put(frag.label, frag);

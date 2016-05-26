@@ -32,6 +32,6 @@ xsldir = ./xsl
 
 	
 clean:
-	del *.xml
-	del *.mmix
-	del *.graph
+	del *.xml || rm *.xml || echo ""
+	del *.mmix || rm *.mmix || echo ""
+	del *.graph || rm *.graph || echo ""

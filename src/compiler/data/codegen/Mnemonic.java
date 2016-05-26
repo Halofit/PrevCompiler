@@ -66,6 +66,13 @@ public class Mnemonic extends Instruction {
 			case "CMP":
 			case "OR":
 			case "AND":
+
+			case "ZSZ":
+			case "ZSNZ":
+			case "ZSN":
+			case "ZSNN":
+			case "ZSP":
+			case "ZSNP":
 				return operands[0] instanceof VirtualRegister ? (VirtualRegister) operands[0] : null;
 
 
@@ -110,6 +117,13 @@ public class Mnemonic extends Instruction {
 			case "CMP":
 			case "OR":
 			case "AND":
+
+			case "ZSZ":
+			case "ZSNZ":
+			case "ZSN":
+			case "ZSNN":
+			case "ZSP":
+			case "ZSNP":
 				return filterNonVirtual(operands[0], operands[1], operands[2]);
 
 			case "NEG":

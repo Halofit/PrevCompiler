@@ -258,3 +258,41 @@ after folding both negative and positive CONST into BINOP:
 _solve uses 280 registers.
 _solve uses 342 instructions.
 
+
+
+write to return value RETURN VALUE !!!!
+Boolean values are wrong
+Conditional Assignments
+
+------------Register allocation------------------
+Barvamo grafe:
+
+T17 gre v preliv:
+					Liveness T17
+|
+| - SETL T17, 5			|
+|						|
+|						|
+| - ADD T17,T17,1		|
+|						|
+|						|
+|						|
+|						|
+| - STO T17,T0,0		|
+
+
+SETL T17, 5 ->
+	SET T100, 5
+	STO T100, FP, -64 //ker je destination -> STORE
+	
+ADD T17,T17,1 ->
+	LDO T101, FP, -64  //zaradi tega ker je source
+	ADD T101,T101,1
+	STO T101, FP, -64  //zaradi tega ker je destination
+	
+STO T17,T0,0 ->
+	LDO T102, FP, -64
+	STO T102, T0, 0		//ker je destination -> STORE
+	
+
+

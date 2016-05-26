@@ -8,13 +8,15 @@
 		printInt(a[i]),
 		printStr("\t")
 	) end,
-	printStr("\n")
+	printStr("\n"),
+	123
 ) where
 	var i : integer
 	var p : ptr integer
 	var a : arr[10] integer
 	
+	fun n(): integer = 114
 	fun printStr(i:string): void
-		fun printInt(i:integer): void
+	fun printInt(i:integer): void
 end
 
