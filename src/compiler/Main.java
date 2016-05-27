@@ -14,6 +14,7 @@ import compiler.phase.lexan.Symbol;
 import compiler.phase.lincode.BasicBlocks;
 import compiler.phase.lincode.LinCode;
 import compiler.phase.liveness.Liveness;
+import compiler.phase.regalloc.RegisterAlloc;
 import compiler.phase.seman.*;
 import compiler.phase.synan.SynAn;
 
@@ -117,6 +118,10 @@ public class Main {
 				if (task.phase.equals("codegen"))
 					break;
 
+				RegisterAlloc regalloc = new RegisterAlloc(task);
+
+				if (task.phase.equals("regalloc"))
+					break;
 
 				break;
 			}
