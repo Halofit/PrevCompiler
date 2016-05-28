@@ -23,9 +23,9 @@ public class CodeGen extends Phase {
 	private int fpTemp;
 	private int rvTemp;
 
-	private FixedRegister sp = new FixedRegister("SP");
-	private FixedRegister fp = new FixedRegister("FP");
-	private FixedRegister rv = new FixedRegister("RV");
+	public static FixedRegister sp = new FixedRegister("SP");
+	public static FixedRegister fp = new FixedRegister("FP");
+	public static FixedRegister rv = new FixedRegister("RV");
 	private FixedRegister reminderReg = new FixedRegister("rR");
 	private FixedRegister colorRegister = new FixedRegister("COLORS"); //Color register is the highest used register
 
@@ -43,34 +43,37 @@ public class CodeGen extends Phase {
 
 	@Override
 	public void close() {
-		super.close();
+		//Just a shorthand for is this phase logged
+		if(logger != null){
+			PrintWriter writer;
+			try {
+				writer = new PrintWriter(task.srcFName + ".mmix", "US-ASCII");
 
-		PrintWriter writer;
-		try {
-			writer = new PrintWriter(task.srcFName + ".mmix", "US-ASCII");
+				String indent = "\t";
 
-			String indent = "\t";
-
-			for (CodeFragment codeFragment : fragInstrs.keySet()) {
-				writer.println("");
-				writer.println(codeFragment.frame.label + ":");
-				writer.println("... (prolog)");
-				InstructionSet instrs = fragInstrs.get(codeFragment);
-				for (Instruction instr : instrs.instrs) {
-					writer.print(indent);
-					writer.println(instr);
+				for (CodeFragment codeFragment : fragInstrs.keySet()) {
+					writer.println("");
+					writer.println(codeFragment.frame.label + ":");
+					writer.println("... (prolog)");
+					InstructionSet instrs = fragInstrs.get(codeFragment);
+					for (Instruction instr : instrs.instrs) {
+						writer.print(indent);
+						writer.println(instr);
+					}
+					writer.println("... (epilog)");
+					writer.println("");
+					writer.println("");
 				}
-				writer.println("... (epilog)");
-				writer.println("");
-				writer.println("");
-			}
 
-			writer.println("");
-			writer.println("");
-			writer.close();
-		} catch (FileNotFoundException | UnsupportedEncodingException e) {
-			e.printStackTrace();
+				writer.println("");
+				writer.println("");
+				writer.close();
+			} catch (FileNotFoundException | UnsupportedEncodingException e) {
+				e.printStackTrace();
+			}
 		}
+
+		super.close();
 	}
 
 	public void generateCode() {

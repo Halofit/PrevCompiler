@@ -29,6 +29,11 @@ public class Label extends Instruction {
 	}
 
 	@Override
+	public boolean usesVirtualRegister(VirtualRegister reg) {
+		return false;
+	}
+
+	@Override
 	public int hashCode() {
 		return label.hashCode();
 	}

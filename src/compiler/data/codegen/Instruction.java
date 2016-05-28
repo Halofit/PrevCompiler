@@ -5,4 +5,5 @@ package compiler.data.codegen;
  */
 public abstract class Instruction {
 	public abstract String toString();
+	public abstract boolean usesVirtualRegister(VirtualRegister reg);
 }

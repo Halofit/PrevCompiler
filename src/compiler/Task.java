@@ -50,54 +50,58 @@ public class Task {
 		String loggedPhases = "";
 		String phase = "";
 
-		for (int argc = 0; argc < args.length; argc++) {
-			if (args[argc].startsWith("-")) {
+		for (String arg : args) {
+			if (arg.startsWith("-")) {
 				// This is an option.
 
-				if (args[argc].startsWith("--phase=")) {
-					if (phase == "") {
-						phase = args[argc].replaceFirst("--phase=", "");
+				if (arg.startsWith("--phase=")) {
+					if (phase.equals("")) {
+						phase = arg.replaceFirst("--phase=", "");
 						if (!phase.matches(allPhases)) {
-							Report.warning("Illegal compilation phase specified by '" + args[argc] + "' ignored.");
+							Report.warning("Illegal compilation phase specified by '" + arg + "' ignored.");
 							phase = "";
 						}
-					} else
-						Report.warning("Phase already specified, option '" + args[argc] + "' ignored.");
+					} else {
+						Report.warning("Phase already specified, option '" + arg + "' ignored.");
+					}
 					continue;
 				}
 
-				if (args[argc].startsWith("--loggedphases=")) {
-					if (loggedPhases == "") {
-						loggedPhases = args[argc].replaceFirst("--loggedphases=", "");
+				if (arg.startsWith("--loggedphases=")) {
+					if (loggedPhases.equals("")) {
+						loggedPhases = arg.replaceFirst("--loggedphases=", "");
 						if (!loggedPhases.matches(allPhases + "(," + allPhases + ")*")) {
-							Report.warning("Illegal compilation phases specified by '" + args[argc] + "' ignored.");
+							Report.warning("Illegal compilation phases specified by '" + arg + "' ignored.");
 							loggedPhases = "";
 						}
-					} else
-						Report.warning("Logged phases already specified, option '" + args[argc] + "' ignored.");
+					} else {
+						Report.warning("Logged phases already specified, option '" + arg + "' ignored.");
+					}
 					continue;
 				}
 
-				if (args[argc].startsWith("--xsldir=")) {
-					if (xslDName == "") {
-						xslDName = args[argc].replaceFirst("--xsldir=", "");
+				if (arg.startsWith("--xsldir=")) {
+					if (xslDName.equals("")) {
+						xslDName = arg.replaceFirst("--xsldir=", "");
 						if (xslDName.equals("")) {
-							Report.warning("No XSL directory specified by '" + args[argc] + "'; option ignored.");
+							Report.warning("No XSL directory specified by '" + arg + "'; option ignored.");
 							loggedPhases = "";
 						}
-					} else
-						Report.warning("XSL directory already specified, option '" + args[argc] + "' ignored.");
+					} else {
+						Report.warning("XSL directory already specified, option '" + arg + "' ignored.");
+					}
 					continue;
 				}
 
-				Report.warning("Unknown command line option '" + args[argc] + "'.");
+				Report.warning("Unknown command line option '" + arg + "'.");
 			} else {
 				// This is a file name.
-				if (srcFName == "") {
-					srcFName = args[argc];
-					xmlFName = args[argc].replaceFirst(".prev$", "");
-				} else
-					Report.warning("Filename '" + args[argc] + "' ignored.");
+				if (srcFName.equals("")) {
+					srcFName = arg;
+					xmlFName = arg.replaceFirst(".prev$", "");
+				} else {
+					Report.warning("Filename '" + arg + "' ignored.");
+				}
 			}
 		}
 
@@ -108,7 +112,7 @@ public class Task {
 		this.phase = phase;
 
 		// Check the source file name.
-		if (this.srcFName == "")
+		if (this.srcFName.equals(""))
 			throw new CompilerError("Source file name not specified.");
 	}
 

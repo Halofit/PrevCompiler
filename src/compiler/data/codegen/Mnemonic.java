@@ -29,6 +29,14 @@ public class Mnemonic extends Instruction {
 		return sb.toString();
 	}
 
+	@Override
+	public boolean usesVirtualRegister(VirtualRegister reg) {
+		for (Operand op : operands) {
+			if(op.equals(reg)) return true;
+		}
+		return false;
+	}
+
 	public VirtualRegister def() {
 		if (operands.length == 0) return null;
 
@@ -136,7 +144,30 @@ public class Mnemonic extends Instruction {
 		}
 	}
 
-	private static VirtualRegister[] filterNonVirtual(Operand... ops){
-		return Arrays.stream(ops).filter(op -> op instanceof VirtualRegister).map(op -> (VirtualRegister)op).toArray(VirtualRegister[]::new);
+	private static VirtualRegister[] filterNonVirtual(Operand... ops) {
+		return Arrays.stream(ops).filter(op -> op instanceof VirtualRegister).map(op -> (VirtualRegister) op).toArray(VirtualRegister[]::new);
+	}
+
+	public boolean isMove() {
+		return (mnemonic.equals("ADD") &&
+				(operands[2] instanceof ConstantOperand) &&
+				((ConstantOperand) operands[2]).value == 0 &&
+				operands[1] instanceof VirtualRegister);
+	}
+
+	public Mnemonic getCopy(VirtualRegister oldreg, VirtualRegister newreg){
+		Operand[] ops = Arrays.stream(this.operands).map(op ->  oldreg.equals(op) ? newreg : op).toArray(Operand[]::new);
+		return new Mnemonic(this.mnemonic, ops);
+	}
+
+	public boolean isDest(VirtualRegister reg){
+		return ((this.operands.length > 0) && reg.equals(operands[0]));
+	}
+
+	public boolean isSrc(VirtualRegister reg){
+		for (int i = 1; i < this.operands.length; i++) {
+			if(reg.equals(operands[i])) return true;
+		}
+		return false;
 	}
 }

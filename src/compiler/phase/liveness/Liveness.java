@@ -20,6 +20,7 @@ public class Liveness extends Phase {
 	public HashMap<CodeFragment, InstructionSet> fragInstrs;
 	public HashMap<CodeFragment, InterferenceGraph> intfGraph;
 
+
 	public Liveness(Task task) {
 		super(task, "liveness");
 
@@ -32,7 +33,7 @@ public class Liveness extends Phase {
 		for (CodeFragment frag : fragInstrs.keySet()) {
 			InstructionSet instr = fragInstrs.get(frag);
 
-			intfGraph.put(frag, new InterferenceGraph(instr, frag.label));
+			intfGraph.put(frag, new InterferenceGraph(instr, frag, 0));
 
 			if(report){
 				System.out.println(frag.label + " uses " + instr.registers.size() + " registers.");
@@ -40,6 +41,7 @@ public class Liveness extends Phase {
 			}
 		}
 	}
+
 
 	@Override
 	public void close() {

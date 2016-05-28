@@ -23,4 +23,9 @@ public class Comment extends Instruction {
 			return "%" + content;
 		}
 	}
+
+	@Override
+	public boolean usesVirtualRegister(VirtualRegister reg) {
+		return false;
+	}
 }

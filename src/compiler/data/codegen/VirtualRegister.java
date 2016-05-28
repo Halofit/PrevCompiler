@@ -7,6 +7,7 @@ import java.util.HashMap;
  */
 public class VirtualRegister extends Register {
 	public long name;
+	public boolean moveRelated;
 
 	private VirtualRegister() {
 		this.name = genRegName();
@@ -41,7 +42,6 @@ public class VirtualRegister extends Register {
 
 	@Override
 	public boolean equals(Object o) {
-		System.out.println(o);
 		return (o instanceof VirtualRegister) && (this.name == ((VirtualRegister)o).name);
 	}
 

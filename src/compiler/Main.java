@@ -111,15 +111,19 @@ public class Main {
 				codeGen.generateCode();
 				codeGen.close();
 
-				Liveness liveness = new Liveness(task);
-				liveness.analyse();
-				liveness.close();
 
-				if (task.phase.equals("codegen"))
+				if (task.phase.equals("codegen")){
+					Liveness liveness = new Liveness(task);
+					liveness.analyse();
+					liveness.close();
 					break;
+				}
+
 
 				RegisterAlloc regalloc = new RegisterAlloc(task);
-
+				regalloc.allocate();
+				regalloc.mapRegisters();
+				regalloc.close();
 				if (task.phase.equals("regalloc"))
 					break;
 

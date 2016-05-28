@@ -12,6 +12,7 @@ import java.util.HashSet;
  */
 public class InstrAnnotations {
 	Mnemonic instr;
+	boolean isMove;
 
 	VirtualRegister def;
 	VirtualRegister[] use;
@@ -21,6 +22,8 @@ public class InstrAnnotations {
 
 	public InstrAnnotations(Mnemonic instr) {
 		this.instr = instr;
+		this.isMove = this.instr.isMove();
+
 		def = instr.def();
 		use = instr.use();
 
@@ -58,6 +61,7 @@ public class InstrAnnotations {
 		}
 		return out.size() - start;
 	}
+
 
 	@Override
 	public String toString() {

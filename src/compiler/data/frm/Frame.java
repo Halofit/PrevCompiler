@@ -5,7 +5,7 @@ import compiler.common.logger.Logger;
 
 /**
  * A stack frame.
- * 
+ *
  * @author sliva
  */
 public class Frame implements Loggable {
@@ -23,12 +23,12 @@ public class Frame implements Loggable {
 	/**
 	 * The size of the stack frame.
 	 */
-	public final long size;
+	public long size;
 
 	/**
-	 * The size of block containing input arguments (and a static link) when
-	 * function is called and the result when function returns.
-	 */
+	* The size of block containing input arguments (and a static link) when
+	* function is called and the result when function returns.
+	*/
 	public final long inpCallSize;
 
 	/**
@@ -39,7 +39,7 @@ public class Frame implements Loggable {
 	/**
 	 * The size of block containing temporary variables.
 	 */
-	public final long tmpVarsSize;
+	public long tmpVarsSize;
 
 	/**
 	 * The size of block containing hidden registers.
@@ -53,16 +53,16 @@ public class Frame implements Loggable {
 	 */
 	public final long outCallSize;
 
+	public long numTemps;
+
 	/**
 	 * Constructs a new empty stack frame.
-	 * 
-	 * @param level
-	 *            The static level.
-	 * @param label
-	 *            The entry label.
+	 *
+	 * @param level The static level.
+	 * @param label The entry label.
 	 */
 	public Frame(int level, String label, long inpCallSize, long locVarsSize, long tmpVarsSize, long hidRegsSize,
-			long outCallSize) {
+				 long outCallSize) {
 		this.level = level;
 		this.label = label;
 
@@ -72,7 +72,26 @@ public class Frame implements Loggable {
 		this.hidRegsSize = hidRegsSize;
 		this.outCallSize = outCallSize;
 
+		numTemps = (tmpVarsSize / 8);
+
+		setSize();
+	}
+
+
+	public void setSize(){
 		this.size = this.locVarsSize + 16 + this.tmpVarsSize + this.hidRegsSize + this.outCallSize;
+	}
+
+	public long addTemp(){
+		this.tmpVarsSize += 8;
+		this.numTemps++;
+		setSize();
+		return numTemps-1;
+	}
+
+	public long getTempsOffset(long idx){
+		//local variables + RA + oldFP + 8 for every next temp
+		return this.locVarsSize + 16 + (idx+1)*8;
 	}
 
 	@Override

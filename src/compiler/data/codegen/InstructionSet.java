@@ -2,10 +2,7 @@ package compiler.data.codegen;
 
 import compiler.phase.codegen.CodeGen;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.*;
 
 /**
  * Created by gregor on 21. 05. 2016.
@@ -91,5 +88,36 @@ public class InstructionSet {
 		sb.append("---").append(imcode).append("---");
 
 		return sb.toString();
+	}
+
+	public void spillVirtualRegister(VirtualRegister reg, long spillLoc) {
+		ListIterator<Instruction> it = instrs.listIterator();
+		while(it.hasNext()){
+			Instruction i = it.next();
+			if(i.usesVirtualRegister(reg)){
+				it.remove();
+				Mnemonic m = (Mnemonic) i;
+				VirtualRegister newreg = VirtualRegister.create();
+				VirtualRegister addreg = VirtualRegister.create();
+				Mnemonic newM = m.getCopy(reg, newreg);
+
+				boolean isSrc = newM.isSrc(newreg);
+				boolean isDst = newM.isDest(newreg);
+
+				if(isSrc){
+					//load offset, and load from the fp+offset (offset is negative, spillLoc is positive)
+					it.add(new Mnemonic("NEG", addreg, new ConstantOperand(spillLoc)));
+					it.add(new Mnemonic("LDO", newreg, CodeGen.fp, addreg));
+				}
+				it.add(newM);
+				if(isDst){
+					if(!isSrc){
+						//if you haven't allready load the address here
+						it.add(new Mnemonic("NEG", addreg, new ConstantOperand(-spillLoc)));
+					}
+					it.add(new Mnemonic("STO", newreg, CodeGen.fp, addreg));
+				}
+			}
+		}
 	}
 }
