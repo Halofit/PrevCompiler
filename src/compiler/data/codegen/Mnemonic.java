@@ -111,7 +111,6 @@ public class Mnemonic extends Instruction {
 			case "LDW":
 			case "LDT":
 			case "LDO":
-				return filterNonVirtual(operands[1], operands[2]);
 
 			case "STB":
 			case "STW":
@@ -132,7 +131,7 @@ public class Mnemonic extends Instruction {
 			case "ZSNN":
 			case "ZSP":
 			case "ZSNP":
-				return filterNonVirtual(operands[0], operands[1], operands[2]);
+				return filterNonVirtual(operands[1], operands[2]);
 
 			case "NEG":
 				return filterNonVirtual(operands[2]);

@@ -14,4 +14,9 @@ public class FlowNode {
 		this.m = instr;
 		this.isCjump = isCjump;
 	}
+
+	@Override
+	public String toString() {
+		return m + " -> " + (follow == null ? "nullfollow" : follow.m) + ((follow2 == null) ? "" : " ( + " + follow2.m + ")");
+	}
 }

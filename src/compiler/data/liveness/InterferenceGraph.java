@@ -6,6 +6,9 @@ import compiler.data.codegen.Mnemonic;
 import compiler.data.codegen.VirtualRegister;
 import compiler.data.frg.CodeFragment;
 
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.*;
 
 /**
@@ -15,7 +18,7 @@ public class InterferenceGraph {
 
 	private CodeFragment frag;
 	public HashMap<VirtualRegister, Node> nodeMap;
-	private HashMap<Mnemonic, InstrAnnotations> annotations;
+	public HashMap<Mnemonic, InstrAnnotations> annotations;
 	private InstrFlowGraph flow;
 	private InstructionSet instrs;
 
@@ -43,6 +46,8 @@ public class InterferenceGraph {
 
 		phyRegs = physicalRegisters;
 		nodeStack = new Stack<>();
+
+		printInOuts();
 	}
 
 
@@ -123,19 +128,43 @@ public class InterferenceGraph {
 		return sb.toString();
 	}
 
+	public void printInOuts(){
+		PrintWriter writer;
+		try {
+			writer = new PrintWriter(frag.label+ "inout.graph", "US-ASCII");
+
+			for (Instruction i : this.instrs.instrs) {
+				if(i instanceof Mnemonic){
+					InstrAnnotations ann = annotations.get(i);
+					writer.print(" ");
+					writer.print(ann);
+				}else{
+					writer.print(i);
+				}
+
+				writer.println();
+			}
+
+			writer.close();
+		} catch (FileNotFoundException | UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public class Node {
 		boolean spill;
-		boolean isVisible;
+		boolean visible;
 		int level;
 
 		VirtualRegister reg;
 		HashSet<Node> edges;
-		public int actReg;
+		public int phyRegName;
 
 		public Node(VirtualRegister reg) {
 			this.reg = reg;
 			this.edges = new HashSet<>();
-			actReg = -1;
+			phyRegName = -1;
+			this.visible = true;
 		}
 
 		public void addEdges(HashSet<VirtualRegister> regs) {
@@ -151,14 +180,14 @@ public class InterferenceGraph {
 			boolean[] takenColors = new boolean[phyRegs];
 
 			for (Node edge : edges) {
-				if (edge.isVisible || actReg >= 0) {
-					takenColors[edge.actReg] = true;
+				if (edge.visible && edge.phyRegName >= 0) {
+					takenColors[edge.phyRegName] = true;
 				}
 			}
 
 			for (int i = 0; i < takenColors.length; i++) {
 				if (!takenColors[i]) {
-					this.actReg = i;
+					this.phyRegName = i;
 					return true;
 				}
 			}
@@ -166,14 +195,14 @@ public class InterferenceGraph {
 		}
 
 		public void show() {
-			this.isVisible = true;
+			this.visible = true;
 			for (Node n : edges) {
 				n.level++;
 			}
 		}
 
 		public void hide() {
-			this.isVisible = false;
+			this.visible = false;
 			for (Node n : edges) {
 				n.level--;
 			}
@@ -195,21 +224,31 @@ public class InterferenceGraph {
 		boolean change;
 		boolean anyToSpill;
 
+		int simplified = 0;
+
 		do {
 			change = false;
 			anyToSpill = false;
 
 			for (Node n : nodeMap.values()) {
-				if (n.level < phyRegs) {
+				if (n.visible && n.level < phyRegs) {
 					n.spill = false;
 					nodeStack.push(n);
 					n.hide();
 					change = true;
+					simplified++;
 				} else {
 					anyToSpill = true;
 				}
 			}
 		} while (change);
+
+		System.out.println(nodeMap.size());
+		for (Node n : nodeMap.values()) {
+			System.out.println(n.level);
+		}
+		System.out.println("Simplified: " + simplified);
+		System.exit(1);
 
 		return anyToSpill;
 	}
@@ -217,7 +256,7 @@ public class InterferenceGraph {
 
 	public void spill() {
 		for (Node n : nodeMap.values()) {
-			if (n.level >= phyRegs) {
+			if (n.visible && n.level >= phyRegs) {
 				n.spill = true;
 				nodeStack.push(n);
 				n.hide();
@@ -249,7 +288,7 @@ public class InterferenceGraph {
 	public void startOver() {
 		for (Node n : nodeMap.values()) {
 			//-1 specifies uncolored
-			if (n.actReg == -1) {
+			if (n.phyRegName == -1) {
 				long tempL = this.frag.frame.addTemp();
 				long offset = this.frag.frame.getTempsOffset(tempL);
 				instrs.spillVirtualRegister(n.reg, offset);

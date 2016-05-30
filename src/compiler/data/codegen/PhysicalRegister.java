@@ -27,6 +27,6 @@ public class PhysicalRegister extends Register {
 
 	@Override
 	public String toString() {
-		return "r"+name;
+		return "$"+name;
 	}
 }

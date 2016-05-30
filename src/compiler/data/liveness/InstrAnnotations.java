@@ -65,6 +65,6 @@ public class InstrAnnotations {
 
 	@Override
 	public String toString() {
-		return "[" + instr + "] Def:" + def + " Use:" + Arrays.toString(use) + " in:" + in + " out:" + out;
+		return instr + " -> Def:" + def + " Use:" + Arrays.toString(use) + " in:" + in + " out:" + out;
 	}
 }

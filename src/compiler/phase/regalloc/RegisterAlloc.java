@@ -29,6 +29,7 @@ public class RegisterAlloc extends Phase {
 	public void allocate(){
 		for (CodeFragment frag : fragInstrs.keySet()) {
 			while(true){
+				System.out.println(frag.label);
 				InstructionSet instrs = fragInstrs.get(frag);
 
 				//Build:
@@ -36,9 +37,11 @@ public class RegisterAlloc extends Phase {
 
 				while(true){
 					//Simplify
+					System.out.println("Simplify");
 					boolean anyToSpill = graph.simplify();
 
 					//spill
+					System.out.println("Spill");
 					if(anyToSpill){
 						graph.spill();
 					}else{
@@ -47,11 +50,13 @@ public class RegisterAlloc extends Phase {
 				}
 
 				//Select
+				System.out.println("Select");
 				boolean done = graph.select();
 
 				if(done){
 					break;
 				}else{
+					System.out.println("Start over");
 					//start over -> we need to fix the code
 					//do the actual spill of uncolored nodes
 					//and modify the code
@@ -77,7 +82,7 @@ public class RegisterAlloc extends Phase {
 						if (operands[i] instanceof VirtualRegister) {
 							VirtualRegister vr = (VirtualRegister) operands[i];
 							InterferenceGraph.Node node = g.nodeMap.get(vr);
-							operands[i] = PhysicalRegister.get(node.actReg);
+							operands[i] = PhysicalRegister.get(node.phyRegName);
 						}
 					}
 				}

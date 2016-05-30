@@ -3,6 +3,9 @@ package compiler.data.liveness;
 import compiler.common.report.InternalCompilerError;
 import compiler.data.codegen.*;
 
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.*;
 
 /**
@@ -76,6 +79,29 @@ public class InstrFlowGraph {
 		@Override
 		public FlowNode next() {
 			return iter.previous();
+		}
+	}
+
+
+	public void printFollowersToFile(String label) {
+		PrintWriter writer;
+		try {
+			writer = new PrintWriter(label+"flowgraph.graph", "US-ASCII");
+
+			Stack<FlowNode> stack = new Stack<>();
+			FlowIterator it = this.iterator();
+			while (it.hasNext()){
+				FlowNode n = it.next();
+				stack.push(n);
+			}
+
+			while(!stack.empty()){
+				writer.println(stack.pop());
+			}
+
+			writer.close();
+		} catch (FileNotFoundException | UnsupportedEncodingException e) {
+			e.printStackTrace();
 		}
 	}
 }

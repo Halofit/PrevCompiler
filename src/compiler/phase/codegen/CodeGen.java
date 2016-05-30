@@ -47,7 +47,7 @@ public class CodeGen extends Phase {
 		if(logger != null){
 			PrintWriter writer;
 			try {
-				writer = new PrintWriter(task.srcFName + ".mmix", "US-ASCII");
+				writer = new PrintWriter(task.srcFName + ".mmixR", "US-ASCII");
 
 				String indent = "\t";
 
