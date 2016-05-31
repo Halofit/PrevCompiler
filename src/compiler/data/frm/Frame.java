@@ -94,6 +94,11 @@ public class Frame implements Loggable {
 		return this.locVarsSize + 16 + (idx+1)*8;
 	}
 
+	public long getOldFPOffset(){
+		//local variables + RA + oldFP + 8 for every next temp
+		return this.locVarsSize + 8;
+	}
+
 	@Override
 	public void log(Logger logger) {
 		logger.begElement("frame");

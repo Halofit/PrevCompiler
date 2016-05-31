@@ -6,12 +6,14 @@
 bindir = ../out/production/Compiler
 xsldir = ./xsl
 
+%.mmix	: %.prev
+	java -classpath $(bindir) compiler.Main --xsldir=$(xsldir) --phase=fin --loggedphases=fin $<
 
 %.regalloc.xml	: %.prev
-	java -classpath $(bindir) compiler.Main --xsldir=$(xsldir) --phase=regalloc --loggedphases=imcode,codegen $<
+	java -classpath $(bindir) compiler.Main --xsldir=$(xsldir) --phase=regalloc --loggedphases=codegen,regalloc $<
 
 %.codegen.xml	: %.prev
-	java -classpath $(bindir) compiler.Main --xsldir=$(xsldir) --phase=codegen --loggedphases=imcode,codegen $<
+	java -classpath $(bindir) compiler.Main --xsldir=$(xsldir) --phase=codegen --loggedphases=imcode,codegen,liveness $<
 
 %.lincode.xml	: %.prev
 	java -classpath $(bindir) compiler.Main --xsldir=$(xsldir) --phase=lincode --loggedphases=lincode,imcode $<

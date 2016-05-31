@@ -22,7 +22,7 @@ public class Liveness extends Phase {
 
 
 	public Liveness(Task task) {
-		super(task, "liveness");
+		super(task, "liveness", false);
 
 		this.intfGraph = task.intfGraph;
 		this.fragInstrs = task.fragInstrs;
@@ -33,7 +33,7 @@ public class Liveness extends Phase {
 		for (CodeFragment frag : fragInstrs.keySet()) {
 			InstructionSet instr = fragInstrs.get(frag);
 
-			intfGraph.put(frag, new InterferenceGraph(instr, frag, 0));
+			intfGraph.put(frag, new InterferenceGraph(instr, frag));
 
 			if(report){
 				System.out.println(frag.label + " uses " + instr.registers.size() + " registers.");
@@ -47,17 +47,20 @@ public class Liveness extends Phase {
 	public void close() {
 		super.close();
 
-		PrintWriter writer;
-		try {
-			writer = new PrintWriter(task.srcFName + ".graph", "US-ASCII");
+		if(this.logging){
+			PrintWriter writer;
+			try {
+				writer = new PrintWriter(task.srcFName + ".graph", "US-ASCII");
 
-			for (InterferenceGraph g : intfGraph.values()) {
-				writer.println(g);
+				for (InterferenceGraph g : intfGraph.values()) {
+					writer.println(g);
+					g.printInOuts();
+				}
+
+				writer.close();
+			} catch (FileNotFoundException | UnsupportedEncodingException e) {
+				e.printStackTrace();
 			}
-
-			writer.close();
-		} catch (FileNotFoundException | UnsupportedEncodingException e) {
-			e.printStackTrace();
 		}
 	}
 }

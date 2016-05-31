@@ -10,7 +10,7 @@ import compiler.common.logger.Logger;
 public class ConstFragment extends Fragment {
 
 	/** The string value. */
-	public final String string;
+	public String string;
 
 	/**
 	 * Constructs a new fragment containing a string constant.
@@ -23,6 +23,36 @@ public class ConstFragment extends Fragment {
 	public ConstFragment(String label, String string) {
 		super(label);
 		this.string = string;
+	}
+
+	public String getStringAsValues(){
+		StringBuilder sb = new StringBuilder();
+
+		for (int i = 1; i < this.string.length() - 1; i++) {
+			char c = this.string.charAt(i);
+			if (c == '\\') {
+				switch (this.string.charAt(i + 1)) {
+					case '\'':
+						c = '\'';
+						break;
+					case '\"':
+						c = '\"';
+						break;
+					case 'n':
+						c = '\n';
+						break;
+					case 't':
+						c = '\t';
+						break;
+				}
+				i++;
+			}
+			sb.append((int)c);
+			sb.append(", ");
+		}
+
+		sb.append(0);
+		return sb.toString();
 	}
 
 	@Override

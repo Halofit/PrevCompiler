@@ -1,5 +1,7 @@
 package compiler.data.codegen;
 
+import compiler.data.liveness.InterferenceGraph;
+
 import java.util.HashMap;
 
 /**
@@ -31,6 +33,11 @@ public class Label extends Instruction {
 	@Override
 	public boolean usesVirtualRegister(VirtualRegister reg) {
 		return false;
+	}
+
+	@Override
+	public void mapRegisters(HashMap<VirtualRegister, InterferenceGraph.Node> nodeMap) {
+
 	}
 
 	@Override

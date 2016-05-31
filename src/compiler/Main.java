@@ -4,6 +4,7 @@ import compiler.common.report.CompilerError;
 import compiler.common.report.Report;
 import compiler.phase.abstr.Abstr;
 import compiler.phase.codegen.CodeGen;
+import compiler.phase.fin.Finalisation;
 import compiler.phase.frames.EvalFrameOut;
 import compiler.phase.frames.EvalFrames;
 import compiler.phase.frames.Frames;
@@ -20,7 +21,7 @@ import compiler.phase.synan.SynAn;
 
 /**
  * The compiler's entry point.
- * 
+ *
  * @author sliva
  */
 public class Main {
@@ -28,9 +29,8 @@ public class Main {
 	/**
 	 * The compiler's entry point: it parses the command line and triggers the
 	 * compilation.
-	 * 
-	 * @param args
-	 *            Command line arguments.
+	 *
+	 * @param args Command line arguments.
 	 */
 	public static void main(String args[]) {
 		System.out.println();
@@ -56,14 +56,16 @@ public class Main {
 				SynAn synAn = new SynAn(task);
 				task.prgAST = synAn.synAn();
 				synAn.close();
-				if (task.phase.equals("synan"))
+				if (task.phase.equals("synan")) {
 					break;
+				}
 
 				// ***** Abstract syntax tree. *****
 				Abstr abstr = new Abstr(task);
 				abstr.close();
-				if (task.phase.equals("abstr"))
+				if (task.phase.equals("abstr")) {
 					break;
+				}
 
 				// ***** Semantic analysis. *****
 				SemAn seman = new SemAn(task);
@@ -72,19 +74,22 @@ public class Main {
 				(new EvalTyp(task.prgAttrs)).visit(task.prgAST);
 				(new EvalMem(task.prgAttrs)).visit(task.prgAST);
 				seman.close();
-				if (task.phase.equals("seman"))
+				if (task.phase.equals("seman")) {
 					break;
+				}
 
-				if (Report.getNumWarnings() > 0)
+				if (Report.getNumWarnings() > 0) {
 					break;
+				}
 
 				// Frames and accesses.
 				Frames frames = new Frames(task);
 				(new EvalFrames(task.prgAttrs)).visit(task.prgAST);
 				(new EvalFrameOut(task.prgAttrs)).visit(task.prgAST);
 				frames.close();
-				if (task.phase.equals("frames"))
+				if (task.phase.equals("frames")) {
 					break;
+				}
 
 				
 				// Intermediate code generation.
@@ -97,22 +102,24 @@ public class Main {
 
 
 				imcode.close();
-				if (task.phase.equals("imcode"))
+				if (task.phase.equals("imcode")) {
 					break;
+				}
 
 
 				// Linearization of the intermediate code.
 				LinCode linCode = new LinCode(task);
 				linCode.close();
-				if (task.phase.equals("lincode"))
+				if (task.phase.equals("lincode")) {
 					break;
+				}
 
 				CodeGen codeGen = new CodeGen(task);
 				codeGen.generateCode();
 				codeGen.close();
 
 
-				if (task.phase.equals("codegen")){
+				if (task.phase.equals("codegen")) {
 					Liveness liveness = new Liveness(task);
 					liveness.analyse();
 					liveness.close();
@@ -124,8 +131,14 @@ public class Main {
 				regalloc.allocate();
 				regalloc.mapRegisters();
 				regalloc.close();
-				if (task.phase.equals("regalloc"))
+
+				Finalisation fin = new Finalisation(task);
+				fin.finishCode();
+				fin.close();
+
+				if (task.phase.equals("regalloc")) {
 					break;
+				}
 
 				break;
 			}

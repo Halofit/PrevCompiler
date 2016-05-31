@@ -77,7 +77,7 @@ public class EvalValue extends FullVisitor {
 				default:
 					value = null;
 			}
-			attrs.valueAttr.set(binExpr, value);
+			if(value != null) attrs.valueAttr.set(binExpr, value);
 		}
 
 	}

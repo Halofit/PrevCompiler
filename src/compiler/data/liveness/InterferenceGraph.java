@@ -5,6 +5,7 @@ import compiler.data.codegen.InstructionSet;
 import compiler.data.codegen.Mnemonic;
 import compiler.data.codegen.VirtualRegister;
 import compiler.data.frg.CodeFragment;
+import compiler.phase.regalloc.RegisterAlloc;
 
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
@@ -23,10 +24,9 @@ public class InterferenceGraph {
 	private InstructionSet instrs;
 
 	//For register allocation
-	private int phyRegs;
 	private Stack<InterferenceGraph.Node> nodeStack;
 
-	public InterferenceGraph(InstructionSet instrs, CodeFragment frag, int physicalRegisters) {
+	public InterferenceGraph(InstructionSet instrs, CodeFragment frag) {
 		this.frag = frag;
 		annotations = new HashMap<>();
 		nodeMap = new HashMap<>();
@@ -44,10 +44,7 @@ public class InterferenceGraph {
 		createInterferanceGraph();
 		checkInterferance();
 
-		phyRegs = physicalRegisters;
 		nodeStack = new Stack<>();
-
-		printInOuts();
 	}
 
 
@@ -122,23 +119,27 @@ public class InterferenceGraph {
 		sb.append(this.frag.label).append('\n');
 
 		for (Node n : this.nodeMap.values()) {
-			sb.append('\t').append(n).append('\n');
+			sb.append('\t').append(n);
+			if (n.phyRegName != -1) {
+				sb.append(" Maps to: $").append(n.phyRegName);
+			}
+			sb.append('\n');
 		}
 
 		return sb.toString();
 	}
 
-	public void printInOuts(){
+	public void printInOuts() {
 		PrintWriter writer;
 		try {
-			writer = new PrintWriter(frag.label+ "inout.graph", "US-ASCII");
+			writer = new PrintWriter(frag.label + "inout.graph", "US-ASCII");
 
 			for (Instruction i : this.instrs.instrs) {
-				if(i instanceof Mnemonic){
+				if (i instanceof Mnemonic) {
 					InstrAnnotations ann = annotations.get(i);
 					writer.print(" ");
 					writer.print(ann);
-				}else{
+				} else {
 					writer.print(i);
 				}
 
@@ -163,7 +164,7 @@ public class InterferenceGraph {
 		public Node(VirtualRegister reg) {
 			this.reg = reg;
 			this.edges = new HashSet<>();
-			phyRegName = -1;
+			this.phyRegName = -1;
 			this.visible = true;
 		}
 
@@ -177,21 +178,24 @@ public class InterferenceGraph {
 
 
 		public boolean color() {
-			boolean[] takenColors = new boolean[phyRegs];
+			boolean[] takenColors = new boolean[RegisterAlloc.physicalRegisters];
+			boolean successfullyColored = false;
 
-			for (Node edge : edges) {
-				if (edge.visible && edge.phyRegName >= 0) {
-					takenColors[edge.phyRegName] = true;
+			for (Node neighbour : edges) {
+				if (neighbour.visible && neighbour.phyRegName >= 0) {
+					takenColors[neighbour.phyRegName] = true;
 				}
 			}
 
 			for (int i = 0; i < takenColors.length; i++) {
 				if (!takenColors[i]) {
 					this.phyRegName = i;
-					return true;
+					successfullyColored = true;
+					break;
 				}
 			}
-			return false;
+
+			return successfullyColored;
 		}
 
 		public void show() {
@@ -231,24 +235,19 @@ public class InterferenceGraph {
 			anyToSpill = false;
 
 			for (Node n : nodeMap.values()) {
-				if (n.visible && n.level < phyRegs) {
-					n.spill = false;
-					nodeStack.push(n);
-					n.hide();
-					change = true;
-					simplified++;
-				} else {
-					anyToSpill = true;
+				if (n.visible) {
+					if (n.level < RegisterAlloc.physicalRegisters) {
+						n.spill = false;
+						nodeStack.push(n);
+						n.hide();
+						change = true;
+						simplified++;
+					} else {
+						anyToSpill = true;
+					}
 				}
 			}
 		} while (change);
-
-		System.out.println(nodeMap.size());
-		for (Node n : nodeMap.values()) {
-			System.out.println(n.level);
-		}
-		System.out.println("Simplified: " + simplified);
-		System.exit(1);
 
 		return anyToSpill;
 	}
@@ -256,7 +255,7 @@ public class InterferenceGraph {
 
 	public void spill() {
 		for (Node n : nodeMap.values()) {
-			if (n.visible && n.level >= phyRegs) {
+			if (n.visible && n.level >= RegisterAlloc.physicalRegisters) {
 				n.spill = true;
 				nodeStack.push(n);
 				n.hide();
@@ -271,17 +270,15 @@ public class InterferenceGraph {
 
 		while (!nodeStack.empty()) {
 			Node n = nodeStack.pop();
+			n.show();
 			if (n.spill) {
-				n.show();
 				if (!n.color()) {
 					anySpilled = true;
 				}
 			} else {
-				n.show();
 				n.color();
 			}
 		}
-
 		return anySpilled;
 	}
 

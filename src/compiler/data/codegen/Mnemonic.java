@@ -1,8 +1,10 @@
 package compiler.data.codegen;
 
 import compiler.common.report.InternalCompilerError;
+import compiler.data.liveness.InterferenceGraph;
 
 import java.util.Arrays;
+import java.util.HashMap;
 
 /**
  * Created by gregor on 20.5.2016.
@@ -35,6 +37,17 @@ public class Mnemonic extends Instruction {
 			if(op.equals(reg)) return true;
 		}
 		return false;
+	}
+
+	@Override
+	public void mapRegisters(HashMap<VirtualRegister, InterferenceGraph.Node> nodeMap) {
+		for (int i = 0; i < operands.length; i++) {
+			if(operands[i] instanceof VirtualRegister){
+				VirtualRegister vr = (VirtualRegister) operands[i];
+				InterferenceGraph.Node n = nodeMap.get(vr);
+				operands[i] = PhysicalRegister.get(n.phyRegName);
+			}
+		}
 	}
 
 	public VirtualRegister def() {
@@ -112,11 +125,6 @@ public class Mnemonic extends Instruction {
 			case "LDT":
 			case "LDO":
 
-			case "STB":
-			case "STW":
-			case "STT":
-			case "STO":
-
 			case "ADD":
 			case "SUB":
 			case "MUL":
@@ -133,8 +141,20 @@ public class Mnemonic extends Instruction {
 			case "ZSNP":
 				return filterNonVirtual(operands[1], operands[2]);
 
+			case "STB":
+			case "STW":
+			case "STT":
+			case "STO":
+				return filterNonVirtual(operands[0], operands[1], operands[2]);
+
 			case "NEG":
-				return filterNonVirtual(operands[2]);
+				//this one is special, since it takes a variable ammount of opeands
+				if(operands.length == 2){
+					return filterNonVirtual(operands[1]);
+				}else{
+					return filterNonVirtual(operands[1], operands[2]);
+				}
+
 
 
 			default:

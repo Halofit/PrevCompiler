@@ -8,6 +8,7 @@ import compiler.common.logger.Logger;
  */
 public abstract class Phase implements AutoCloseable {
 
+	protected boolean logging;
 	protected Task task;
 
 	/**
@@ -18,17 +19,31 @@ public abstract class Phase implements AutoCloseable {
 
 	public Phase(Task task, String phaseName) {
 		this.task = task;
-		if (this.task.loggedPhases.contains(phaseName)) {
+		this.logging = this.task.loggedPhases.contains(phaseName);
+		if (logging) {
 			logger = new Logger(this.task.xmlFName + "." + phaseName + ".xml",
-					this.task.xslDName + "/" + phaseName + ".xsl");
-		} else
+								this.task.xslDName + "/" + phaseName + ".xsl");
+		} else {
 			logger = null;
+		}
+	}
+
+	public Phase(Task task, String phaseName, boolean xmlLogging) {
+		this.task = task;
+		this.logging = this.task.loggedPhases.contains(phaseName);
+		if (logging && xmlLogging) {
+			logger = new Logger(this.task.xmlFName + "." + phaseName + ".xml",
+								this.task.xslDName + "/" + phaseName + ".xsl");
+		} else {
+			logger = null;
+		}
 	}
 
 	@Override
 	public void close() {
-		if (logger != null)
+		if (logger != null) {
 			logger.close();
+		}
 	}
 
 }

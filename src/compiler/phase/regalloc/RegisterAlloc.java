@@ -1,7 +1,8 @@
 package compiler.phase.regalloc;
 
 import compiler.Task;
-import compiler.data.codegen.*;
+import compiler.data.codegen.Instruction;
+import compiler.data.codegen.InstructionSet;
 import compiler.data.frg.CodeFragment;
 import compiler.data.liveness.InterferenceGraph;
 import compiler.phase.Phase;
@@ -15,34 +16,33 @@ import java.util.HashMap;
  * Created by gregor on 27.5.2016.
  */
 public class RegisterAlloc extends Phase {
-	public static int physicalRegisters = 16;
+	public static int physicalRegisters = 4;
 
 	private HashMap<CodeFragment, InstructionSet> fragInstrs;
 	private HashMap<CodeFragment, InterferenceGraph> coloredGraphs;
 
 	public RegisterAlloc(Task task) {
-		super(task, "regalloc");
+		super(task, "regalloc", false);
 		fragInstrs = task.fragInstrs;
 		coloredGraphs = new HashMap<>();
 	}
 
 	public void allocate(){
 		for (CodeFragment frag : fragInstrs.keySet()) {
+			InterferenceGraph graph;
 			while(true){
 				System.out.println(frag.label);
 				InstructionSet instrs = fragInstrs.get(frag);
 
 				//Build:
-				InterferenceGraph graph = new InterferenceGraph(instrs, frag, physicalRegisters);
+				graph = new InterferenceGraph(instrs, frag);
 
 				while(true){
 					//Simplify
-					System.out.println("Simplify");
 					boolean anyToSpill = graph.simplify();
 
-					//spill
-					System.out.println("Spill");
 					if(anyToSpill){
+						//spill
 						graph.spill();
 					}else{
 						break;
@@ -50,22 +50,19 @@ public class RegisterAlloc extends Phase {
 				}
 
 				//Select
-				System.out.println("Select");
-				boolean done = graph.select();
+				boolean anySpilled = graph.select();
 
-				if(done){
+				if(!anySpilled){
 					break;
 				}else{
-					System.out.println("Start over");
 					//start over -> we need to fix the code
 					//do the actual spill of uncolored nodes
 					//and modify the code
 					graph.startOver();
 				}
-
-				//We have finished -> save the graph
-				coloredGraphs.put(frag, graph);
 			}
+			//We have finished -> save the graph
+			coloredGraphs.put(frag, graph);
 		}
 	}
 
@@ -74,25 +71,13 @@ public class RegisterAlloc extends Phase {
 			InterferenceGraph g = coloredGraphs.get(frag);
 			InstructionSet instrs = fragInstrs.get(frag);
 
-			for (Instruction instr : instrs.instrs) {
-				if(instr instanceof Mnemonic){
-					Mnemonic m = (Mnemonic) instr;
-					Operand[] operands = m.operands;
-					for (int i = 0; i < operands.length; i++) {
-						if (operands[i] instanceof VirtualRegister) {
-							VirtualRegister vr = (VirtualRegister) operands[i];
-							InterferenceGraph.Node node = g.nodeMap.get(vr);
-							operands[i] = PhysicalRegister.get(node.phyRegName);
-						}
-					}
-				}
-			}
+			instrs.mapRegisters(g.nodeMap);
 		}
 	}
 
 	@Override
 	public void close() {
-		if(logger != null){
+		if(this.logging){
 			PrintWriter writer;
 			try {
 				writer = new PrintWriter(task.srcFName + ".mmix", "US-ASCII");
@@ -116,6 +101,15 @@ public class RegisterAlloc extends Phase {
 				writer.println("");
 				writer.println("");
 				writer.close();
+
+
+				//print the interferance graph as well
+				writer = new PrintWriter(task.srcFName + ".graph", "US-ASCII");
+				for (InterferenceGraph g : this.coloredGraphs.values()) {
+					writer.println(g);
+				}
+				writer.close();
+
 			} catch (FileNotFoundException | UnsupportedEncodingException e) {
 				e.printStackTrace();
 			}

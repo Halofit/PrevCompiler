@@ -1,5 +1,9 @@
 package compiler.data.codegen;
 
+import compiler.data.liveness.InterferenceGraph;
+
+import java.util.HashMap;
+
 /**
  * Created by gregor on 21. 05. 2016.
  */
@@ -27,5 +31,10 @@ public class Comment extends Instruction {
 	@Override
 	public boolean usesVirtualRegister(VirtualRegister reg) {
 		return false;
+	}
+
+	@Override
+	public void mapRegisters(HashMap<VirtualRegister, InterferenceGraph.Node> nodeMap) {
+
 	}
 }

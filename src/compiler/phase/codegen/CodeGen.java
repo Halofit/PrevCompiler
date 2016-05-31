@@ -26,17 +26,18 @@ public class CodeGen extends Phase {
 	public static FixedRegister sp = new FixedRegister("SP");
 	public static FixedRegister fp = new FixedRegister("FP");
 	public static FixedRegister rv = new FixedRegister("RV");
-	private FixedRegister reminderReg = new FixedRegister("rR");
-	private FixedRegister colorRegister = new FixedRegister("COLORS"); //Color register is the highest used register
+	public static FixedRegister returnJumpReg = new FixedRegister("rJ");
+	public static FixedRegister reminderReg = new FixedRegister("rR");
+	public static FixedRegister colorRegister = new FixedRegister("COLORS"); //Color register is the highest used register
 
-	private ConstantOperand const0 = new ConstantOperand(0);
-	private ConstantOperand const1 = new ConstantOperand(1);
+	public static ConstantOperand const0 = new ConstantOperand(0);
+	public static ConstantOperand const1 = new ConstantOperand(1);
 
 	private HashMap<CodeFragment, InstructionSet> fragInstrs;
 	private HashMap<IMC, InstructionSet> map;
 
 	public CodeGen(Task task) {
-		super(task, "codegen");
+		super(task, "codegen", false);
 		map = new HashMap<>();
 		fragInstrs = task.fragInstrs;
 	}
@@ -44,10 +45,10 @@ public class CodeGen extends Phase {
 	@Override
 	public void close() {
 		//Just a shorthand for is this phase logged
-		if(logger != null){
+		if(this.logging){
 			PrintWriter writer;
 			try {
-				writer = new PrintWriter(task.srcFName + ".mmixR", "US-ASCII");
+				writer = new PrintWriter(task.srcFName + ".fake.mmix", "US-ASCII");
 
 				String indent = "\t";
 
@@ -361,7 +362,7 @@ public class CodeGen extends Phase {
 
 				Instruction lasttmp = ownis.popLast();
 				if (!(lasttmp instanceof Mnemonic)) {
-					System.out.println(lasttmp);
+					System.err.println(lasttmp);
 					throw new InternalCompilerError();
 				}
 				Mnemonic last = (Mnemonic) lasttmp;
