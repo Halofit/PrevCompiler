@@ -16,7 +16,6 @@ public class InstructionSet {
 	public Register ret;
 
 	public HashSet<VirtualRegister> registers;
-	public HashMap<Label, Integer> labelLocations;
 
 	public long mnemonicCount;
 
@@ -53,19 +52,6 @@ public class InstructionSet {
 		return last;
 	}
 
-	public void indexLabels() {
-		this.labelLocations = new HashMap<>();
-
-		int loc = 0;
-		Iterator<Instruction> it = this.instrs.descendingIterator();
-		while (it.hasNext()) {
-			Instruction next = it.next();
-			if (next instanceof Label) {
-				labelLocations.put((Label) next, loc);
-			}
-			loc++;
-		}
-	}
 
 	public void countRegisters() {
 		this.registers = new HashSet<>();
@@ -135,7 +121,7 @@ public class InstructionSet {
 		PhysicalRegister r1 = PhysicalRegister.get(1);
 
 		LinkedList<Instruction> prolog = new LinkedList<>();
-		prolog.add(Label.get("prolog_" + label));
+		prolog.add(Label.get(label));
 
 		//Move FP&SP.
 		prolog.add(new Mnemonic("ADD", r0, CodeGen.fp, CodeGen.const0));
@@ -152,12 +138,13 @@ public class InstructionSet {
 		prolog.add(new Mnemonic("GET", r0, CodeGen.returnJumpReg));
 		prolog.add(new Mnemonic("SUB", r1, r1, new ConstantOperand(8)));
 		prolog.add(new Mnemonic("STO", r0, r1, CodeGen.const0));
+		prolog.add(new Comment(null));
 
 		this.instrs.addAll(0, prolog);
 
 
 		LinkedList<Instruction> epilog = new LinkedList<>();
-		epilog.add(Label.get("epilog_" + label));
+		//epilog.add(Label.get("epilog_" + label)); uneeded
 
 		//Save RV to stack.
 		epilog.add(new Mnemonic("STO", CodeGen.rv, CodeGen.fp, CodeGen.const0));
@@ -170,14 +157,14 @@ public class InstructionSet {
 		//Restore rJ.
 		epilog.add(new Mnemonic("SUB", r1, r1, new ConstantOperand(8)));
 		epilog.add(new Mnemonic("STO", r1, r1, CodeGen.const0));
-		epilog.add(new Mnemonic("SET", CodeGen.returnJumpReg, r1));
+		epilog.add(new Mnemonic("PUT", CodeGen.returnJumpReg, r1));
 
 		//Restore FP&SP
 		epilog.add(new Mnemonic("ADD", CodeGen.sp, CodeGen.fp, CodeGen.const0));
 		epilog.add(new Mnemonic("ADD", CodeGen.fp, r0, CodeGen.const0));
 
 		//Return
-		epilog.add(new Mnemonic("POP", CodeGen.colorRegister, CodeGen.const0));
+		epilog.add(new Mnemonic("POP", CodeGen.const0, CodeGen.const0));
 
 		this.instrs.addAll(epilog);
 	}

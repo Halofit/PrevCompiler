@@ -22,8 +22,8 @@ public class Mnemonic extends Instruction {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder(mnemonic);
+		sb.append(' ');
 		for (Operand operand : operands) {
-			sb.append(' ');
 			sb.append(operand).append(',');
 		}
 

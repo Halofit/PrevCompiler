@@ -41,3 +41,4 @@ clean:
 	del *.xml || rm *.xml || echo ""
 	del *.mmix || rm *.mmix || echo ""
 	del *.graph || rm *.graph || echo ""
+	del *.mms || rm *.mms || echo ""

@@ -5,3 +5,5 @@ out
 *.xml
 *.mmix
 *.graph
+*.mms
+*.mmo

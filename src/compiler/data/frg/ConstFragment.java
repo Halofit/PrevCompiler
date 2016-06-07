@@ -48,7 +48,7 @@ public class ConstFragment extends Fragment {
 				i++;
 			}
 			sb.append((int)c);
-			sb.append(", ");
+			sb.append(","); //THERE MUST BE NO SPACE
 		}
 
 		sb.append(0);
