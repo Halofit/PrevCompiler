@@ -10,7 +10,7 @@
 	)
 	
 	fun b(): boolean = (
-		(printStr("b\n"), true)
+		(printStr("b\n"), false)
 	)
 	
 	fun printStr(s:string): void

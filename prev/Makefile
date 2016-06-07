@@ -47,3 +47,4 @@ clean:
 	del *.mmix || rm *.mmix || echo ""
 	del *.graph || rm *.graph || echo ""
 	del *.mms || rm *.mms || echo ""
+	del *.mmo || rm *.mmo || echo ""

@@ -168,4 +168,25 @@ public class InstructionSet {
 
 		this.instrs.addAll(epilog);
 	}
+
+	public void joinLabels() {
+		ListIterator<Instruction> it = instrs.listIterator();
+
+		String pLabel = null;
+		while(it.hasNext()){
+			Instruction i = it.next();
+
+			if(i instanceof Label){
+				if(pLabel != null){
+					((Label) i).label = pLabel;
+				}
+
+				pLabel = ((Label) i).label;
+			}else if(i instanceof Comment){
+				//do nothing
+			}else{
+				pLabel = null;
+			}
+		}
+	}
 }

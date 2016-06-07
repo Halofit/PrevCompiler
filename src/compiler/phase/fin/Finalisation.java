@@ -41,6 +41,7 @@ public class Finalisation extends Phase {
 		for (CodeFragment cf : fragInstrs.keySet()) {
 			InstructionSet is = fragInstrs.get(cf);
 			is.injectEntryAndExit(cf);
+			is.joinLabels();
 		}
 
 		PrintWriter writer;
@@ -105,7 +106,7 @@ public class Finalisation extends Phase {
 					if(instr instanceof Label){
 						if(bufferdLabel != null){
 							System.err.println("Buffered label is non-null!");
-							throw new InternalCompilerError();
+							//throw new InternalCompilerError();
 						}
 						bufferdLabel = instr.toString();
 					}else if(instr instanceof Comment){
@@ -154,14 +155,11 @@ public class Finalisation extends Phase {
 
 	private final String auxiliary_functions =
 						   "\n" +
-						   "%these functions don't bother with\n" +
-						   "%moving the stack pointer & other nonsense\n" +
-						   "\n" +
-						   "_printChr\tLDO $0,SP,8 %get character\n" +
-						   "\t\t\tSTB $0,SP,0\n" +
-						   "\t\t\tSETL $0,0\n" +
+						   "_printChr\tLDO $1,SP,8\n" +
+						   "\t\t\tSET $0,0\n" +
 						   "\t\t\tSTO $0,SP,8\n" +
-						   "\t\t\tADD $255,SP,0\n" +
+						   "\t\t\tSTO $1,SP,0\n" +
+						   "\t\t\tADD $255,SP,7\n" +
 						   "\t\t\tTRAP 0,Fputs,StdOut\n" +
 						   "\t\t\tPOP 0,0\n" +
 						   "\n" +

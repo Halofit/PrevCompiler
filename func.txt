@@ -1,11 +1,9 @@
 
-%these functions don't bother with moving the stack pointer & other nonsense
-
-_printChr	LDO $0,SP,8 %get character
-			STB $0,SP,0
-			SETL $0,0
+_printChr	LDO $1,SP,8
+			SET $0,0
 			STO $0,SP,8
-			ADD $255,SP,0
+			STO $1,SP,0
+			ADD $255,SP,7
 			TRAP 0,Fputs,StdOut
 			POP 0,0
 

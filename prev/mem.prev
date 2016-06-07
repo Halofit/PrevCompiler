@@ -4,9 +4,9 @@
 	p^ = 1,
 	for i=0,9 : (		
 		printInt(i),
-		printStr(": "),
-		printInt(a[i]),
-		printStr("\t")
+		printStr(": ")
+		#printInt(a[i]),
+		#printChr('\n')
 	) end,
 	printStr("\n"),
 	123
@@ -16,7 +16,8 @@
 	var a : arr[10] integer
 	
 	fun n(): integer = 114
-	fun printStr(i:string): void
+	fun printStr(s:string): void
 	fun printInt(i:integer): void
+	fun printChr(c:char): void
 end
 
