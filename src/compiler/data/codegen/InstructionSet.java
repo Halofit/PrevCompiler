@@ -152,11 +152,11 @@ public class InstructionSet {
 		//Get old FP into register $0.
 		epilog.add(new Mnemonic("SET", r1, new ConstantOperand(frag.frame.getOldFPOffset())));
 		epilog.add(new Mnemonic("SUB", r1, CodeGen.fp, r1));
-		epilog.add(new Mnemonic("STO", r0, r1, CodeGen.const0));
+		epilog.add(new Mnemonic("LDO", r0, r1, CodeGen.const0));
 
 		//Restore rJ.
 		epilog.add(new Mnemonic("SUB", r1, r1, new ConstantOperand(8)));
-		epilog.add(new Mnemonic("STO", r1, r1, CodeGen.const0));
+		epilog.add(new Mnemonic("LDO", r1, r1, CodeGen.const0));
 		epilog.add(new Mnemonic("PUT", CodeGen.returnJumpReg, r1));
 
 		//Restore FP&SP

@@ -73,6 +73,7 @@ public class Mnemonic extends Instruction {
 
 			case "GET":
 			case "GETA":
+			case "LDA":
 
 			case "SETL":
 			case "INCML":
@@ -109,6 +110,7 @@ public class Mnemonic extends Instruction {
 			case "GET":
 			case "GETA":
 			case "SETL":
+			case "LDA":
 				return new VirtualRegister[]{};
 
 			case "PUSHJ":

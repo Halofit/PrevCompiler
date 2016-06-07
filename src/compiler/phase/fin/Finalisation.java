@@ -53,12 +53,12 @@ public class Finalisation extends Phase {
 			writer.println("\t\tLOC	Data_Segment");
 
 			//define the common registers
-			writer.println("FP IS $253"); //No indentation, FP mus be a label
-			writer.println("SP IS $254");
+			writer.println("FP IS $252"); //No indentation, FP mus be a label
+			writer.println("SP IS $253");
 			writer.println("RV IS $0");
 			writer.println("COLORS IS $" + RegisterAlloc.physicalRegisters);
 			writer.println();
-			writer.println("\t\tGREG @"); //Set the two registers as global SP,FP
+			writer.println("%allocate a global register for loading constants and global variables");
 			writer.println("\t\tGREG @");
 			writer.println();
 			writer.println();
@@ -86,9 +86,14 @@ public class Finalisation extends Phase {
 			writer.println();
 			writer.println();
 
-			writer.println("%Set stack pointer to 0x3000'0000'0000'0000");
-			writer.println("Main\tSETH SP,#3000");
+			writer.println("%Set stack pointer to 0x4000'0000'0000'0000 - 8");
+			writer.println("Main\tPUT rG,252");
+			writer.println("\t\tSETH SP,#4000");
+			writer.println("\t\tSUB SP,SP,8");
+			writer.println("\t\tSETL FP,0");
 			writer.println("\t\tPUSHJ $0,_");
+			writer.println("\t\tTRAP 0,Halt,0");
+
 
 
 			String indent = "\t\t";
@@ -146,54 +151,53 @@ public class Finalisation extends Phase {
 		}
 	}
 
-	//TODO this shit is licenced with an oppresive licence -> remove -.-
+
 	private final String auxiliary_functions =
-						   "\n"+
-						   "_printStr\tADD $0,SP,8\n"+
-						   "\tLDO $255,$0,0\n"+
-						   "\tTRAP 0,Fputs,StdOut\n"+
-						   "\tPOP 0,0\n"+
-						   "\n"+
-						   "\n"+
-						   "\n"+
-						   "_printChr\t LDO $0,SP,8\n"+
-						   "\tSTB $0,SP,1\n"+
-						   "\tADD $255,SP,8\n"+
-						   "\tTRAP 0,Fputs,StdOut\n"+
-						   "\tPOP 0,0\n"+
-						   "\n"+
-						   "\n"+
-						   "\n"+
-						   "_printInt\tADD $0,SP,8\n"+
-						   "\tLDO $0,$0,0\n"+
-						   "\tGET $3,rJ\n"+
-						   "\tSETL $2,1 # Base divider\n"+
-						   "\t\n"+
-						   "\t# check if it's minus\n"+
-						   "\tCMP $1,$0,0\n"+
-						   "\tBNN $1,_printInt_radix\n"+
-						   "\t\n"+
-						   "\t# make it positive\n"+
-						   "\tNEG $0,$0\n"+
-						   "\tSETL $1,45\n"+
-						   "\tSTO $1,SP,8\n"+
-						   "\tPUSHJ $64,_printChr\n"+
-						   "\t\n"+
-						   "\t# Calculate largest divider with base 10\n"+
-						   "_printInt_radix\tCMP $1,$2,$0\n"+
-						   "\tBP $1,_printInt_print_start\n"+
-						   "\tMUL $2,$2,10\n"+
-						   "\tJMP _printInt_radix\n"+
-						   "_printInt_print_start DIV $2,$2,10\n"+
-						   "_printInt_print CMP $1,$2,0\n"+
-						   "\tBNP $1,_printInt_end\n"+
-						   "\tDIV $0,$0,$2\n"+
-						   "\tADD $0,$0,48 # Convert number to ascii number and print\n"+
-						   "\tSTO $0,SP,8\n"+
-						   "\tPUSHJ $64,_printChr\n"+
-						   "\tGET $0,rR\n"+
-						   "\tDIV $2,$2,10\n"+
-						   "\tJMP _printInt_print\n"+
-						   "_printInt_end PUT rJ,$3\n"+
-						   "\tPOP 0,0";
+						   "\n" +
+						   "%these functions don't bother with\n" +
+						   "%moving the stack pointer & other nonsense\n" +
+						   "\n" +
+						   "_printChr\tLDO $0,SP,8 %get character\n" +
+						   "\t\t\tSTB $0,SP,0\n" +
+						   "\t\t\tSETL $0,0\n" +
+						   "\t\t\tSTO $0,SP,8\n" +
+						   "\t\t\tADD $255,SP,0\n" +
+						   "\t\t\tTRAP 0,Fputs,StdOut\n" +
+						   "\t\t\tPOP 0,0\n" +
+						   "\n" +
+						   "\t\t\t\n" +
+						   "_printStr\tADD $0,SP,8 %get string pointer\n" +
+						   "\t\t\tLDO $255,$0,0\n" +
+						   "\t\t\tTRAP 0,Fputs,StdOut\n" +
+						   "\t\t\tPOP 0,0\n" +
+						   "\t\t\t\n" +
+						   "\t\t\t\n" +
+						   "\t\t\t\n" +
+						   "_printInt\tSUBU $1,SP,128 %first set-up the buffer\n" +
+						   "\t\t\tSETL $3,0\n" +
+						   "\t\t\tSTO $3,$1,0\n" +
+						   "\t\t\tLDO $0,SP,8\t%load number into $0\n" +
+						   "\t\t\tSETL $2,#20\n" +
+						   "\t\t\tSTB $2,$1,0 %set first byte to space\n" +
+						   "\t\t\tBNN $0,Pos\n" +
+						   "\n" +
+						   "Neg\t\t\tSETL $2,#2D\n" +
+						   "\t\t\tSTB $2,$1,0 %set first byte to minus\n" +
+						   "\t\t\tNEG $0,$0\n" +
+						   "\t\t\t%fall trough to positive\n" +
+						   "\n" +
+						   "Pos\t\t\tADDU $2,$1,16\n" +
+						   "\t\t\tADDU $1,$1,1 %for the sign\n" +
+						   "Loop_p\t\tSUB $2,$2,1\n" +
+						   "\t\t\tDIV $0,$0,10 %divide by 10\n" +
+						   "\t\t\tGET $4,rR\n" +
+						   "\t\t\tADD $4,$4,#30\n" +
+						   "\t\t\tSTB $4,$2,0\n" +
+						   "\t\t\tCMP $3,$1,$2\n" +
+						   "\t\t\tBNZ $3,Loop_p\n" +
+						   "\n" +
+						   "\t\t\t%write actual data\n" +
+						   "\t\t\tSUBU $255,SP,128\n" +
+						   "\t\t\tTRAP 0,Fputs,StdOut\n" +
+						   "\t\t\tPOP 0,0\n";
 }

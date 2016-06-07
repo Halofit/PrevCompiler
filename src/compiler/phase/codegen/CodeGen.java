@@ -397,7 +397,7 @@ public class CodeGen extends Phase {
 	public void tile(NAME name) {
 		InstructionSet ownis = new InstructionSet("NAME | " + name.name);
 		ownis.set(VirtualRegister.create());
-		ownis.add(new Mnemonic("GETA", ownis.ret, new OperandLabel(name.name)));
+		ownis.add(new Mnemonic("LDA", ownis.ret, new OperandLabel(name.name)));
 
 		setInstrs(name, ownis);
 	}
