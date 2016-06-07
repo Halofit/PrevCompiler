@@ -62,7 +62,6 @@ public class Finalisation extends Phase {
 			writer.println("\t\tGREG @");
 			writer.println();
 			writer.println();
-			writer.println();
 
 			for (String s : fragments.keySet()) {
 				Fragment f = fragments.get(s);
@@ -78,6 +77,19 @@ public class Finalisation extends Phase {
 					throw new InternalCompilerError();
 				}
 			}
+
+			writer.println();
+			writer.println();
+
+			//set location for instructions
+			writer.println("\t\tLOC	#100");
+			writer.println();
+			writer.println();
+
+			writer.println("%Set stack pointer to 0x3000'0000'0000'0000");
+			writer.println("Main\tSETH SP,#3000");
+			writer.println("\t\tPUSHJ $0,_");
+
 
 			String indent = "\t\t";
 			String bufferdLabel = null;
@@ -134,7 +146,7 @@ public class Finalisation extends Phase {
 		}
 	}
 
-
+	//TODO this shit is licenced with an oppresive licence -> remove -.-
 	private final String auxiliary_functions =
 						   "\n"+
 						   "_printStr\tADD $0,SP,8\n"+
