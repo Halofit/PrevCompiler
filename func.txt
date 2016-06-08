@@ -1,0 +1,46 @@
+
+_printChr	LDO $0,SP,8
+			SETL $1,0
+			SUB $2,SP,16
+			STO $0,$2,0
+			STO $1,$2,8
+			ADD $255,$2,7
+			TRAP 0,Fputs,StdOut
+			POP 0,0
+
+
+			
+_printStr	ADD $0,SP,8 %get string pointer
+			LDO $255,$0,0
+			TRAP 0,Fputs,StdOut
+			POP 0,0
+			
+			
+			
+_printInt	SUBU $1,SP,128 %first set-up the buffer
+			SETL $3,0
+			STO $3,$1,0
+			LDO $0,SP,8	%load number into $0
+			SETL $2,#20
+			STB $2,$1,0 %set first byte to space
+			BNN $0,Pos
+
+Neg			SETL $2,#2D
+			STB $2,$1,0 %set first byte to minus
+			NEG $0,$0
+			%fall trough to positive
+
+Pos			ADDU $2,$1,16
+			ADDU $1,$1,1 %for the sign
+Loop_p		SUB $2,$2,1
+			DIV $0,$0,10 %divide by 10
+			GET $4,rR
+			ADD $4,$4,#30
+			STB $4,$2,0
+			CMP $3,$1,$2
+			BNZ $3,Loop_p
+
+			%write actual data
+			SUBU $255,SP,128
+			TRAP 0,Fputs,StdOut
+			POP 0,0

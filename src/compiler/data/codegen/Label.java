@@ -27,7 +27,7 @@ public class Label extends Instruction {
 
 	@Override
 	public String toString() {
-		return label + ": ";
+		return label + "\t";
 	}
 
 	@Override

@@ -26,6 +26,8 @@ import compiler.phase.synan.SynAn;
  */
 public class Main {
 
+	public static final boolean oddaja = false;
+
 	/**
 	 * The compiler's entry point: it parses the command line and triggers the
 	 * compilation.

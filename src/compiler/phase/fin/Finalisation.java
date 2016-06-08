@@ -1,9 +1,9 @@
 package compiler.phase.fin;
 
+import compiler.Main;
 import compiler.Task;
 import compiler.common.report.InternalCompilerError;
-import compiler.data.codegen.Instruction;
-import compiler.data.codegen.InstructionSet;
+import compiler.data.codegen.*;
 import compiler.data.frg.CodeFragment;
 import compiler.data.frg.ConstFragment;
 import compiler.data.frg.DataFragment;
@@ -11,15 +11,19 @@ import compiler.data.frg.Fragment;
 import compiler.phase.Phase;
 import compiler.phase.regalloc.RegisterAlloc;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
+import java.util.Scanner;
 
 /**
  * Created by gregor on 31. 05. 2016.
  */
 public class Finalisation extends Phase {
+
+	private static final String fileEnding = ".mms";
 
 	private HashMap<CodeFragment, InstructionSet> fragInstrs;
 	private HashMap<String, Fragment> fragments;
@@ -32,22 +36,31 @@ public class Finalisation extends Phase {
 	}
 
 	public void finishCode() {
+		//This is no longer logged, this is the final result
+
 		for (CodeFragment cf : fragInstrs.keySet()) {
 			InstructionSet is = fragInstrs.get(cf);
 			is.injectEntryAndExit(cf);
+			is.joinLabels();
 		}
 
 		PrintWriter writer;
 		try {
-			writer = new PrintWriter(task.srcFName + ".mmix", "US-ASCII");
+			writer = new PrintWriter(task.srcFName + fileEnding, "US-ASCII");
 
+			//Header
+			writer.println();
+			writer.println();
 			writer.println("\t\tLOC	Data_Segment");
 
 			//define the common registers
-			writer.println("\t\tFP IS $253");
-			writer.println("\t\tSP IS $254");
-			writer.println("\t\tRV IS $0");
-			writer.println("\t\tCOLORS IS $" + RegisterAlloc.physicalRegisters);
+			writer.println("FP IS $252"); //No indentation, FP mus be a label
+			writer.println("SP IS $253");
+			writer.println("RV IS $0");
+			writer.println("COLORS IS $" + RegisterAlloc.physicalRegisters);
+			writer.println();
+			writer.println("%allocate a global register for loading constants and global variables");
+			writer.println("\t\tGREG @");
 			writer.println();
 			writer.println();
 
@@ -58,22 +71,95 @@ public class Finalisation extends Phase {
 					//For now do nothing, we should first handle other fragments
 				} else if (f instanceof ConstFragment) {
 					ConstFragment cf = (ConstFragment) f;
-					writer.println(s + "\tBYTE\t" + cf.getStringAsValues());
+					writer.println(s + "\t\tBYTE\t" + cf.getStringAsValues());
+					int required_padding = (cf.string.length() + 1) % 8;
+
+					//Add padding to align to 8
+					if (required_padding != 0) {
+						writer.print("\t\tBYTE\t");
+						while (required_padding != 0) {
+							writer.print("0");
+							if (required_padding != 1) writer.print(",");
+							required_padding--;
+						}
+						writer.println("\t%padding");
+					}
 				} else if (f instanceof DataFragment) {
-					writer.println(s + "\tOCTA\t" + 0);
+					DataFragment df = (DataFragment) f;
+					long required_padding = df.width % 8;
+
+					if(required_padding == 0){
+						writer.print(s + "\t\tOCTA\t0");
+						for (int i = 8; i < df.width; i+=8) {
+							if(i%(8*16) == 0){
+								writer.println();
+								writer.print("\t\tOCTA\t0");
+							}else{
+								writer.print(",0");
+							}
+						}
+					}else{
+						writer.print(s + "\t\tBYTE\t0");
+						for (int i = 1; i < df.width+required_padding; i++) {
+							if(i%16 == 0){
+								writer.println();
+								writer.print("\t\tBYTE\t0");
+							}else{
+								writer.print(",0");
+							}
+						}
+					}
+
+					writer.println();
 				} else {
 					throw new InternalCompilerError();
 				}
 			}
 
-			String indent = "\t";
+			writer.println();
+			writer.println();
+
+			//set location for instructions
+			writer.println("\t\tLOC	#100");
+			writer.println();
+			writer.println();
+
+			writer.println("%Set stack pointer to 0x4000'0000'0000'0000 - 8");
+			writer.println("Main\tPUT rG,252");
+			writer.println("\t\tSETH SP,#4000");
+			writer.println("\t\tSUB SP,SP,8");
+			writer.println("\t\tSETL FP,0");
+			writer.println("\t\tPUSHJ $0,_");
+			writer.println("\t\tTRAP 0,Halt,0");
+
+
+			String indent = "\t\t";
+			String bufferdLabel = null;
 			for (CodeFragment codeFragment : fragInstrs.keySet()) {
 				writer.println("");
-				writer.println(codeFragment.frame.label + ":");
 				InstructionSet instrs = fragInstrs.get(codeFragment);
 				for (Instruction instr : instrs.instrs) {
-					writer.print(indent);
-					writer.println(instr);
+					if (instr instanceof Label) {
+						if (bufferdLabel != null) {
+							System.err.println("Buffered label is non-null!");
+							//throw new InternalCompilerError();
+						}
+						bufferdLabel = instr.toString();
+					} else if (instr instanceof Comment) {
+						writer.println(instr);
+					} else if (instr instanceof Mnemonic) {
+						if (bufferdLabel != null) {
+							writer.print(bufferdLabel);
+							writer.print('\t');
+							writer.println(instr);
+							bufferdLabel = null;
+						} else {
+							writer.print(indent);
+							writer.println(instr);
+						}
+					} else {
+						throw new InternalCompilerError();
+					}
 				}
 				writer.println("");
 				writer.println("");
@@ -81,10 +167,73 @@ public class Finalisation extends Phase {
 
 			writer.println("");
 			writer.println("");
+			writer.println(auxiliary_functions);
 			writer.close();
 
 		} catch (FileNotFoundException | UnsupportedEncodingException e) {
 			e.printStackTrace();
 		}
+
+		if (Main.oddaja) {
+			Scanner sc;
+			try {
+				sc = new Scanner(new File(task.srcFName + fileEnding));
+				while (sc.hasNextLine()) {
+					System.out.println(sc.nextLine());
+				}
+				sc.close();
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+		}
 	}
+
+
+	private final String auxiliary_functions =
+			"\n" +
+			"_printChr\tLDO $0,SP,8\n" +
+			"\t\t\tSETL $1,0\n" +
+			"\t\t\tSUB $2,SP,16\n" +
+			"\t\t\tSTO $0,$2,0\n" +
+			"\t\t\tSTO $1,$2,8\n" +
+			"\t\t\tADD $255,$2,7\n" +
+			"\t\t\tTRAP 0,Fputs,StdOut\n" +
+			"\t\t\tPOP 0,0\n" +
+			"\n" +
+			"\n" +
+			"\t\t\t\n" +
+			"_printStr\tADD $0,SP,8 %get string pointer\n" +
+			"\t\t\tLDO $255,$0,0\n" +
+			"\t\t\tTRAP 0,Fputs,StdOut\n" +
+			"\t\t\tPOP 0,0\n" +
+			"\t\t\t\n" +
+			"\t\t\t\n" +
+			"\t\t\t\n" +
+			"_printInt\tSUBU $1,SP,128 %first set-up the buffer\n" +
+			"\t\t\tSETL $3,0\n" +
+			"\t\t\tSTO $3,$1,0\n" +
+			"\t\t\tLDO $0,SP,8\t%load number into $0\n" +
+			"\t\t\tSETL $2,#20\n" +
+			"\t\t\tSTB $2,$1,0 %set first byte to space\n" +
+			"\t\t\tBNN $0,Pos\n" +
+			"\n" +
+			"Neg\t\t\tSETL $2,#2D\n" +
+			"\t\t\tSTB $2,$1,0 %set first byte to minus\n" +
+			"\t\t\tNEG $0,$0\n" +
+			"\t\t\t%fall trough to positive\n" +
+			"\n" +
+			"Pos\t\t\tADDU $2,$1,16\n" +
+			"\t\t\tADDU $1,$1,1 %for the sign\n" +
+			"Loop_p\t\tSUB $2,$2,1\n" +
+			"\t\t\tDIV $0,$0,10 %divide by 10\n" +
+			"\t\t\tGET $4,rR\n" +
+			"\t\t\tADD $4,$4,#30\n" +
+			"\t\t\tSTB $4,$2,0\n" +
+			"\t\t\tCMP $3,$1,$2\n" +
+			"\t\t\tBNZ $3,Loop_p\n" +
+			"\n" +
+			"\t\t\t%write actual data\n" +
+			"\t\t\tSUBU $255,SP,128\n" +
+			"\t\t\tTRAP 0,Fputs,StdOut\n" +
+			"\t\t\tPOP 0,0\n";
 }

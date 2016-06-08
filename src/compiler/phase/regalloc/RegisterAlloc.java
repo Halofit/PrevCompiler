@@ -31,7 +31,7 @@ public class RegisterAlloc extends Phase {
 		for (CodeFragment frag : fragInstrs.keySet()) {
 			InterferenceGraph graph;
 			while(true){
-				System.out.println(frag.label);
+				//System.out.println(frag.label);
 				InstructionSet instrs = fragInstrs.get(frag);
 
 				//Build:

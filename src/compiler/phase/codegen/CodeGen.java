@@ -17,7 +17,7 @@ import java.util.HashMap;
  * Created by gregor on 20.5.2016.
  */
 public class CodeGen extends Phase {
-	public static boolean commentAnnotations = false;
+	public static boolean commentAnnotations = true;
 	public static boolean spacingComments = true;
 
 	private int fpTemp;
@@ -388,6 +388,8 @@ public class CodeGen extends Phase {
 			} else {
 				ownis.add(new Mnemonic("ADD", dstret, srcret, const0));
 			}
+		}else{
+			//System.out.println("WARNING: empty move " + move.id + " (has source with no apparent return value)");
 		}
 
 		setInstrs(move, ownis);
@@ -397,7 +399,7 @@ public class CodeGen extends Phase {
 	public void tile(NAME name) {
 		InstructionSet ownis = new InstructionSet("NAME | " + name.name);
 		ownis.set(VirtualRegister.create());
-		ownis.add(new Mnemonic("GETA", ownis.ret, new OperandLabel(name.name)));
+		ownis.add(new Mnemonic("LDA", ownis.ret, new OperandLabel(name.name)));
 
 		setInstrs(name, ownis);
 	}
@@ -472,7 +474,7 @@ public class CodeGen extends Phase {
 		InstructionSet expris = getInstrs(unop.expr);
 
 		ownis.add(expris);
-		Register ret = ownis.ret;
+		Register ret = expris.ret;
 		ownis.set(ret);
 
 		switch (unop.oper) {

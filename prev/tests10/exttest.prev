@@ -1,0 +1,15 @@
+(
+	printStr("\n"),
+	printChr('a'),
+	printStr("\n"),
+	printStr("ABC\n"),
+	printChr('b'),
+	printChr('c'),
+	printStr("\n"),
+	123
+) where
+	fun printStr(s:string): void
+	fun printInt(i:integer): void
+	fun printChr(c:char): void
+end
+

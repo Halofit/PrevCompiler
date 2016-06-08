@@ -286,7 +286,7 @@ SETL T17, 5 ->
 	STO T100, FP, -64 //ker je destination -> STORE
 	
 ADD T17,T17,1 ->
-	LDO T101, FP, -64  //zaradi tega ker je source
+	LDO T101, FP, -64  //zaradi tega ker je sourcegi
 	ADD T101,T101,1
 	STO T101, FP, -64  //zaradi tega ker je destination
 	

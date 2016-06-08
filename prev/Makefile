@@ -6,8 +6,18 @@
 bindir = ../out/production/Compiler
 xsldir = ./xsl
 
-%.mmix	: %.prev
+%.run	: %.prev
 	java -classpath $(bindir) compiler.Main --xsldir=$(xsldir) --phase=fin --loggedphases=fin $<
+	mmixal -x $<.mms 
+	mmix -q $<.mmo
+
+%.db	: %.prev
+	java -classpath $(bindir) compiler.Main --xsldir=$(xsldir) --phase=fin --loggedphases=fin,lincode $<
+	mmixal -x $<.mms 
+	mmix -q $<.mmo
+
+%.mmix	: %.prev
+	java -classpath $(bindir) compiler.Main --xsldir=$(xsldir) --phase=fin --loggedphases=fin,lincode $<
 
 %.regalloc.xml	: %.prev
 	java -classpath $(bindir) compiler.Main --xsldir=$(xsldir) --phase=regalloc --loggedphases=codegen,regalloc $<
@@ -41,3 +51,5 @@ clean:
 	del *.xml || rm *.xml || echo ""
 	del *.mmix || rm *.mmix || echo ""
 	del *.graph || rm *.graph || echo ""
+	del *.mms || rm *.mms || echo ""
+	del *.mmo || rm *.mmo || echo ""

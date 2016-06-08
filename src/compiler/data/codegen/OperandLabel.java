@@ -12,7 +12,6 @@ public class OperandLabel extends Operand {
 
 	@Override
 	public String toString() {
-		String s = label.toString();
-		return s.substring(0, s.length()-2); //remove the last :
+		return label.toString();
 	}
 }
