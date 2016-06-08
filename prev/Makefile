@@ -6,6 +6,11 @@
 bindir = ../out/production/Compiler
 xsldir = ./xsl
 
+%.run	: %.prev
+	java -classpath $(bindir) compiler.Main --xsldir=$(xsldir) --phase=fin --loggedphases=fin $<
+	mmixal -x $<.mms 
+	mmix -q $<.mmo
+
 %.db	: %.prev
 	java -classpath $(bindir) compiler.Main --xsldir=$(xsldir) --phase=fin --loggedphases=fin,lincode $<
 	mmixal -x $<.mms 

@@ -1,11 +1,13 @@
 
-_printChr	LDO $1,SP,8
-			SET $0,0
-			STO $0,SP,8
-			STO $1,SP,0
-			ADD $255,SP,7
+_printChr	LDO $0,SP,8
+			SETL $1,0
+			SUB $2,SP,16
+			STO $0,$2,0
+			STO $1,$2,8
+			ADD $255,$2,7
 			TRAP 0,Fputs,StdOut
 			POP 0,0
+
 
 			
 _printStr	ADD $0,SP,8 %get string pointer
