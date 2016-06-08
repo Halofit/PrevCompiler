@@ -296,3 +296,9 @@ STO T17,T0,0 ->
 	
 
 
+------------Register allocation------------------
+SP <-- recimo na 8000 0000 0000 0000
+
+zagonska "funkcija"
+	FP, SP, prepare + PUSHJ _
+	TRAP neki

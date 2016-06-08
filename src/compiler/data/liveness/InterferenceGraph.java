@@ -274,6 +274,7 @@ public class InterferenceGraph {
 			if (n.spill) {
 				if (!n.color()) {
 					anySpilled = true;
+					System.out.println("Spilled: " + n.reg);
 				}
 			} else {
 				n.color();
