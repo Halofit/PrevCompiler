@@ -15,7 +15,7 @@ import java.util.HashMap;
  * Created by gregor on 22. 05. 2016.
  */
 public class Liveness extends Phase {
-	public static boolean report = false;
+	public static boolean report = true;
 
 	public HashMap<CodeFragment, InstructionSet> fragInstrs;
 	public HashMap<CodeFragment, InterferenceGraph> intfGraph;

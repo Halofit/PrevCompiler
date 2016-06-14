@@ -1,4 +1,4 @@
-(q=0,solve(@qs,0),1)
+(q=0,solve(@qs,0),0)
 
 where
 

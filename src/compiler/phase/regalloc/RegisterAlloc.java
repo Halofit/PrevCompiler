@@ -16,7 +16,7 @@ import java.util.HashMap;
  * Created by gregor on 27.5.2016.
  */
 public class RegisterAlloc extends Phase {
-	public static int physicalRegisters = 4;
+	public static int physicalRegisters = 8;
 
 	private HashMap<CodeFragment, InstructionSet> fragInstrs;
 	private HashMap<CodeFragment, InterferenceGraph> coloredGraphs;

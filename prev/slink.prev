@@ -1,0 +1,34 @@
+(funA(), 0)
+ 
+where
+	fun funA():integer =(
+			a = 1,
+			funB(),
+			printStr("funA()\n"),
+			printInt(a),
+			printStr("\n"),
+			1
+		)
+		where 
+			var a:integer
+			
+			fun funB():integer=(
+				printInt(a),
+				a = 2,
+				printStr(" funB()\n"),
+				1
+			)
+			where 
+				var b:integer
+			end
+		end
+		
+	
+	
+  # STDLIB
+  
+  fun printChr(c:char):void
+  fun printInt(i:integer):void
+  fun printStr(s:string):void
+
+end
